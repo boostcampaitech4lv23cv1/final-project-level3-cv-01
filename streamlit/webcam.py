@@ -34,7 +34,7 @@ while(True): #Check Video is Available
 		cv2.imshow('Original VIDEO', frame)
 		cv2.imshow('Inversed VIDEO', inversed)
 
-		if cv2.waitKey(delay) == 27: #wait 10ms until user input 'esc'
+		if cv2.waitKey(1) & 0xFF == 27:
 			break
 	else:
 		print("ret is false")
