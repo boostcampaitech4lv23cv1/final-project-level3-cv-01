@@ -6,13 +6,10 @@ import csv
 import pandas as pd
 import argparse
 
-VIDEO_PATH = "/opt/ml/TEST_VIDEO/침착맨의 순두부찌개 철학.mp4"
-SAVED_DIR = "/opt/ml/Face/not_saving_problem_test"
+VIDEO_PATH = ""
+SAVED_DIR = ""
 
 NEW_VIDEO_NAME = "jupyter_to_python_TEST"
-
-VIDEO_WIDTH = 0
-VIDEO_HEIGHT = 0
 
 
 def parse_args():
@@ -29,9 +26,6 @@ def parse_args():
 def video_to_frame():
 
     cap = cv2.VideoCapture(VIDEO_PATH)
-
-    VIDEO_WIDTH = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-    VIDEO_HEIGHT = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
     count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = cap.get(cv2.CAP_PROP_FPS)
 
@@ -40,7 +34,7 @@ def video_to_frame():
 
         if not ret:  # 새로운 프레임을 못받아 왔을 때 braek
             break
-        if int(cap.get(1)) % int(fps) == 0:
+        if int(cap.get(1)) % int(fps / 10) == 0:
             cv2.imwrite(SAVED_DIR + "/frame%d.jpg" % count, frame)
             print("Saved frame number : ", str(int(cap.get(1))))
             count += 1
@@ -149,26 +143,35 @@ def add_emotion_on_frame(emotions_mtcnn, df_mtcnn):
 
 def frame_to_video(rec_image_list):
     cap = cv2.VideoCapture(VIDEO_PATH)
-    fourcc = cv2.VideoWriter_fourcc(*"DIVX")
-    delay = round(1000 / 2)
-    out = cv2.VideoWriter("/opt/ml/TEST.mp4", fourcc, 4, (VIDEO_WIDTH, VIDEO_HEIGHT))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+
+    fourcc = cv2.VideoWriter_fourcc("m", "p", "4", "v")
+
+    out = cv2.VideoWriter("fps_10.mp4", fourcc, 10, (width, height))
     for rec_frame in rec_image_list:
         out.write(rec_frame)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
 
     cap.release()
     out.release()
     cv2.destroyAllWindows()
-    print("SUCCESS")
 
 
 def main():
     # args = parse_args()
 
     frames = video_to_frame()
+
     emotions_mtcnn = analyze_emotion(frames)
+
     df = make_emotion_df(emotions_mtcnn)
-    print(df)
+
     rec_image_list = add_emotion_on_frame(emotions_mtcnn, df)
+
     frame_to_video(rec_image_list)
 
 
