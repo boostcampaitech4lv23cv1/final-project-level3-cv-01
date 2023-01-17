@@ -7,10 +7,10 @@ from pytz import timezone
 from datetime import datetime
 import streamlit as st
 
-
-
+# Eye Tracking
 from gaze_tracking import GazeTracking
 gaze = GazeTracking()
+
 # st.session_state.start_recording = False
 # st.session_state.end_recording = False
 
@@ -90,12 +90,12 @@ if start_recording:
         elif gaze.is_center():
             text = "Looking center"
 
-        cv2.putText(frame, text, (90, 100), cv2.FONT_HERSHEY_DUPLEX, 3, (0, 0, 255), 2)
+        cv2.putText(frame, text, (90, 100), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
 
         left_pupil = gaze.pupil_left_coords()
         right_pupil = gaze.pupil_right_coords()
-        cv2.putText(frame, "Left pupil:  " + str(left_pupil), (90, 300), cv2.FONT_HERSHEY_DUPLEX, 3, (0, 0, 255), 1)
-        cv2.putText(frame, "Right pupil: " + str(right_pupil), (90, 500), cv2.FONT_HERSHEY_DUPLEX, 3, (0, 0, 255), 1)
+        cv2.putText(frame, "Left pupil:  " + str(left_pupil), (90, 300), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 1)
+        cv2.putText(frame, "Right pupil: " + str(right_pupil), (90, 500), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 1)
 
 
 
