@@ -5,6 +5,8 @@ import time
 import tempfile
 from pytz import timezone
 from datetime import datetime
+from deepface import DeepFace
+
 import streamlit as st
 
 # st.session_state.start_recording = False
@@ -68,6 +70,9 @@ if start_recording:
     start = time.time()
     timer = st.sidebar.empty()
     num_frames = 0
+    models = {}
+    models["emotion"] = DeepFace.build_model("Emotion")
+    models["gender"] = DeepFace.build_model("Gender")
     while video.isOpened() and start_recording and not end_recording:
         ret, frame = video.read()
 
@@ -77,10 +82,29 @@ if start_recording:
         if ret and sec//60<number:
             num_frames += 1
 
-            stframe.image(frame,channels='BGR', use_column_width=True)
+            
+            emotions_mtcnn = DeepFace.analyze(
+                img_path=frame,
+                actions=("gender", "emotion"),
+                models=models,
+                enforce_detection=False,
+                detector_backend="mtcnn",
+            )
+            dominant_emotion = emotions_mtcnn['dominant_emotion']
+            region = emotions_mtcnn['region']
+            rec = (region['x'],region['y'],region['w'],region['h'])
+            pth = cv2.imread(frame)
+            x = rec[0]
+            y = rec[1]-10
+            pos = (x,y)           
+            rec_image = cv2.rectangle(pth, rec,(0, 255, 0),thickness =4)
+            rec_image= cv2.putText(rec_image, dominant_emotion, pos,cv2.FONT_HERSHEY_SIMPLEX, 2, (36,255,12), 2) 
+            
+            
+            stframe.image(rec_image,channels='BGR', use_column_width=True)
 
             if start_recording:
-                out.write(frame)
+                out.write(rec_image)
             
             cv2.waitKey(1)
 
