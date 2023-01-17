@@ -167,3 +167,7 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# db
+**/db
+**/db/**
