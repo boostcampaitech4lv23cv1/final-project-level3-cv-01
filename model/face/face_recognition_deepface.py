@@ -2,6 +2,7 @@ from deepface import DeepFace
 import cv2
 import matplotlib.pyplot as plt
 import glob
+import os
 import csv
 import pandas as pd
 import argparse
@@ -24,7 +25,10 @@ def parse_args():
     return args
 
 
-def video_to_frame():
+def video_to_frame(VIDEO_PATH, SAVED_DIR='./db/frames'):
+
+    if not os.path.exists(SAVED_DIR):
+        os.makedirs(SAVED_DIR)
 
     cap = cv2.VideoCapture(VIDEO_PATH)
     count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
@@ -35,7 +39,7 @@ def video_to_frame():
 
         if not ret:  # 새로운 프레임을 못받아 왔을 때 braek
             break
-        if int(cap.get(1)) % int(fps / 10) == 0:
+        if int(cap.get(1)) % int(fps) == 0:
             cv2.imwrite(SAVED_DIR + "/frame%d.jpg" % count, frame)
             print("Saved frame number : ", str(int(cap.get(1))))
             count += 1
