@@ -36,7 +36,7 @@ if start_recording:
     st.markdown('**질문** : 1분 자기 소개를 해주세요')
     stframe = st.empty()
     with st.spinner('Get Ready for Camera'):
-        video = cv2.VideoCapture('/Users/yongcho/dev/yonggit/final-project-level3-cv-01/aa.mov')
+        video = cv2.VideoCapture(0)
 
         #Load Web Camera
         if not (video.isOpened()):
