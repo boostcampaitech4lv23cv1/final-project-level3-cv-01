@@ -82,11 +82,11 @@ if start_recording:
         text = ""
 
         if gaze.is_right() or gaze.is_left() or gaze.is_up() or gaze.is_down():
-            text = "어디보냐?"
+            text = "out of sight"
         elif gaze.is_center():
             text = "Center"
         else:
-            text = "못잡겠다"
+            text = "molu"
 
         cv2.putText(frame, text, (90, 100), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
 
