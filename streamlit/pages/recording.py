@@ -81,14 +81,16 @@ if start_recording:
         frame = gaze.annotated_frame()
         text = ""
 
-        if gaze.is_blinking():
-            text = "Blinking"
-        elif gaze.is_right():
-            text = "Looking right"
+        if gaze.is_right():
+            text = "Right"
         elif gaze.is_left():
-            text = "Looking left"
+            text = "Left"
+        elif gaze.is_up():
+            text = "Up"
+        elif gaze.is_down():
+            text = "Down"
         elif gaze.is_center():
-            text = "Looking center"
+            text = "Center"
 
         cv2.putText(frame, text, (90, 100), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
 
