@@ -4,7 +4,7 @@ import cv2
 import dlib
 from .eye import Eye
 from .calibration import Calibration
-
+import pandas as pd
 
 class GazeTracking(object):
     """
@@ -68,6 +68,8 @@ class GazeTracking(object):
             x = self.eye_left.origin[0] + self.eye_left.pupil.x
             y = self.eye_left.origin[1] + self.eye_left.pupil.y
             return (x, y)
+        else:
+            return (0,0)
 
     def pupil_right_coords(self):
         """Returns the coordinates of the right pupil"""
@@ -75,7 +77,8 @@ class GazeTracking(object):
             x = self.eye_right.origin[0] + self.eye_right.pupil.x
             y = self.eye_right.origin[1] + self.eye_right.pupil.y
             return (x, y)
-
+        else:
+            return (0,0)
     def horizontal_ratio(self):
         """Returns a number between 0.0 and 1.0 that indicates the
         horizontal direction of the gaze. The extreme right is 0.0,
@@ -137,3 +140,39 @@ class GazeTracking(object):
             cv2.line(frame, (x_right, y_right - 5), (x_right, y_right + 5), color)
 
         return frame
+
+    def analyze_eye(self, frames):
+        """analyze eye tracking used in fastapi
+        """
+        ret = []
+        left = []
+        right = []
+        
+        for frame in frames:
+            self.refresh(frame)
+            # self.annotated_frame()
+            if self.is_right() or self.is_left() or self.is_up() or self.is_down():
+                text = "Side"
+            elif self.is_center():
+                text = "Center"
+            else:
+                text = "None"
+            
+            # if None, return (0,0)
+            left_pupil = self.pupil_left_coords()
+            right_pupil = self.pupil_right_coords()
+            
+            ret.append(text)
+            left.append(left_pupil)
+            right.append(right_pupil)
+        
+        df = pd.DataFrame(
+        {
+            "tracking": ret,
+            "left": left,
+            "right": right
+        }
+        )
+
+        return df
+            

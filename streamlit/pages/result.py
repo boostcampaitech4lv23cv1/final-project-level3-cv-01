@@ -4,6 +4,7 @@ import os
 import requests
 import pandas as pd
 
+BACKEND_EYE = 'http://127.0.0.1:8000/eye_tracking'
 BACKEND_FACE = 'http://127.0.0.1:8000/face_emotion'
 
 st.title('HEY-I')
@@ -32,9 +33,15 @@ if 'confirm_video' in st.session_state.keys():
                 r = requests.post(
                     BACKEND_FACE, json=input_json
                 )
+                r2 = requests.post(
+                    BACKEND_EYE, json=input_json
+                )
             
             result = pd.read_json(r.text, orient = 'records')
+            result2 = pd.read_json(r2.text, orient = 'records')
+            
             st.dataframe(result)
+            st.dataframe(result2)
 
     else:
         st.subheader('면접 영상이 제대로 저장되지 않았습니다. 다시 면접 영상을 녹화해주세요.')
