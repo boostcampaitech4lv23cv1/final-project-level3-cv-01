@@ -7,6 +7,10 @@ from pytz import timezone
 from datetime import datetime
 import streamlit as st
 
+
+
+from gaze_tracking import GazeTracking
+gaze = GazeTracking()
 # st.session_state.start_recording = False
 # st.session_state.end_recording = False
 
@@ -32,7 +36,7 @@ if start_recording:
     st.markdown('**질문** : 1분 자기 소개를 해주세요')
     stframe = st.empty()
     with st.spinner('Get Ready for Camera'):
-        video = cv2.VideoCapture(0)
+        video = cv2.VideoCapture('/Users/yongcho/dev/yonggit/final-project-level3-cv-01/aa.mov')
 
         #Load Web Camera
         if not (video.isOpened()):
@@ -70,6 +74,30 @@ if start_recording:
     num_frames = 0
     while video.isOpened() and start_recording and not end_recording:
         ret, frame = video.read()
+
+        ### eye tracking ###
+        gaze.refresh(frame)
+        
+        frame = gaze.annotated_frame()
+        text = ""
+
+        if gaze.is_blinking():
+            text = "Blinking"
+        elif gaze.is_right():
+            text = "Looking right"
+        elif gaze.is_left():
+            text = "Looking left"
+        elif gaze.is_center():
+            text = "Looking center"
+
+        cv2.putText(frame, text, (90, 100), cv2.FONT_HERSHEY_DUPLEX, 3, (0, 0, 255), 2)
+
+        left_pupil = gaze.pupil_left_coords()
+        right_pupil = gaze.pupil_right_coords()
+        cv2.putText(frame, "Left pupil:  " + str(left_pupil), (90, 300), cv2.FONT_HERSHEY_DUPLEX, 3, (0, 0, 255), 1)
+        cv2.putText(frame, "Right pupil: " + str(right_pupil), (90, 500), cv2.FONT_HERSHEY_DUPLEX, 3, (0, 0, 255), 1)
+
+
 
         sec = round(time.time() - start)
         timer.metric("Countdown", f"{sec//60:02d}:{sec%60:02d}")
