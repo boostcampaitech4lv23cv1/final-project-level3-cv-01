@@ -108,3 +108,7 @@ if 'video_dir' in st.session_state.keys():
         check = st.button('Check Video')
         if check:
             st.video(video_bytes)
+
+            # 분석할 영상 결정
+            st.write('이 영상으로 분석을 진행할까요?')
+            check = st.button('Comfirm')
