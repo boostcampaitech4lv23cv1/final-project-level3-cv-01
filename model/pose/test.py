@@ -2,7 +2,6 @@ import mediapipe as mp  # Import mediapipe
 import cv2  # Import opencv
 
 import numpy as np
-import time
 from datetime import datetime
 
 
@@ -23,22 +22,10 @@ def calculate_angle(a, b):
 
 
 def run():
-    cap = cv2.VideoCapture("./mhchoi.mp4")
+    cap = cv2.VideoCapture("./db/output_230117_145243.mp4")
 
     anomaly = {"shoulder": [], "hand": []}
     shoulder_coordinates = {"left": [], "right": []}
-    hand_coordinates = {}
-
-    features = [
-        "left_wrist",
-        "left_pinky",
-        "left_index",
-        "left_thumb",
-        "right_wrist",
-        "right_pinky",
-        "right_index",
-        "right_thumb",
-    ]
 
     # Initiate holistic model
     with mp_holistic.Holistic(
@@ -62,13 +49,7 @@ def run():
             image.flags.writeable = True
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-            # # 1. Draw face landmarks
-            # mp_drawing.draw_landmarks(image, results.face_landmarks, mp_holistic.FACEMESH_CONTOURS,
-            #                         mp_drawing.DrawingSpec(color=(80,110,10), thickness=1, circle_radius=1),
-            #                         mp_drawing.DrawingSpec(color=(80,256,121), thickness=1, circle_radius=1)
-            #                         )
-
-            # 2. Right hand
+            # Right hand
             mp_drawing.draw_landmarks(
                 image,
                 results.right_hand_landmarks,
@@ -81,7 +62,7 @@ def run():
                 ),
             )
 
-            # 3. Left Hand
+            # Left Hand
             mp_drawing.draw_landmarks(
                 image,
                 results.left_hand_landmarks,
@@ -94,7 +75,7 @@ def run():
                 ),
             )
 
-            # 4. Pose Detections
+            # Pose Detections
             mp_drawing.draw_landmarks(
                 image,
                 results.pose_landmarks,
