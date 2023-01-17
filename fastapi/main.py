@@ -15,7 +15,7 @@ app = FastAPI(
 # Bytes 파일로 받을지 str로 받을지 결정해야 함. 우선은 str로 받는 버전
 class InferenceFace(BaseModel):
     VIDEO_PATH: str
-    # SAVED_DIR: Optional[str] = None
+    SAVED_DIR: str
 
 @app.get("/")
 def base():
@@ -24,8 +24,8 @@ def base():
 @app.post("/face_emotion")
 def get_emotion_df(inp: InferenceFace):
     VIDEO_PATH = inp.VIDEO_PATH
-    # SAVED_DIR = inp.SAVED_DIR
-    frames = fr.video_to_frame(VIDEO_PATH)
+    SAVED_DIR = inp.SAVED_DIR
+    frames = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
     emotions_mtcnn = fr.analyze_emotion(frames)
     df = fr.make_emotion_df(emotions_mtcnn)
     df_json = df.to_json(orient='records')

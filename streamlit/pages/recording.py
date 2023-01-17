@@ -104,11 +104,14 @@ if 'video_dir' in st.session_state.keys():
         # print(st.session_state.video_dir)
         video_file = open(st.session_state.video_dir, 'rb')
         video_bytes = video_file.read()
-        st.write('가장 최근 녹화된 영상입니다. 이 영상으로 업로드 할 것인지 결정해주세요')
-        check = st.button('Check Video')
+        st.write('가장 최근 녹화된 영상을 확인하시겠습니까?')
+        check = st.checkbox('Check Video')
         if check:
-            st.video(video_bytes)
+            with st.expander('가장 최근 녹화된 영상입니다. 이 영상으로 업로드 할 것인지 결정해주세요'):
+                st.video(video_bytes)
 
-            # 분석할 영상 결정
-            st.write('이 영상으로 분석을 진행할까요?')
-            check = st.button('Comfirm')
+                # 분석할 영상 결정
+                st.write('이 영상으로 분석을 진행할까요?')
+                confirm = st.button('Comfirm')
+                if confirm:
+                    st.session_state.confirm_video = st.session_state.video_dir
