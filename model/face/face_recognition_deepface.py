@@ -19,6 +19,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Analyze emotion and Remake Video")
     parser.add_argument("--video_path", help="video path to analyze")
     parser.add_argument("--saved_dir", help="dir to save frame")
+    parser.add_argument("--new_video_name", help="video name to save")
     args = parser.parse_args()
     return args
 
@@ -169,7 +170,8 @@ def main():
     emotions_mtcnn = analyze_emotion(frames)
 
     df = make_emotion_df(emotions_mtcnn)
-
+    
+    df.to_csv(f"{NEW_VIDEO_NAME}")
     rec_image_list = add_emotion_on_frame(emotions_mtcnn, df)
 
     frame_to_video(rec_image_list)
