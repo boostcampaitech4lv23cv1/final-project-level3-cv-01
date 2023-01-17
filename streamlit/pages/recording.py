@@ -81,16 +81,12 @@ if start_recording:
         frame = gaze.annotated_frame()
         text = ""
 
-        if gaze.is_right():
-            text = "Right"
-        elif gaze.is_left():
-            text = "Left"
-        elif gaze.is_up():
-            text = "Up"
-        elif gaze.is_down():
-            text = "Down"
+        if gaze.is_right() or gaze.is_left() or gaze.is_up() or gaze.is_down():
+            text = "어디보냐?"
         elif gaze.is_center():
             text = "Center"
+        else:
+            text = "못잡겠다"
 
         cv2.putText(frame, text, (90, 100), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
 
