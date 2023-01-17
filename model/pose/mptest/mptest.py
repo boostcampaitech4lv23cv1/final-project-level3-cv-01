@@ -1,4 +1,4 @@
-from model.pose.test import run
+from ..test import run
 
 if __name__ == "__main__":
     run()

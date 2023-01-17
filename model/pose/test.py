@@ -1,5 +1,6 @@
 import mediapipe as mp  # Import mediapipe
 import cv2  # Import opencv
+import os
 
 import numpy as np
 from datetime import datetime
@@ -22,7 +23,8 @@ def calculate_angle(a, b):
 
 
 def run():
-    cap = cv2.VideoCapture("./db/output_230117_145243.mp4")
+    videos = os.listdir("./db")
+    cap = cv2.VideoCapture(f"./db/{videos[-1]}")
 
     anomaly = {"shoulder": [], "hand": []}
     shoulder_coordinates = {"left": [], "right": []}
