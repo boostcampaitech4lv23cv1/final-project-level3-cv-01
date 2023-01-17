@@ -24,13 +24,28 @@ def calculate_angle(a, b):
 
 def run():
     cap = cv2.VideoCapture("./mhchoi.mp4")
+
     anomaly = {"shoulder": [], "hand": []}
+    shoulder_coordinates = {"left": [], "right": []}
+    hand_coordinates = {}
+
+    features = [
+        "left_wrist",
+        "left_pinky",
+        "left_index",
+        "left_thumb",
+        "right_wrist",
+        "right_pinky",
+        "right_index",
+        "right_thumb",
+    ]
 
     # Initiate holistic model
     with mp_holistic.Holistic(
         min_detection_confidence=0.5, min_tracking_confidence=0.5
     ) as holistic:
         start_time = datetime.now()
+        print(start_time)
 
         while cap.isOpened():
             ret, frame = cap.read()
@@ -47,7 +62,13 @@ def run():
             image.flags.writeable = True
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-            # Right hand
+            # # 1. Draw face landmarks
+            # mp_drawing.draw_landmarks(image, results.face_landmarks, mp_holistic.FACEMESH_CONTOURS,
+            #                         mp_drawing.DrawingSpec(color=(80,110,10), thickness=1, circle_radius=1),
+            #                         mp_drawing.DrawingSpec(color=(80,256,121), thickness=1, circle_radius=1)
+            #                         )
+
+            # 2. Right hand
             mp_drawing.draw_landmarks(
                 image,
                 results.right_hand_landmarks,
@@ -60,7 +81,7 @@ def run():
                 ),
             )
 
-            # Left Hand
+            # 3. Left Hand
             mp_drawing.draw_landmarks(
                 image,
                 results.left_hand_landmarks,
@@ -73,7 +94,7 @@ def run():
                 ),
             )
 
-            # Pose Detections
+            # 4. Pose Detections
             mp_drawing.draw_landmarks(
                 image,
                 results.pose_landmarks,
@@ -87,6 +108,8 @@ def run():
             )
             # Export coordinates
             try:
+                current_time = datetime.now()
+                target_time = current_time - start_time
                 landmarks = results.pose_landmarks.landmark
 
                 # Get shoulder coordinates
@@ -94,24 +117,34 @@ def run():
                     landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER].x,
                     landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER].y,
                 ]
+                shoulder_coordinates["left"].append(
+                    (f"{target_time.total_seconds():.3f}초", left_shoulder)
+                )
                 right_shoulder = [
                     landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER].x,
                     landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER].y,
                 ]
+                shoulder_coordinates["right"].append(
+                    (f"{target_time.total_seconds():.3f}초", right_shoulder)
+                )
 
                 # Calculate shoulder angle
                 angle = calculate_angle(left_shoulder, right_shoulder)
-                if angle <= 170:  # 기준 정해야함
-                    anomaly["shoulder"].append(time.time())
+                if angle <= 170 or angle >= 190:  # 기준 정해야함
+                    anomaly["shoulder"].append((target_time, datetime.now()))
                 else:
-                    shoulder_seconds = anomaly["shoulder"][-1] - anomaly["shoulder"][0]
+                    shoulder_seconds = (
+                        anomaly["shoulder"][-1][1] - anomaly["shoulder"][0][1]
+                    ).total_seconds()
+                    shoulder_anomaly_start = anomaly["shoulder"][0][0].total_seconds()
+                    shoulder_anomaly_end = anomaly["shoulder"][-1][0].total_seconds()
                     if shoulder_seconds >= 1e-3:
-                        print(f"{shoulder_seconds:.3f}초 동안 자세가 좋지 않았습니다.")
+                        print(
+                            f"{shoulder_anomaly_start:.3f}초 부터 {shoulder_anomaly_end:.3f}초 까지 {shoulder_seconds:.3f}초 동안 자세가 좋지 않았습니다."
+                        )
                     anomaly["shoulder"] = []
 
                 if results.left_hand_landmarks or results.right_hand_landmarks:
-                    current_time = datetime.now()
-                    target_time = current_time - start_time
                     print(f"{target_time.total_seconds():.3f}초에 손이 나왔습니다.")
 
             except:
