@@ -18,6 +18,8 @@ class GazeTracking(object):
         self.eye_left = None
         self.eye_right = None
         self.calibration = Calibration()
+        self.VIDEO_PATH = ""
+        self.SAVED_DIR = ""
 
         # _face_detector is used to detect faces
         self._face_detector = dlib.get_frontal_face_detector()
@@ -147,9 +149,10 @@ class GazeTracking(object):
         ret = []
         left = []
         right = []
+        anno_frames = []
         
         for frame in frames:
-            self.refresh(frame)
+            
             # self.annotated_frame()
             if self.is_right() or self.is_left() or self.is_up() or self.is_down():
                 text = "Side"
@@ -165,7 +168,11 @@ class GazeTracking(object):
             ret.append(text)
             left.append(left_pupil)
             right.append(right_pupil)
-        
+
+            # annotation
+            anno_frame = self.get_annotated_frame(frame, text, left_pupil, right_pupil)
+            anno_frames.append(anno_frame)
+                
         df = pd.DataFrame(
         {
             "tracking": ret,
@@ -174,5 +181,41 @@ class GazeTracking(object):
         }
         )
 
-        return df
-            
+        return df, anno_frames
+    
+    def get_annotated_frame(self, frame, text, left_pupil, right_pupil):
+        self.refresh(frame)
+        frame = self.annotated_frame()
+        
+        if text == 'None':
+            cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_TRIPLEX, 1.6, (0, 0, 255), 3)
+            cv2.putText(frame, "Left:  " + str(left_pupil), (90, 130), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (0, 0, 255), 2)
+            cv2.putText(frame, "Right: " + str(right_pupil), (90, 165), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (0, 0, 255), 2)
+        
+        else:
+            cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_TRIPLEX, 1.6, (0, 255, 0), 3)
+            cv2.putText(frame, "Left:  " + str(left_pupil), (90, 130), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (0, 255, 0), 2)
+            cv2.putText(frame, "Right: " + str(right_pupil), (90, 165), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (0, 255, 0), 2)
+        
+        return frame
+    
+    def frame_to_video(self, rec_image_list):
+        cap = cv2.VideoCapture(self.VIDEO_PATH)
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+
+        fourcc = cv2.VideoWriter_fourcc("m", "p", "4", "v")
+
+        out = cv2.VideoWriter(f'./db/output{self.SAVED_DIR}.mp4', fourcc, 10, (width, height))
+        
+        for rec_frame in rec_image_list:
+            out.write(rec_frame)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+
+        cap.release()
+        out.release()
+        cv2.destroyAllWindows()
+

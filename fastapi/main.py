@@ -40,9 +40,11 @@ def get_eye_df(inp: InferenceFace):
     VIDEO_PATH = inp.VIDEO_PATH
     SAVED_DIR = inp.SAVED_DIR
     frames = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
-    df = gaze.analyze_eye(frames)
+    df, anno_frames = gaze.analyze_eye(frames)
     df_json = df.to_json(orient='records')
     df_response = JSONResponse(json.loads(df_json))
+    
+    gaze.frame_to_video(anno_frames)
     return df_response
 
 
