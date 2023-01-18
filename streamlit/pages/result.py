@@ -5,6 +5,7 @@ import requests
 import pandas as pd
 
 BACKEND_FACE = 'http://127.0.0.1:8000/face_emotion'
+BACKEND_POSE = 'http://127.0.0.1:8000/pose_estimation'
 
 st.title('HEY-I')
 
@@ -32,7 +33,7 @@ if 'confirm_video' in st.session_state.keys():
                 r = requests.post(
                     BACKEND_FACE, json=input_json
                 )
-            
+                r2 = requests.post(BACKEND_POSE, input_json)
             result = pd.read_json(r.text, orient = 'records')
             st.dataframe(result)
 

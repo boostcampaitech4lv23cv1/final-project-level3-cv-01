@@ -21,10 +21,9 @@ def calculate_angle(a, b):
 
     return angle
 
-
-def run():
-    videos = os.listdir("./db")
-    cap = cv2.VideoCapture(f"./db/{videos[-1]}")
+VIDEO_PATH = os.path.join('./db',os.listdir('./db')[-1])
+def run(video_path):
+    cap = cv2.VideoCapture(video_path)
 
     anomaly = {"shoulder": [], "hand": []}
     shoulder_coordinates = {"left": [], "right": []}
@@ -147,4 +146,4 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    run(VIDEO_PATH)

@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 sys.path.append(os.getcwd())
 import model.face.face_recognition_deepface as fr
+from model.pose import pose_with_mediapipe as pwm
 
 app = FastAPI(
     title='HEY-I',
@@ -31,6 +32,11 @@ def get_emotion_df(inp: InferenceFace):
     df_json = df.to_json(orient='records')
     df_response = JSONResponse(json.loads(df_json))
     return df_response
+
+@app.post("/pose_estimation")
+def get_pose_results(inp: InferenceFace):
+    VIDEO_PATH = inp.VIDEO_PATH
+    pwm.run(VIDEO_PATH)
 
 # if __name__ == '__main__':
 #     uvicorn.run('FastAPI.main:app', host='127.0.0.1', port=8000, reload=True)
