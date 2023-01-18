@@ -1,10 +1,11 @@
 import mediapipe as mp  # Import mediapipe
 import cv2  # Import opencv
 import os
+import json
 
 import numpy as np
+import pandas as pd
 from datetime import datetime
-
 
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
@@ -26,7 +27,8 @@ def run(video_path):
     cap = cv2.VideoCapture(video_path)
 
     anomaly = {"shoulder": [], "hand": []}
-    to_give = {"shoulder":[], "hand":[]}
+    shoulder_components={"start":[],"end":[],"elapsed":[]}
+    hand_components={"time":[]}
 
     # Initiate holistic model
     with mp_holistic.Holistic(
@@ -116,11 +118,13 @@ def run(video_path):
                     shoulder_anomaly_start = anomaly["shoulder"][0][0].total_seconds()
                     shoulder_anomaly_end = anomaly["shoulder"][-1][0].total_seconds()
                     if shoulder_seconds >= 1e-3:
-                        to_give["shoulder"].append(f"{shoulder_anomaly_start:.3f}초 부터 {shoulder_anomaly_end:.3f}초 까지 {shoulder_seconds:.3f}초 동안 자세가 좋지 않았습니다.")
+                        shoulder_components["start"].append(shoulder_anomaly_start)
+                        shoulder_components["end"].append(shoulder_anomaly_end)
+                        shoulder_components["elapsed"].append(shoulder_seconds)
                     anomaly["shoulder"] = []
 
                 if results.left_hand_landmarks or results.right_hand_landmarks:
-                    to_give["hand"].append(f"{target_time.total_seconds():.3f}초에 손이 나왔습니다.")
+                    hand_components["time"].append(target_time.total_seconds())
 
             except:
                 pass
@@ -136,9 +140,14 @@ def run(video_path):
     cv2.waitKey(1)
     cv2.waitKey(1)
     cv2.waitKey(1)
-    return to_give
+    return shoulder_components, hand_components
+
+def dict_to_json(d:dict):
+    d_df = pd.DataFrame(d)
+    d_json = d_df.to_json(orient='records')
+    return d_json
 
 if __name__ == "__main__":
-    info: dict = run(VIDEO_PATH) 
-    print(info)
+    shoulder_info, hand_info = run(VIDEO_PATH) 
+    print(shoulder_info, hand_info)
     
