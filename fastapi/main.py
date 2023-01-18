@@ -18,6 +18,7 @@ class InferenceFace(BaseModel):
     VIDEO_PATH: str
     SAVED_DIR: str
 
+
 @app.get("/")
 def base():
     return {"hello" : "world"}
@@ -36,7 +37,10 @@ def get_emotion_df(inp: InferenceFace):
 @app.post("/pose_estimation")
 def get_pose_results(inp: InferenceFace):
     VIDEO_PATH = inp.VIDEO_PATH
-    pwm.run(VIDEO_PATH)
+    shoulder_info,hand_info = pwm.run(VIDEO_PATH)
+    shoulder_json,hand_json = pwm.dict_to_json(shoulder_info),pwm.dict_to_json(hand_info)
+    shoulder_response,hand_response = JSONResponse(json.loads(shoulder_json)),JSONResponse(json.loads(hand_json))
+    return shoulder_response,hand_response
 
 # if __name__ == '__main__':
-#     uvicorn.run('FastAPI.main:app', host='127.0.0.1', port=8000, reload=True)
+#     uvicorn.run('FastAPI.main:app', host='0.0.0.0', port=8000, reload=True)
