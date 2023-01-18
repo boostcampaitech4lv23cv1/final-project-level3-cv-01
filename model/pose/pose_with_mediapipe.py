@@ -26,7 +26,7 @@ def run(video_path):
     cap = cv2.VideoCapture(video_path)
 
     anomaly = {"shoulder": [], "hand": []}
-    shoulder_coordinates = {"left": [], "right": []}
+    to_give = {"shoulder":[], "hand":[]}
 
     # Initiate holistic model
     with mp_holistic.Holistic(
@@ -99,20 +99,15 @@ def run(video_path):
                     landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER].x,
                     landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER].y,
                 ]
-                shoulder_coordinates["left"].append(
-                    (f"{target_time.total_seconds():.3f}초", left_shoulder)
-                )
                 right_shoulder = [
                     landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER].x,
                     landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER].y,
                 ]
-                shoulder_coordinates["right"].append(
-                    (f"{target_time.total_seconds():.3f}초", right_shoulder)
-                )
+
 
                 # Calculate shoulder angle
                 angle = calculate_angle(left_shoulder, right_shoulder)
-                if angle <= 170 or angle >= 190:  # 기준 정해야함
+                if angle <= 170 :  # 기준 정해야함
                     anomaly["shoulder"].append((target_time, datetime.now()))
                 else:
                     shoulder_seconds = (
@@ -121,13 +116,11 @@ def run(video_path):
                     shoulder_anomaly_start = anomaly["shoulder"][0][0].total_seconds()
                     shoulder_anomaly_end = anomaly["shoulder"][-1][0].total_seconds()
                     if shoulder_seconds >= 1e-3:
-                        print(
-                            f"{shoulder_anomaly_start:.3f}초 부터 {shoulder_anomaly_end:.3f}초 까지 {shoulder_seconds:.3f}초 동안 자세가 좋지 않았습니다."
-                        )
+                        to_give["shoulder"].append(f"{shoulder_anomaly_start:.3f}초 부터 {shoulder_anomaly_end:.3f}초 까지 {shoulder_seconds:.3f}초 동안 자세가 좋지 않았습니다.")
                     anomaly["shoulder"] = []
 
                 if results.left_hand_landmarks or results.right_hand_landmarks:
-                    print(f"{target_time.total_seconds():.3f}초에 손이 나왔습니다.")
+                    to_give["hand"].append(f"{target_time.total_seconds():.3f}초에 손이 나왔습니다.")
 
             except:
                 pass
@@ -143,7 +136,9 @@ def run(video_path):
     cv2.waitKey(1)
     cv2.waitKey(1)
     cv2.waitKey(1)
-
+    return to_give
 
 if __name__ == "__main__":
-    run(VIDEO_PATH)
+    info: dict = run(VIDEO_PATH) 
+    print(info)
+    

@@ -36,7 +36,7 @@ if start_recording:
 
         #Load Web Camera
         if not (video.isOpened()):
-            print("File isn't opend!!")
+            print("File isn't opened!!")
 
         #Set Video File Property
         w = round(video.get(cv2.CAP_PROP_FRAME_WIDTH))

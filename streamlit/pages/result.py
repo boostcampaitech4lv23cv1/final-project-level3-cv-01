@@ -29,14 +29,15 @@ if 'confirm_video' in st.session_state.keys():
                 'SAVED_DIR' : SAVED_DIR
             }
 
+
             with st.spinner('inferencing...'):
                 r = requests.post(
                     BACKEND_FACE, json=input_json
                 )
-                r2 = requests.post(BACKEND_POSE, input_json)
+                r3 = requests.post(BACKEND_POSE, json=input_json)
             result = pd.read_json(r.text, orient = 'records')
             st.dataframe(result)
-
+            st.write(r3.text)
     else:
         st.subheader('면접 영상이 제대로 저장되지 않았습니다. 다시 면접 영상을 녹화해주세요.')
 else:
