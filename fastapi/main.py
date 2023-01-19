@@ -18,7 +18,6 @@ class InferenceFace(BaseModel):
     VIDEO_PATH: str
     SAVED_DIR: str
 
-
 @app.get("/")
 def base():
     return {"hello" : "world"}
@@ -34,13 +33,21 @@ def get_emotion_df(inp: InferenceFace):
     df_response = JSONResponse(json.loads(df_json))
     return df_response
 
-@app.post("/pose_estimation")
-def get_pose_results(inp: InferenceFace):
+@app.post("/shoulder_pose_estimation")
+def get_shoulder_results(inp: InferenceFace):
     VIDEO_PATH = inp.VIDEO_PATH
-    shoulder_info,hand_info = pwm.run(VIDEO_PATH)
-    shoulder_json,hand_json = pwm.dict_to_json(shoulder_info),pwm.dict_to_json(hand_info)
-    shoulder_response,hand_response = JSONResponse(json.loads(shoulder_json)),JSONResponse(json.loads(hand_json))
-    return shoulder_response,hand_response
+    shoulder_info, _ = pwm.run(VIDEO_PATH)
+    shoulder_json = pwm.dict_to_json(shoulder_info)
+    shoulder_response = JSONResponse(shoulder_json)
+    return shoulder_response
+
+@app.post("/hand_pose_estimation")
+def get_hand_results(inp: InferenceFace):
+    VIDEO_PATH = inp.VIDEO_PATH
+    _,hand_info = pwm.run(VIDEO_PATH)
+    hand_json = pwm.dict_to_json(hand_info)
+    hand_response = JSONResponse(hand_json)
+    return hand_response
 
 # if __name__ == '__main__':
 #     uvicorn.run('FastAPI.main:app', host='0.0.0.0', port=8000, reload=True)

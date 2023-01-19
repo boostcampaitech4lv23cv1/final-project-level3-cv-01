@@ -37,7 +37,7 @@ def run(video_path):
         start_time = datetime.now()
         print(start_time)
 
-        while cap.isOpened():
+        while cap:
             ret, frame = cap.read()
             if not ret:
                 break
@@ -146,8 +146,12 @@ def dict_to_json(d:dict):
     d_df = pd.DataFrame(d)
     d_json = d_df.to_json(orient='records')
     return d_json
+    
+def dict_to_df(d:dict):
+    return pd.DataFrame(d)
 
 if __name__ == "__main__":
     shoulder_info, hand_info = run(VIDEO_PATH) 
-    print(shoulder_info, hand_info)
-    
+    shoulder_json,hand_json = dict_to_json(shoulder_info), dict_to_json(hand_info)
+    # shoulder_response,hand_response = JSONResponse(json.loads(shoulder_json)),JSONResponse(json.loads(hand_json))
+    print(shoulder_json,hand_json)

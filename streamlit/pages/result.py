@@ -5,7 +5,8 @@ import requests
 import pandas as pd
 
 BACKEND_FACE = 'http://127.0.0.1:8000/face_emotion'
-BACKEND_POSE = 'http://127.0.0.1:8000/pose_estimation'
+BACKEND_POSE_SHOULDER = 'http://127.0.0.1:8000/shoulder_pose_estimation'
+BACKEND_POSE_HAND = 'http://127.0.0.1:8000/hand_pose_estimation'
 
 st.title('HEY-I')
 
@@ -34,10 +35,18 @@ if 'confirm_video' in st.session_state.keys():
                 r = requests.post(
                     BACKEND_FACE, json=input_json
                 )
-                r3 = requests.post(BACKEND_POSE, json=input_json)
+                r_shoulder = requests.post(BACKEND_POSE_SHOULDER, json=input_json)
+                r_hand = requests.post(BACKEND_POSE_HAND,json=input_json)
+
             result = pd.read_json(r.text, orient = 'records')
             st.dataframe(result)
-            st.write(r3.text)
+
+            shoulder_result = pd.read_json(r_shoulder.json(), orient='records')
+            st.dataframe(shoulder_result)
+
+            hand_result = pd.read_json(r_hand.json(),orient='records')
+            st.dataframe(hand_result)
+
     else:
         st.subheader('면접 영상이 제대로 저장되지 않았습니다. 다시 면접 영상을 녹화해주세요.')
 else:
