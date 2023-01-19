@@ -27,22 +27,25 @@ def run(video_path):
     cap = cv2.VideoCapture(video_path)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    cap.set(cv2.CAP_PROP_FPS,60)
-
-    fps = cap.get(cv2.CAP_PROP_FPS) 
+    # count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+    # cap.get(cv2.CAP_PROP_FPS) == 30
+    fps = 60
+    cap.set(cv2.CAP_PROP_FPS,fps)
     fourcc = cv2.VideoWriter_fourcc(*'vp80')
+    print(fps) 
 
     out = cv2.VideoWriter("./db/pose.webm", fourcc, fps, (width, height))
 
     anomaly = {"shoulder": [], "hand": []}
     shoulder_components={"start":[],"end":[],"elapsed":[]}
     hand_components={"time":[]}
-    start_time = datetime.now() 
 
     # Initiate holistic model
     with mp_holistic.Holistic(
         min_detection_confidence=0.5, min_tracking_confidence=0.5
     ) as holistic:
+        start_time = datetime.now()
+        print(start_time)
 
         while cap.isOpened():
             ret, frame = cap.read()
@@ -114,6 +117,14 @@ def run(video_path):
                     landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER].x,
                     landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER].y,
                 ]
+                left_wrist = [
+                    landmarks[mp_pose.PoseLandmark.LEFT_WRIST].x,
+                    landmarks[mp_pose.PoseLandmark.LEFT_WRIST].y,
+                ]
+                right_wrist = [
+                    landmarks[mp_pose.PoseLandmark.RIGHT_WRIST].x,
+                    landmarks[mp_pose.PoseLandmark.RIGHT_WRIST].y,
+                ]
 
 
                 # Calculate shoulder angle
@@ -132,7 +143,9 @@ def run(video_path):
                         shoulder_components["elapsed"].append(shoulder_seconds)
                     anomaly["shoulder"] = []
 
-                if results.left_hand_landmarks or results.right_hand_landmarks:
+                # if results.left_hand_landmarks or results.right_hand_landmarks:
+                #     hand_components["time"].append(target_time.total_seconds())
+                if left_wrist or right_wrist:
                     hand_components["time"].append(target_time.total_seconds())
 
             except:
