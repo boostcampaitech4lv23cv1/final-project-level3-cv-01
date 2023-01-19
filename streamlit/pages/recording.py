@@ -61,7 +61,7 @@ if start_recording:
             video.release()
             sys.exit()
 
-    end_recording = st.sidebar.button('End Recordinging')
+    end_recording = st.sidebar.button('End Recording')
     # end_recording = st.sidebar.button('End Recordinging', key='end_recording')
 
     #Load frame and Save it
