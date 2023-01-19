@@ -58,7 +58,7 @@ if 'confirm_video' in st.session_state.keys():
             with tab2:
                 st.header('Pose')
                 st.subheader('니 자세가 이렇다 삐딱하이 에픽하이')
-                result2 = pd.read_json(r2.text, orient = 'records')
+                st.dataframe(result2)
                 
 
 
