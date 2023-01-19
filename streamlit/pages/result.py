@@ -22,6 +22,7 @@ if 'confirm_video' in st.session_state.keys():
         
         inference = st.button('Inference')
         if inference:
+
             VIDEO_PATH = st.session_state.confirm_video
             SAVED_DIR = os.path.join(os.path.splitext(st.session_state.confirm_video)[0], 'frames')
 
@@ -59,6 +60,8 @@ if 'confirm_video' in st.session_state.keys():
                 st.subheader('니 자세가 이렇다 삐딱하이 에픽하이')
                 result2 = pd.read_json(r2.text, orient = 'records')
                 
+
+
             with tab3:
                 st.header('Eye')
                 st.subheader('동태눈깔 꼬라보노 보노보노')
