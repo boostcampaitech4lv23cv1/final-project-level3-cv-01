@@ -155,7 +155,7 @@ def frame_to_video(rec_image_list):
 
     fourcc = cv2.VideoWriter_fourcc("m", "p", "4", "v")
 
-    out = cv2.VideoWriter("fps_10.mp4", fourcc, 10, (width, height))
+    out = cv2.VideoWriter("fps_10.mp4", fourcc, fps, (width, height))
     for rec_frame in rec_image_list:
         out.write(rec_frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):

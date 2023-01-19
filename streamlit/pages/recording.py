@@ -44,7 +44,7 @@ if start_recording:
         framecount = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
         #video.set(cv2.CAP_PROP_FPS, 10) # fps 설정
         fps = video.get(cv2.CAP_PROP_FPS)
-        fourcc = cv2.VideoWriter_fourcc(*'avc1')
+        fourcc = cv2.VideoWriter_fourcc(*'vp80')
         # delay = 6
         print('fps:',fps)
         print('framecount:',framecount)
@@ -53,11 +53,11 @@ if start_recording:
         if not os.path.exists('./db'):
             os.makedirs('./db')
         start_time = datetime.now(timezone("Asia/Seoul")).strftime("_%y%m%d_%H%M%S")
-        video_dir = f'./db/output{start_time}.mp4'
+        video_dir = f'./db/output{start_time}.webm'
         st.session_state.video_dir = video_dir
         out = cv2.VideoWriter(video_dir, fourcc, fps, (w,h))
         if not (out.isOpened()):
-            print("File isn't opend!!")
+            print("File isn't opened!!")
             video.release()
             sys.exit()
 

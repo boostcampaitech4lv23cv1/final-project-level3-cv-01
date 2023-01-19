@@ -25,6 +25,14 @@ def calculate_angle(a, b):
 VIDEO_PATH = os.path.join('./db',os.listdir('./db')[-1])
 def run(video_path):
     cap = cv2.VideoCapture(video_path)
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    # count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+    fps = cap.get(cv2.CAP_PROP_FPS) 
+    fourcc = cv2.VideoWriter_fourcc(*'vp80')
+    print(fps) 
+
+    out = cv2.VideoWriter("./db/pose.webm", fourcc, fps, (width, height))
 
     anomaly = {"shoulder": [], "hand": []}
     shoulder_components={"start":[],"end":[],"elapsed":[]}
@@ -37,7 +45,7 @@ def run(video_path):
         start_time = datetime.now()
         print(start_time)
 
-        while cap:
+        while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
@@ -90,6 +98,8 @@ def run(video_path):
                     color=(245, 66, 230), thickness=2, circle_radius=2
                 ),
             )
+            out.write(image)
+
             # Export coordinates
             try:
                 current_time = datetime.now()
@@ -129,7 +139,9 @@ def run(video_path):
             except:
                 pass
 
+
             cv2.imshow("Video Feed", image)
+            
 
             if cv2.waitKey(10) & 0xFF == ord("q"):
                 break
@@ -142,13 +154,13 @@ def run(video_path):
     cv2.waitKey(1)
     return shoulder_components, hand_components
 
+
 def dict_to_json(d:dict):
     d_df = pd.DataFrame(d)
     d_json = d_df.to_json(orient='records')
     return d_json
     
-def dict_to_df(d:dict):
-    return pd.DataFrame(d)
+
 
 if __name__ == "__main__":
     shoulder_info, hand_info = run(VIDEO_PATH) 

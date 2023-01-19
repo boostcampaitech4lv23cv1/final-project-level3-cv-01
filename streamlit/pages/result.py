@@ -41,6 +41,11 @@ if 'confirm_video' in st.session_state.keys():
             result = pd.read_json(r.text, orient = 'records')
             st.dataframe(result)
 
+            # pose estimation
+            pose_video = open('./db/pose.webm','rb')
+            pose_video_bytes = pose_video.read()
+            st.video(pose_video_bytes)
+
             shoulder_result = pd.read_json(r_shoulder.json(), orient='records')
             st.dataframe(shoulder_result)
 
