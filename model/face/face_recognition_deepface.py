@@ -81,6 +81,8 @@ def make_emotion_df(emotions_mtcnn):
     surprise = []
     neutral = []
     lenoflist = len(emotions_mtcnn)
+    dominant_emotion = []
+
     for i in range(1, lenoflist + 1):
         tmp = "instance_" + str(i)
         angry.append(emotions_mtcnn[tmp]["emotion"]["angry"])
@@ -90,7 +92,7 @@ def make_emotion_df(emotions_mtcnn):
         sad.append(emotions_mtcnn[tmp]["emotion"]["sad"])
         surprise.append(emotions_mtcnn[tmp]["emotion"]["surprise"])
         neutral.append(emotions_mtcnn[tmp]["emotion"]["neutral"])
-
+        dominant_emotion.append((emotions_mtcnn[tmp]["dominant_emotion"]))
     df_mtcnn = pd.DataFrame(
         {
             "angry": angry,
@@ -100,13 +102,14 @@ def make_emotion_df(emotions_mtcnn):
             "sad": sad,
             "surprise": surprise,
             "neutral": neutral,
+            "dominant_emotion": dominant_emotion,
         }
     )
 
     return df_mtcnn
 
 
-def add_emotion_on_frame(emotions_mtcnn, df_mtcnn,saved_dir):
+def add_emotion_on_frame(emotions_mtcnn, df_mtcnn, saved_dir):
     len_of_df = len(df_mtcnn)
     text_of_rec = []
     for i in range(len_of_df):
@@ -148,16 +151,16 @@ def add_emotion_on_frame(emotions_mtcnn, df_mtcnn,saved_dir):
     return rec_image_list
 
 
-def frame_to_video(rec_image_list,video_path):
+def frame_to_video(rec_image_list, video_path):
     cap = cv2.VideoCapture(video_path)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = cap.get(cv2.CAP_PROP_FPS)
 
-    fourcc = cv2.VideoWriter_fourcc(*'vp80')
+    fourcc = cv2.VideoWriter_fourcc(*"vp80")
 
-    out = cv2.VideoWriter("./db/vp80.webm", fourcc, 4, (width, height))
+    out = cv2.VideoWriter("db/vp80.webm", fourcc, 4, (width, height))
     for rec_frame in rec_image_list:
         out.write(rec_frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -176,7 +179,7 @@ def main():
     emotions_mtcnn = analyze_emotion(frames)
 
     df = make_emotion_df(emotions_mtcnn)
-    
+
     df.to_csv(f"{NEW_VIDEO_NAME}")
     rec_image_list = add_emotion_on_frame(emotions_mtcnn, df)
 
