@@ -33,6 +33,10 @@ if 'confirm_video' in st.session_state.keys():
                     BACKEND_FACE, json=input_json
                 )
             
+            video_file = open('./db/vp80.webm', 'rb')
+            video_bytes = video_file.read()
+            st.video(video_bytes)
+        
             result = pd.read_json(r.text, orient = 'records')
             st.dataframe(result)
 
