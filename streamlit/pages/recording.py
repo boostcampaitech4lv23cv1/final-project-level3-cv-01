@@ -7,6 +7,7 @@ from pytz import timezone
 from datetime import datetime
 import streamlit as st
 
+
 # st.session_state.start_recording = False
 # st.session_state.end_recording = False
 
@@ -32,8 +33,8 @@ if start_recording:
     st.markdown('**질문** : 1분 자기 소개를 해주세요')
     stframe = st.empty()
     with st.spinner('Get Ready for Camera'):
+        #video = cv2.VideoCapture('/opt/ml/TEST_VIDEO/ka.mp4')
         video = cv2.VideoCapture(0)
-
         #Load Web Camera
         if not (video.isOpened()):
             print("File isn't opend!!")
@@ -44,7 +45,7 @@ if start_recording:
         framecount = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
         #video.set(cv2.CAP_PROP_FPS, 10) # fps 설정
         fps = video.get(cv2.CAP_PROP_FPS)
-        fourcc = cv2.VideoWriter_fourcc(*'avc1')
+        fourcc = cv2.VideoWriter_fourcc(*'vp80')
         # delay = 6
         print('fps:',fps)
         print('framecount:',framecount)
@@ -53,7 +54,7 @@ if start_recording:
         if not os.path.exists('./db'):
             os.makedirs('./db')
         start_time = datetime.now(timezone("Asia/Seoul")).strftime("_%y%m%d_%H%M%S")
-        video_dir = f'./db/output{start_time}.mp4'
+        video_dir = f'./db/output{start_time}.webm'
         st.session_state.video_dir = video_dir
         out = cv2.VideoWriter(video_dir, fourcc, fps, (w,h))
         if not (out.isOpened()):
@@ -61,7 +62,7 @@ if start_recording:
             video.release()
             sys.exit()
 
-    end_recording = st.sidebar.button('End Recordinging')
+    end_recording = st.sidebar.button('End Recording')
     # end_recording = st.sidebar.button('End Recordinging', key='end_recording')
 
     #Load frame and Save it

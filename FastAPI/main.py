@@ -28,6 +28,11 @@ def get_emotion_df(inp: InferenceFace):
     frames = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
     emotions_mtcnn = fr.analyze_emotion(frames)
     df = fr.make_emotion_df(emotions_mtcnn)
+    
+    rec_image_list =fr.add_emotion_on_frame(emotions_mtcnn,df,SAVED_DIR)
+
+    fr.frame_to_video(rec_image_list,VIDEO_PATH)
+    
     df_json = df.to_json(orient='records')
     df_response = JSONResponse(json.loads(df_json))
     return df_response
