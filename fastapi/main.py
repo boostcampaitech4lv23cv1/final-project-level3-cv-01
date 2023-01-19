@@ -36,7 +36,7 @@ def get_emotion_df(inp: InferenceFace):
 
 @app.post("/eye_tracking")
 def get_eye_df(inp: InferenceFace):
-    gaze = gt()
+    gaze = gt.GazeTracking()
     VIDEO_PATH = inp.VIDEO_PATH
     SAVED_DIR = inp.SAVED_DIR
     frames = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)

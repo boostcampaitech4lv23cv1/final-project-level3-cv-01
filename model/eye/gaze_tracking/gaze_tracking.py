@@ -183,7 +183,8 @@ class GazeTracking(object):
 
         return df, anno_frames
     
-    def get_annotated_frame(self, frame, text, left_pupil, right_pupil):
+    def get_annotated_frame(self, path, text, left_pupil, right_pupil):
+        frame = cv2.imread(path)
         self.refresh(frame)
         frame = self.annotated_frame()
         
