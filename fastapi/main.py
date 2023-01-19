@@ -27,7 +27,7 @@ def get_emotion_df(inp: InferenceFace):
     VIDEO_PATH = inp.VIDEO_PATH
     SAVED_DIR = inp.SAVED_DIR
     frames = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
-    emotions_mtcnn = fr.emotion(frames)
+    emotions_mtcnn = fr.analyze_emotion(frames)
     df = fr.make_emotion_df(emotions_mtcnn)
     df_json = df.to_json(orient='records')
     df_response = JSONResponse(json.loads(df_json))
