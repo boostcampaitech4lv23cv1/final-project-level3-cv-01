@@ -4,8 +4,8 @@ import os
 import requests
 import pandas as pd
 
-BACKEND_FACE = 'http://127.0.0.1:8000/face_emotion'
 BACKEND_EYE = 'http://127.0.0.1:8000/eye_tracking'
+BACKEND_FACE = 'http://127.0.0.1:8000/face_emotion'
 
 st.set_page_config(layout='wide')
 st.title('HEY-I')
@@ -22,24 +22,25 @@ if 'confirm_video' in st.session_state.keys():
         
         inference = st.button('Inference')
         if inference:
-            # VIDEO_PATH = st.session_state.confirm_video
-            # SAVED_DIR = os.path.join(os.path.splitext(st.session_state.confirm_video)[0], 'frames')
+            VIDEO_PATH = st.session_state.confirm_video
+            SAVED_DIR = os.path.join(os.path.splitext(st.session_state.confirm_video)[0], 'frames')
 
-            # input_json = {
-            #     'VIDEO_PATH' : VIDEO_PATH,
-            #     'SAVED_DIR' : SAVED_DIR
-            # }
+            input_json = {
+                'VIDEO_PATH' : VIDEO_PATH,
+                'SAVED_DIR' : SAVED_DIR
+            }
 
-            # with st.spinner('inferencing...'):
-            #     r = requests.post(
-            #         BACKEND_FACE, json=input_json
-            #     )
-            #     r2 = requests.post(
-            #         BACKEND_EYE, json=input_json
-            #     )
+            with st.spinner('inferencing...'):
+                r = requests.post(
+                    BACKEND_FACE, json=input_json
+                )
+                r2 = requests.post(
+                    BACKEND_EYE, json=input_json
+                )
             
-            # result = pd.read_json(r.text, orient = 'records')
-            # result2 = pd.read_json(r2.text, orient = 'records')
+            result = pd.read_json(r.text, orient = 'records')
+            result2 = pd.read_json(r2.text, orient = 'records')
+            
             with st.expander('영상 분석 결과 확인'):
                 video_file = open('db/output_230119_155322.mp4', 'rb')
                 video_bytes = video_file.read()
