@@ -25,7 +25,7 @@ def parse_args():
     return args
 
 
-def video_to_frame(VIDEO_PATH, SAVED_DIR='./db/frames'):
+def video_to_frame(VIDEO_PATH, SAVED_DIR="./db/frames"):
 
     if not os.path.exists(SAVED_DIR):
         os.makedirs(SAVED_DIR)
@@ -174,7 +174,7 @@ def main():
     emotions_mtcnn = analyze_emotion(frames)
 
     df = make_emotion_df(emotions_mtcnn)
-    
+
     df.to_csv(f"{NEW_VIDEO_NAME}")
     rec_image_list = add_emotion_on_frame(emotions_mtcnn, df)
 
