@@ -27,7 +27,7 @@ def run(video_path):
     cap = cv2.VideoCapture(video_path)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    cap.set(cv2.CAP_PROP_FPS,60)
+    cap.set(cv2.CAP_PROP_FPS,10)
 
     fps = cap.get(cv2.CAP_PROP_FPS) 
     fourcc = cv2.VideoWriter_fourcc(*'vp80')
@@ -139,7 +139,7 @@ def run(video_path):
                 pass
 
 
-            cv2.imshow("Video Feed", image)
+            # cv2.imshow("Video Feed", image)
             
 
             if cv2.waitKey(10) & 0xFF == ord("q"):
