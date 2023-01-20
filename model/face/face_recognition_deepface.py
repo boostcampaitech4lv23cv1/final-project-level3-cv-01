@@ -25,7 +25,7 @@ def parse_args():
     return args
 
 
-def video_to_frame(VIDEO_PATH, SAVED_DIR='./db/frames'):
+def video_to_frame(VIDEO_PATH, SAVED_DIR):
 
     if not os.path.exists(SAVED_DIR):
         os.makedirs(SAVED_DIR)
@@ -81,6 +81,8 @@ def make_emotion_df(emotions_mtcnn):
     surprise = []
     neutral = []
     lenoflist = len(emotions_mtcnn)
+    dominant_emotion = []
+
     for i in range(1, lenoflist + 1):
         tmp = "instance_" + str(i)
         angry.append(emotions_mtcnn[tmp]["emotion"]["angry"])
@@ -90,7 +92,7 @@ def make_emotion_df(emotions_mtcnn):
         sad.append(emotions_mtcnn[tmp]["emotion"]["sad"])
         surprise.append(emotions_mtcnn[tmp]["emotion"]["surprise"])
         neutral.append(emotions_mtcnn[tmp]["emotion"]["neutral"])
-
+        dominant_emotion.append((emotions_mtcnn[tmp]["dominant_emotion"]))
     df_mtcnn = pd.DataFrame(
         {
             "angry": angry,
@@ -100,13 +102,41 @@ def make_emotion_df(emotions_mtcnn):
             "sad": sad,
             "surprise": surprise,
             "neutral": neutral,
+            "dominant_emotion": dominant_emotion,
         }
     )
 
     return df_mtcnn
 
 
-def add_emotion_on_frame(emotions_mtcnn, df_mtcnn):
+def make_binary_df(emotions_mtcnn):
+    pos_emo = ["happy", "neutral"]
+    neg_emp = ["angry", "disgust", "fear", "sad", "surprise"]
+
+    positive = []
+    negative = []
+
+    for i in range(1, len(emotions_mtcnn) + 1):
+        tmp = "instance_" + str(i)
+        p = 0
+        n = 0
+        if emotions_mtcnn[tmp]["dominant_emotion"] in pos_emo:
+            p += emotions_mtcnn[tmp]["emotion"]["happy"]
+            p += emotions_mtcnn[tmp]["emotion"]["neutral"]
+
+        else:
+            n += emotions_mtcnn[tmp]["emotion"]["angry"]
+            n += emotions_mtcnn[tmp]["emotion"]["disgust"]
+            n += emotions_mtcnn[tmp]["emotion"]["fear"]
+            n += emotions_mtcnn[tmp]["emotion"]["sad"]
+            n += emotions_mtcnn[tmp]["emotion"]["surprise"]
+        positive.append(p)
+        negative.append(n)
+    df_binary = pd.DataFrame({"positive": positive, "negative": negative})
+    return df_binary
+
+
+def add_emotion_on_frame(emotions_mtcnn, df_mtcnn, saved_dir):
     len_of_df = len(df_mtcnn)
     text_of_rec = []
     for i in range(len_of_df):
@@ -123,8 +153,10 @@ def add_emotion_on_frame(emotions_mtcnn, df_mtcnn):
         tmp = "instance_" + str(i)
         region = emotions_mtcnn[tmp]["region"]
         regions.append(region)
-    images = glob.glob(f"{SAVED_DIR}/*.jpg")
+
+    images = glob.glob(f"{saved_dir}/*.jpg")
     images.sort()
+
     rec_image_list = []
     for idx, (region, i) in enumerate(zip(regions, images)):
         pth = cv2.imread(i)
@@ -146,16 +178,16 @@ def add_emotion_on_frame(emotions_mtcnn, df_mtcnn):
     return rec_image_list
 
 
-def frame_to_video(rec_image_list):
-    cap = cv2.VideoCapture(VIDEO_PATH)
+def frame_to_video(rec_image_list, video_path):
+    cap = cv2.VideoCapture(video_path)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = cap.get(cv2.CAP_PROP_FPS)
 
-    fourcc = cv2.VideoWriter_fourcc("m", "p", "4", "v")
+    fourcc = cv2.VideoWriter_fourcc(*"vp80")
 
-    out = cv2.VideoWriter("fps_10.mp4", fourcc, 10, (width, height))
+    out = cv2.VideoWriter("db/vp80.webm", fourcc, 4, (width, height))
     for rec_frame in rec_image_list:
         out.write(rec_frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -174,7 +206,7 @@ def main():
     emotions_mtcnn = analyze_emotion(frames)
 
     df = make_emotion_df(emotions_mtcnn)
-    
+
     df.to_csv(f"{NEW_VIDEO_NAME}")
     rec_image_list = add_emotion_on_frame(emotions_mtcnn, df)
 
