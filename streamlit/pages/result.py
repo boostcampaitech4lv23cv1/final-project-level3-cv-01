@@ -7,6 +7,8 @@ import time
 
 BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
 BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
+BACKEND_POSE_SHOULDER = 'http://127.0.0.1:8000/shoulder_pose_estimation'
+BACKEND_POSE_HAND = 'http://127.0.0.1:8000/hand_pose_estimation'
 
 st.set_page_config(layout="wide")
 st.title("HEY-I")
@@ -52,14 +54,28 @@ if "confirm_video" in st.session_state.keys():
                 st.header("Emotion")
                 st.subheader("니 얼굴 표정 이렇다 임마 표정 좀 풀어라")
                 st.line_chart(result)
+                
             with tab2:
                 st.header("Pose")
                 st.subheader("니 자세가 이렇다 삐딱하이 에픽하이")
+                
+                # pose estimation
+                pose_video = open('./db/pose.webm','rb')
+                pose_video_bytes = pose_video.read()
+                st.video(pose_video_bytes)
+
+                shoulder_result = pd.read_json(r_shoulder.json(), orient='records')
+                st.dataframe(shoulder_result)
+
+                hand_result = pd.read_json(r_hand.json(),orient='records')
+                st.dataframe(hand_result)
 
             with tab3:
                 st.header("Eye")
                 st.subheader("동태눈깔 꼬라보노 보노보노")
                 st.dataframe(result2)
+
+            
 
     else:
         st.subheader("면접 영상이 제대로 저장되지 않았습니다. 다시 면접 영상을 녹화해주세요.")

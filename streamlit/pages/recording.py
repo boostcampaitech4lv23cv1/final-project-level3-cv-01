@@ -37,7 +37,7 @@ if start_recording:
         video = cv2.VideoCapture(0)
         # Load Web Camera
         if not (video.isOpened()):
-            print("File isn't opend!!")
+            print("File isn't opened!!")
 
         # Set Video File Property
         w = round(video.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -58,7 +58,7 @@ if start_recording:
         st.session_state.video_dir = video_dir
         out = cv2.VideoWriter(video_dir, fourcc, fps, (w, h))
         if not (out.isOpened()):
-            print("File isn't opend!!")
+            print("File isn't opened!!")
             video.release()
             sys.exit()
 

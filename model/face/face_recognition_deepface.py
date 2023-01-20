@@ -185,7 +185,7 @@ def frame_to_video(rec_image_list, video_path):
     count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = cap.get(cv2.CAP_PROP_FPS)
 
-    fourcc = cv2.VideoWriter_fourcc(*"vp80")
+    fourcc = cv2.VideoWriter_fourcc("m", "p", "4", "v")
 
     out = cv2.VideoWriter("db/vp80.webm", fourcc, 4, (width, height))
     for rec_frame in rec_image_list:
