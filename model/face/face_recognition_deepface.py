@@ -92,7 +92,6 @@ def make_emotion_df(emotions_mtcnn):
         sad.append(emotions_mtcnn[tmp]["emotion"]["sad"])
         surprise.append(emotions_mtcnn[tmp]["emotion"]["surprise"])
         neutral.append(emotions_mtcnn[tmp]["emotion"]["neutral"])
-        dominant_emotion.append((emotions_mtcnn[tmp]["dominant_emotion"]))
     df_mtcnn = pd.DataFrame(
         {
             "angry": angry,
@@ -102,17 +101,19 @@ def make_emotion_df(emotions_mtcnn):
             "sad": sad,
             "surprise": surprise,
             "neutral": neutral,
-            "dominant_emotion": dominant_emotion,
         }
     )
 
     return df_mtcnn
 
 
-def make_binary_df(emotions_mtcnn):
+def make_binary_df(emotions_mtcnn, df_mtcnn):
     pos_emo = ["happy", "neutral"]
     neg_emp = ["angry", "disgust", "fear", "sad", "surprise"]
-
+    highest = []
+    for i in range(len(df_mtcnn)):
+        string = df_mtcnn.iloc[i].idxmax()
+        highest.append(string)
     positive = []
     negative = []
 
@@ -120,7 +121,7 @@ def make_binary_df(emotions_mtcnn):
         tmp = "instance_" + str(i)
         p = 0
         n = 0
-        if emotions_mtcnn[tmp]["dominant_emotion"] in pos_emo:
+        if highest[i - 1] in pos_emo:
             p += emotions_mtcnn[tmp]["emotion"]["happy"]
             p += emotions_mtcnn[tmp]["emotion"]["neutral"]
 
@@ -185,7 +186,7 @@ def frame_to_video(rec_image_list, video_path):
     count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = cap.get(cv2.CAP_PROP_FPS)
 
-    fourcc = cv2.VideoWriter_fourcc("m", "p", "4", "v")
+    fourcc = cv2.VideoWriter_fourcc(*"vp80")
 
     out = cv2.VideoWriter("db/vp80.webm", fourcc, 4, (width, height))
     for rec_frame in rec_image_list:
