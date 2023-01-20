@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 sys.path.append(os.getcwd())
 import model.face.face_recognition_deepface as fr
+import model.eye.gaze_tracking.gaze_tracking as gt
 
 app = FastAPI(
     title='HEY-I',
@@ -31,6 +32,21 @@ def get_emotion_df(inp: InferenceFace):
     df_json = df.to_json(orient='records')
     df_response = JSONResponse(json.loads(df_json))
     return df_response
+
+
+@app.post("/eye_tracking")
+def get_eye_df(inp: InferenceFace):
+    gaze = gt.GazeTracking()
+    VIDEO_PATH = inp.VIDEO_PATH
+    SAVED_DIR = inp.SAVED_DIR
+    frames = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
+    df, anno_frames = gaze.analyze_eye(frames)
+    df_json = df.to_json(orient='records')
+    df_response = JSONResponse(json.loads(df_json))
+    
+    gaze.frame_to_video(anno_frames)
+    return df_response
+
 
 # if __name__ == '__main__':
 #     uvicorn.run('FastAPI.main:app', host='127.0.0.1', port=8000, reload=True)
