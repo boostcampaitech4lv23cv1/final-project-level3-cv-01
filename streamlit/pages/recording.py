@@ -115,4 +115,5 @@ if "video_dir" in st.session_state.keys():
                 st.write("이 영상으로 분석을 진행할까요?")
                 confirm = st.button("Comfirm")
                 if confirm:
+                    st.write("분석할 영상이 확인 되었습니다. Result 에서 결과를 확인하세요.")
                     st.session_state.confirm_video = st.session_state.video_dir

@@ -5,8 +5,10 @@ import requests
 import pandas as pd
 import time
 
+BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
 BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
 
+st.set_page_config(layout="wide")
 st.title("HEY-I")
 
 if "confirm_video" in st.session_state.keys():
@@ -21,28 +23,29 @@ if "confirm_video" in st.session_state.keys():
 
         inference = st.button("Inference")
         if inference:
+
             VIDEO_PATH = st.session_state.confirm_video
             SAVED_DIR = os.path.join(
                 os.path.splitext(st.session_state.confirm_video)[0], "frames"
             )
-
             input_json = {"VIDEO_PATH": VIDEO_PATH, "SAVED_DIR": SAVED_DIR}
 
-            # with st.spinner("inferencing..."):
-            #     try:
-            #         r = requests.post(BACKEND_FACE, json=input_json)
-            #     except:
-            #         time.sleep(2)
-            #         r = requests.post(BACKEND_FACE, json=input_json)
-            #     r = requests.post(BACKEND_FACE, json=input_json)
             with st.spinner("inferencing..."):
                 r = requests.post(BACKEND_FACE, json=input_json)
+                r2 = requests.post(BACKEND_EYE, json=input_json)
+            result = pd.read_json(r.text, orient="records")
+            result2 = pd.read_json(r2.text, orient="records")
+
             video_file = open("./db/vp80.webm", "rb")
             video_bytes = video_file.read()
             st.video(video_bytes)
 
-            result = pd.read_json(r.text, orient="records")
-            # st.dataframe(result)
+            with st.expander("영상 분석 결과 확인"):
+                video_file = open("db/output_230119_155322.mp4", "rb")
+                video_bytes = video_file.read()
+                st.write("영상 분석 결과입니다.")
+                st.video(video_bytes)
+
             tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])
 
             with tab1:
@@ -56,6 +59,7 @@ if "confirm_video" in st.session_state.keys():
             with tab3:
                 st.header("Eye")
                 st.subheader("동태눈깔 꼬라보노 보노보노")
+                st.dataframe(result2)
 
     else:
         st.subheader("면접 영상이 제대로 저장되지 않았습니다. 다시 면접 영상을 녹화해주세요.")
