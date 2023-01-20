@@ -35,8 +35,17 @@ if "confirm_video" in st.session_state.keys():
             with st.spinner("inferencing..."):
                 r = requests.post(BACKEND_FACE, json=input_json)
                 r2 = requests.post(BACKEND_EYE, json=input_json)
+                r_shoulder = requests.post(BACKEND_POSE_SHOULDER, json=input_json)
+                r_hand = requests.post(BACKEND_POSE_HAND,json=input_json)
+            
             result = pd.read_json(r.text, orient="records")
             result2 = pd.read_json(r2.text, orient="records")
+            shoulder_result = pd.read_json(r_shoulder.json(), orient='records')
+            st.dataframe(shoulder_result)
+
+            hand_result = pd.read_json(r_hand.json(),orient='records')
+            st.dataframe(hand_result)
+            
 
             video_file = open("./db/vp80.webm", "rb")
             video_bytes = video_file.read()
