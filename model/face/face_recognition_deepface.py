@@ -109,6 +109,33 @@ def make_emotion_df(emotions_mtcnn):
     return df_mtcnn
 
 
+def make_binary_df(emotions_mtcnn):
+    pos_emo = ["happy", "neutral"]
+    neg_emp = ["angry", "disgust", "fear", "sad", "surprise"]
+
+    positive = []
+    negative = []
+
+    for i in range(1, len(emotions_mtcnn) + 1):
+        tmp = "instance_" + str(i)
+        p = 0
+        n = 0
+        if emotions_mtcnn[tmp]["dominant_emotion"] in pos_emo:
+            p += emotions_mtcnn[tmp]["emotion"]["happy"]
+            p += emotions_mtcnn[tmp]["emotion"]["neutral"]
+
+        else:
+            n += emotions_mtcnn[tmp]["emotion"]["angry"]
+            n += emotions_mtcnn[tmp]["emotion"]["disgust"]
+            n += emotions_mtcnn[tmp]["emotion"]["fear"]
+            n += emotions_mtcnn[tmp]["emotion"]["sad"]
+            n += emotions_mtcnn[tmp]["emotion"]["surprise"]
+        positive.append(p)
+        negative.append(n)
+    df_binary = pd.DataFrame({"positive": positive, "negative": negative})
+    return df_binary
+
+
 def add_emotion_on_frame(emotions_mtcnn, df_mtcnn, saved_dir):
     len_of_df = len(df_mtcnn)
     text_of_rec = []

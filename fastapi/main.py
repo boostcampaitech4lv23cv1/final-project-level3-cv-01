@@ -29,34 +29,10 @@ def get_emotion_df(inp: InferenceFace):
     frames = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
     emotions_mtcnn = fr.analyze_emotion(frames)
     df = fr.make_emotion_df(emotions_mtcnn)
-
     rec_image_list = fr.add_emotion_on_frame(emotions_mtcnn, df, SAVED_DIR)
-
     fr.frame_to_video(rec_image_list, VIDEO_PATH)
 
-    pos_emo = ["happy", "neutral"]
-    neg_emp = ["angry", "disgust", "fear", "sad", "surprise"]
-
-    positive = []
-    negative = []
-
-    for i in range(1, len(emotions_mtcnn) + 1):
-        tmp = "instance_" + str(i)
-        p = 0
-        n = 0
-        if emotions_mtcnn[tmp]["dominant_emotion"] in pos_emo:
-            p += emotions_mtcnn[tmp]["emotion"]["happy"]
-            p += emotions_mtcnn[tmp]["emotion"]["neutral"]
-
-        else:
-            n += emotions_mtcnn[tmp]["emotion"]["angry"]
-            n += emotions_mtcnn[tmp]["emotion"]["disgust"]
-            n += emotions_mtcnn[tmp]["emotion"]["fear"]
-            n += emotions_mtcnn[tmp]["emotion"]["sad"]
-            n += emotions_mtcnn[tmp]["emotion"]["surprise"]
-        positive.append(p)
-        negative.append(n)
-    df_binary = pd.DataFrame({"positive": positive, "negative": negative})
+    df_binary = fr.make_binary_df(emotions_mtcnn)
 
     df_json = df_binary.to_json(orient="records")
     df_response = JSONResponse(json.loads(df_json))
