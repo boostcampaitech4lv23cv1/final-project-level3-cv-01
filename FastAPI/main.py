@@ -7,6 +7,7 @@ sys.path.append(os.getcwd())
 import model.face.face_recognition_deepface as fr
 from model.pose import pose_with_mediapipe as pwm
 import model.eye.gaze_tracking.gaze_tracking as gt
+from model.pose.heyi_mmpose_demo import main
 
 app = FastAPI(title="HEY-I", description="This is a demo of HEY-I")
 
@@ -56,6 +57,13 @@ def get_hand_results(inp: InferenceFace):
     hand_response = JSONResponse(hand_json)
     return hand_response
 
+@app.post("/demo_with_mmpose")
+def demo_with_mmpose(inp: InferenceFace):
+    VIDEO_PATH  = inp.VIDEO_PATH
+    SAVED_DIR = inp.SAVED_DIR
+    df = main(VIDEO_PATH,SAVED_DIR)
+    df_json = df.to_json(orient="records")
+    return JSONResponse(json.loads(df_json))
 
 @app.post("/eye_tracking")
 def get_eye_df(inp: InferenceFace):
