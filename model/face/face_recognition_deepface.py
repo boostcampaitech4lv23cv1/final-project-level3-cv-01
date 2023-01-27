@@ -188,7 +188,7 @@ def frame_to_video(rec_image_list, video_path):
 
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
 
-    out = cv2.VideoWriter("db/vp80.webm", fourcc, 4, (width, height))
+    out = cv2.VideoWriter("./db/vp80.webm", fourcc, 2, (width, height))
     for rec_frame in rec_image_list:
         out.write(rec_frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -199,20 +199,20 @@ def frame_to_video(rec_image_list, video_path):
     cv2.destroyAllWindows()
 
 
-def main():
-    # args = parse_args()
+# def main():
+#     # args = parse_args()
 
-    frames = video_to_frame()
+#     frames = video_to_frame()
 
-    emotions_mtcnn = analyze_emotion(frames)
+#     emotions_mtcnn = analyze_emotion(frames)
 
-    df = make_emotion_df(emotions_mtcnn)
+#     df = make_emotion_df(emotions_mtcnn)
 
-    df.to_csv(f"{NEW_VIDEO_NAME}")
-    rec_image_list = add_emotion_on_frame(emotions_mtcnn, df)
+#     df.to_csv(f"{NEW_VIDEO_NAME}")
+#     rec_image_list = add_emotion_on_frame(emotions_mtcnn, df)
 
-    frame_to_video(rec_image_list)
+#     frame_to_video(rec_image_list)
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

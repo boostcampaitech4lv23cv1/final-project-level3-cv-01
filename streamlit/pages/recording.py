@@ -34,7 +34,7 @@ if start_recording:
     stframe = st.empty()
     with st.spinner("Get Ready for Camera"):
         # video = cv2.VideoCapture('/opt/ml/TEST_VIDEO/ka.mp4')
-        video = cv2.VideoCapture(0)
+        video = cv2.VideoCapture(1)
         # Load Web Camera
         if not (video.isOpened()):
             print("File isn't opened!!")
@@ -56,14 +56,13 @@ if start_recording:
         start_time = datetime.now(timezone("Asia/Seoul")).strftime("_%y%m%d_%H%M%S")
         video_dir = f"./db/output{start_time}.webm"
         st.session_state.video_dir = video_dir
-        out = cv2.VideoWriter(video_dir, fourcc, fps, (w, h))
+        out = cv2.VideoWriter(video_dir, fourcc, fps / 2, (w, h))
         if not (out.isOpened()):
             print("File isn't opened!!")
             video.release()
             sys.exit()
 
     end_recording = st.sidebar.button("End Recording")
-    # end_recording = st.sidebar.button('End Recordinging', key='end_recording')
 
     # Load frame and Save it
     start = time.time()
