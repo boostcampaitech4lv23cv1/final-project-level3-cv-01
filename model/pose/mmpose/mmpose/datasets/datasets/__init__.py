@@ -46,7 +46,6 @@ from .hand import (
 from .mesh import MeshAdversarialDataset, MeshH36MDataset, MeshMixDataset, MoshDataset
 from .top_down import (
     TopDownAicDataset,
-    TopDownAihubVideoDataset,
     TopDownCocoDataset,
     TopDownCocoWholeBodyDataset,
     TopDownCrowdPoseDataset,
@@ -79,7 +78,6 @@ __all__ = [
     "TopDownOCHumanDataset",
     "TopDownAicDataset",
     "TopDownAihubDataset",
-    "TopDownAihubVideoDataset",
     "TopDownCocoWholeBodyDataset",
     "MeshH36MDataset",
     "MeshMixDataset",
