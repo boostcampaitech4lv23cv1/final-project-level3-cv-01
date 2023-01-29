@@ -171,8 +171,7 @@ cython_debug/
 # db
 **/db/**
 
-# data
-**/data/**
-
+# aihub data
+aihub/
 # wandb
 wandb/
