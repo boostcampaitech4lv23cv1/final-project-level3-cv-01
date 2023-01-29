@@ -6,12 +6,11 @@ import json
 import numpy as np
 import pandas as pd
 from datetime import datetime
-
+import streamlit as st
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 mp_holistic = mp.solutions.holistic
 mp_drawing_styles = mp.solutions.drawing_styles
-
 
 def calculate_angle(a, b):
     a = np.array(a)
@@ -23,7 +22,6 @@ def calculate_angle(a, b):
     return angle
 
 
-VIDEO_PATH = ""  # os.path.join("./db", "output_230119_194953.webm")
 
 
 def run(video_path):
@@ -34,8 +32,8 @@ def run(video_path):
 
     fps = cap.get(cv2.CAP_PROP_FPS)
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
-
-    out = cv2.VideoWriter("./db/pose.webm", fourcc, fps, (width, height))
+    vid_save_name = f"./{video_path.split('/')[1]}/{video_path.split('/')[2]}/pose_{video_path.split('/')[-1]}"
+    out = cv2.VideoWriter(vid_save_name, fourcc, fps, (width, height))
 
     anomaly = {"shoulder": [], "hand": []}
     shoulder_components = {"start": [], "end": [], "elapsed": []}
@@ -160,8 +158,8 @@ def dict_to_json(d: dict):
     return d_json
 
 
-if __name__ == "__main__":
-    shoulder_info, hand_info = run(VIDEO_PATH)
-    shoulder_json, hand_json = dict_to_json(shoulder_info), dict_to_json(hand_info)
-    # shoulder_response,hand_response = JSONResponse(json.loads(shoulder_json)),JSONResponse(json.loads(hand_json))
-    print(shoulder_json, hand_json)
+# if __name__ == "__main__":
+#     shoulder_info, hand_info = run(VIDEO_PATH)
+#     shoulder_json, hand_json = dict_to_json(shoulder_info), dict_to_json(hand_info)
+#     # shoulder_response,hand_response = JSONResponse(json.loads(shoulder_json)),JSONResponse(json.loads(hand_json))
+#     print(shoulder_json, hand_json)
