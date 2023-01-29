@@ -6,6 +6,7 @@ import tempfile
 from pytz import timezone
 from datetime import datetime
 import streamlit as st
+from google.cloud import storage
 
 
 # st.session_state.start_recording = False
@@ -51,19 +52,21 @@ if start_recording:
         print("framecount:", framecount)
 
         # Save Video
-        if not os.path.exists("./db"):
-            os.makedirs("./db")
-        start_time = datetime.now(timezone("Asia/Seoul")).strftime("_%y%m%d_%H%M%S")
-        video_dir = f"./db/output{start_time}.webm"
+        start_time = datetime.now(timezone("Asia/Seoul")).strftime("%y%m%d_%H%M%S")
+        # if not os.path.exists(f"./{st.session_state.name}_{st.session_state.num}"):
+        #     os.makedirs(f"./{st.session_state.name}_{st.session_state.num}")
+        if not os.path.exists(f"./{st.session_state.name}_{st.session_state.num}/{start_time}"):
+            os.makedirs(f"./{st.session_state.name}_{st.session_state.num}/{start_time}")    
+        
+        video_dir = f"./{st.session_state.name}_{st.session_state.num}/{start_time}/recording.webm"
         st.session_state.video_dir = video_dir
-        out = cv2.VideoWriter(video_dir, fourcc, fps, (w, h))
+        out = cv2.VideoWriter(video_dir, fourcc, fps / 4, (w, h))
         if not (out.isOpened()):
             print("File isn't opened!!")
             video.release()
             sys.exit()
 
     end_recording = st.sidebar.button("End Recording")
-    # end_recording = st.sidebar.button('End Recordinging', key='end_recording')
 
     # Load frame and Save it
     start = time.time()
@@ -93,9 +96,9 @@ if start_recording:
 
     video.release()
     out.release()
+    
     cv2.destroyAllWindows()
-
-# print(st.session_state)
+    
 
 # if end_recording and os.path.exists(st.session_state.video_dir):
 #     st.write(f'{video_dir}에 면접 영상이 저장되었습니다. 수고하셨습니다!')
@@ -117,3 +120,5 @@ if "video_dir" in st.session_state.keys():
                 if confirm:
                     st.write("분석할 영상이 확인 되었습니다. Result 에서 결과를 확인하세요.")
                     st.session_state.confirm_video = st.session_state.video_dir
+                    
+

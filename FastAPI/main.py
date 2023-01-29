@@ -2,7 +2,7 @@ import os, sys, json, uvicorn
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-
+import glob
 sys.path.append(os.getcwd())
 import model.face.face_recognition_deepface as fr
 from model.pose import pose_with_mediapipe as pwm
@@ -62,12 +62,13 @@ def get_eye_df(inp: InferenceFace):
     gaze = gt.GazeTracking()
     VIDEO_PATH = inp.VIDEO_PATH
     SAVED_DIR = inp.SAVED_DIR
-    frames = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
+    frames = glob.glob(f"{SAVED_DIR}/*.jpg")
+    frames.sort()
     df, anno_frames = gaze.analyze_eye(frames)
     df_json = df.to_json(orient="records")
     df_response = JSONResponse(json.loads(df_json))
 
-    gaze.frame_to_video(anno_frames)
+    gaze.frame_to_video(VIDEO_PATH,anno_frames)
     return df_response
 
 

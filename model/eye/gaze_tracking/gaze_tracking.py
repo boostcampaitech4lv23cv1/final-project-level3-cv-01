@@ -5,6 +5,7 @@ import dlib
 from .eye import Eye
 from .calibration import Calibration
 import pandas as pd
+import streamlit as st
 
 class GazeTracking(object):
     """
@@ -26,7 +27,9 @@ class GazeTracking(object):
 
         # _predictor is used to get facial landmarks of a given face
         cwd = os.path.abspath(os.path.dirname(__file__))
-        model_path = os.path.abspath(os.path.join(cwd, "trained_models/shape_predictor_68_face_landmarks.dat"))
+        model_path = os.path.abspath(
+            os.path.join(cwd, "trained_models/shape_predictor_68_face_landmarks.dat")
+        )
         self._predictor = dlib.shape_predictor(model_path)
 
     @property
@@ -71,7 +74,7 @@ class GazeTracking(object):
             y = self.eye_left.origin[1] + self.eye_left.pupil.y
             return (x, y)
         else:
-            return (0,0)
+            return (0, 0)
 
     def pupil_right_coords(self):
         """Returns the coordinates of the right pupil"""
@@ -80,7 +83,8 @@ class GazeTracking(object):
             y = self.eye_right.origin[1] + self.eye_right.pupil.y
             return (x, y)
         else:
-            return (0,0)
+            return (0, 0)
+
     def horizontal_ratio(self):
         """Returns a number between 0.0 and 1.0 that indicates the
         horizontal direction of the gaze. The extreme right is 0.0,
@@ -110,17 +114,24 @@ class GazeTracking(object):
         """Returns true if the user is looking to the left"""
         if self.pupils_located:
             return self.horizontal_ratio() >= 0.62
+
     def is_up(self):
         if self.pupils_located:
             return self.vertical_ratio() >= 0.62
+
     def is_down(self):
         if self.pupils_located:
             return self.vertical_ratio() <= 0.38
-        
+
     def is_center(self):
         """Returns true if the user is looking to the center"""
         if self.pupils_located:
-            return self.is_right() is not True and self.is_left() is not True and self.is_up() is not True and self.is_down() is not True
+            return (
+                self.is_right() is not True
+                and self.is_left() is not True
+                and self.is_up() is not True
+                and self.is_down() is not True
+            )
 
     def is_blinking(self):
         """Returns true if the user closes his eyes"""
@@ -144,15 +155,14 @@ class GazeTracking(object):
         return frame
 
     def analyze_eye(self, frames):
-        """analyze eye tracking used in fastapi
-        """
+        """analyze eye tracking used in fastapi"""
         ret = []
         left = []
         right = []
         anno_frames = []
-        
+
         for frame in frames:
-            
+
             # self.annotated_frame()
             if self.is_right() or self.is_left() or self.is_up() or self.is_down():
                 text = "Side"
@@ -160,11 +170,11 @@ class GazeTracking(object):
                 text = "Center"
             else:
                 text = "None"
-            
+
             # if None, return (0,0)
             left_pupil = self.pupil_left_coords()
             right_pupil = self.pupil_right_coords()
-            
+
             ret.append(text)
             left.append(left_pupil)
             right.append(right_pupil)
@@ -172,45 +182,73 @@ class GazeTracking(object):
             # annotation
             anno_frame = self.get_annotated_frame(frame, text, left_pupil, right_pupil)
             anno_frames.append(anno_frame)
-                
-        df = pd.DataFrame(
-        {
-            "tracking": ret,
-            "left": left,
-            "right": right
-        }
-        )
+
+        df = pd.DataFrame({"tracking": ret, "left": left, "right": right})
 
         return df, anno_frames
-    
+
     def get_annotated_frame(self, path, text, left_pupil, right_pupil):
         frame = cv2.imread(path)
         self.refresh(frame)
         frame = self.annotated_frame()
-        
-        if text == 'None':
-            cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_TRIPLEX, 1.6, (0, 0, 255), 3)
-            cv2.putText(frame, "Left:  " + str(left_pupil), (90, 130), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (0, 0, 255), 2)
-            cv2.putText(frame, "Right: " + str(right_pupil), (90, 165), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (0, 0, 255), 2)
-        
+
+        if text == "None":
+            cv2.putText(
+                frame, text, (90, 60), cv2.FONT_HERSHEY_TRIPLEX, 1.6, (0, 0, 255), 3
+            )
+            cv2.putText(
+                frame,
+                "Left:  " + str(left_pupil),
+                (90, 130),
+                cv2.FONT_HERSHEY_TRIPLEX,
+                0.9,
+                (0, 0, 255),
+                2,
+            )
+            cv2.putText(
+                frame,
+                "Right: " + str(right_pupil),
+                (90, 165),
+                cv2.FONT_HERSHEY_TRIPLEX,
+                0.9,
+                (0, 0, 255),
+                2,
+            )
+
         else:
-            cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_TRIPLEX, 1.6, (0, 255, 0), 3)
-            cv2.putText(frame, "Left:  " + str(left_pupil), (90, 130), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (0, 255, 0), 2)
-            cv2.putText(frame, "Right: " + str(right_pupil), (90, 165), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (0, 255, 0), 2)
-        
+            cv2.putText(
+                frame, text, (90, 60), cv2.FONT_HERSHEY_TRIPLEX, 1.6, (0, 255, 0), 3
+            )
+            cv2.putText(
+                frame,
+                "Left:  " + str(left_pupil),
+                (90, 130),
+                cv2.FONT_HERSHEY_TRIPLEX,
+                0.9,
+                (0, 255, 0),
+                2,
+            )
+            cv2.putText(
+                frame,
+                "Right: " + str(right_pupil),
+                (90, 165),
+                cv2.FONT_HERSHEY_TRIPLEX,
+                0.9,
+                (0, 255, 0),
+                2,
+            )
+
         return frame
-    
-    def frame_to_video(self, rec_image_list):
-        cap = cv2.VideoCapture(self.VIDEO_PATH)
+
+    def frame_to_video(self, VIDEO_PATH, rec_image_list):
+        cap = cv2.VideoCapture(VIDEO_PATH)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-        fps = cap.get(cv2.CAP_PROP_FPS)
 
-        fourcc = cv2.VideoWriter_fourcc("m", "p", "4", "v")
+        fourcc = cv2.VideoWriter_fourcc(*"vp80")
+        vid_save_name = f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_{VIDEO_PATH.split('/')[-1]}"
+        out = cv2.VideoWriter(vid_save_name, fourcc, 2, (width, height))
 
-        out = cv2.VideoWriter(f'./db/output{self.SAVED_DIR}.mp4', fourcc, 10, (width, height))
-        
         for rec_frame in rec_image_list:
             out.write(rec_frame)
             if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -219,4 +257,3 @@ class GazeTracking(object):
         cap.release()
         out.release()
         cv2.destroyAllWindows()
-

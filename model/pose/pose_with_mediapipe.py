@@ -6,12 +6,11 @@ import json
 import numpy as np
 import pandas as pd
 from datetime import datetime
-
+import streamlit as st
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 mp_holistic = mp.solutions.holistic
 mp_drawing_styles = mp.solutions.drawing_styles
-
 
 def calculate_angle(a, b):
     a = np.array(a)
@@ -22,22 +21,24 @@ def calculate_angle(a, b):
 
     return angle
 
-VIDEO_PATH = os.path.join('./db','output_230119_194953.webm')
+
+
+
 def run(video_path):
     cap = cv2.VideoCapture(video_path)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    cap.set(cv2.CAP_PROP_FPS,10)
+    # cap.set(cv2.CAP_PROP_FPS, 10)
 
-    fps = cap.get(cv2.CAP_PROP_FPS) 
-    fourcc = cv2.VideoWriter_fourcc(*'vp80')
-
-    out = cv2.VideoWriter("./db/pose.webm", fourcc, fps, (width, height))
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    fourcc = cv2.VideoWriter_fourcc(*"vp80")
+    vid_save_name = f"./{video_path.split('/')[1]}/{video_path.split('/')[2]}/pose_{video_path.split('/')[-1]}"
+    out = cv2.VideoWriter(vid_save_name, fourcc, fps, (width, height))
 
     anomaly = {"shoulder": [], "hand": []}
-    shoulder_components={"start":[],"end":[],"elapsed":[]}
-    hand_components={"time":[]}
-    start_time = datetime.now() 
+    shoulder_components = {"start": [], "end": [], "elapsed": []}
+    hand_components = {"time": []}
+    start_time = datetime.now()
 
     # Initiate holistic model
     with mp_holistic.Holistic(
@@ -115,10 +116,9 @@ def run(video_path):
                     landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER].y,
                 ]
 
-
                 # Calculate shoulder angle
                 angle = calculate_angle(left_shoulder, right_shoulder)
-                if angle <= 170 :  # 기준 정해야함
+                if angle <= 170:  # 기준 정해야함
                     anomaly["shoulder"].append((target_time, datetime.now()))
                 else:
                     shoulder_seconds = (
@@ -138,9 +138,7 @@ def run(video_path):
             except:
                 pass
 
-
             # cv2.imshow("Video Feed", image)
-            
 
             if cv2.waitKey(10) & 0xFF == ord("q"):
                 break
@@ -154,15 +152,14 @@ def run(video_path):
     return shoulder_components, hand_components
 
 
-def dict_to_json(d:dict):
+def dict_to_json(d: dict):
     d_df = pd.DataFrame(d)
-    d_json = d_df.to_json(orient='records')
+    d_json = d_df.to_json(orient="records")
     return d_json
-    
 
 
-if __name__ == "__main__":
-    shoulder_info, hand_info = run(VIDEO_PATH) 
-    shoulder_json,hand_json = dict_to_json(shoulder_info), dict_to_json(hand_info)
-    # shoulder_response,hand_response = JSONResponse(json.loads(shoulder_json)),JSONResponse(json.loads(hand_json))
-    print(shoulder_json,hand_json)
+# if __name__ == "__main__":
+#     shoulder_info, hand_info = run(VIDEO_PATH)
+#     shoulder_json, hand_json = dict_to_json(shoulder_info), dict_to_json(hand_info)
+#     # shoulder_response,hand_response = JSONResponse(json.loads(shoulder_json)),JSONResponse(json.loads(hand_json))
+#     print(shoulder_json, hand_json)
