@@ -15,36 +15,31 @@ from mmpose.datasets.datasets.base import Kpt2dSviewRgbImgBottomUpDataset
 
 
 @DATASETS.register_module()
-class BottomUpCocoDataset(Kpt2dSviewRgbImgBottomUpDataset):
-    """Aihub Pose Dataset
+class BottomUpAihubDataset(Kpt2dSviewRgbImgBottomUpDataset):
+    """COCO dataset for bottom-up pose estimation.
 
-    Keypoint indexes::
+    The dataset loads raw features and apply specified transforms
+    to return a dict containing the image tensors and other information.
+
+    COCO keypoint indexes::
 
         0: 'nose',
-        1: 'mid_shoulder',
-        2: 'right_shoulder',
-        3: 'right_elbow',
-        4: 'right_wrist',
+        1: 'left_eye',
+        2: 'right_eye',
+        3: 'left_ear',
+        4: 'right_ear',
         5: 'left_shoulder',
-        6: 'left_elbow',
-        7: 'left_wrist',
-        8: 'middle_hip',
-        9: 'right_hip_1',
-        10: 'right_hip_2',
-        11: 'right_hip_3',
-        12: 'left_hip_1',
-        13: 'left_hip_2',
-        14: 'left_hip_3',
-        15: 'right_eye',
-        16: 'left_eye',
-        17: 'right_cheek',
-        18: 'left_cheek',
-        19: 'left_hip_4',
-        20: 'left_hip_5',
-        21: 'left_hip_6',
-        22: 'right_hip_4',
-        23: 'right_hip_5',
-        24: 'right_hip_6',
+        6: 'right_shoulder',
+        7: 'left_elbow',
+        8: 'right_elbow',
+        9: 'left_wrist',
+        10: 'right_wrist',
+        11: 'left_hip',
+        12: 'right_hip',
+        13: 'left_knee',
+        14: 'right_knee',
+        15: 'left_ankle',
+        16: 'right_ankle'
 
     Args:
         ann_file (str): Path to the annotation file.

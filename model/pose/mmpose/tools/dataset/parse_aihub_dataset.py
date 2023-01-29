@@ -1,43 +1,39 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import csv
 import json
 import os
 import time
 
 import cv2
+import h5py
 import numpy as np
 
 np.random.seed(0)
 
 
-def get_poly_area(x, y):
-    """Calculate area of polygon given (x,y) coordinates (Shoelace formula)
-
-    :param x: np.ndarray(N, )
-    :param y: np.ndarray(N, )
-    :return: area
-    """
-    return float(0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1))))
-
-
-def get_seg_area(segmentations):
-    area = 0
-    for segmentation in segmentations:
-        area += get_poly_area(segmentation[:, 0], segmentation[:, 1])
-    return area
-
-
 def save_coco_anno(
-    data_annotation, img_root, save_path, start_img_id=0, start_ann_id=0, kpt_num=25
+    keypoints_all,
+    annotated_all,
+    imgs_all,
+    keypoints_info,
+    skeleton_info,
+    dataset,
+    img_root,
+    save_path,
+    start_img_id=0,
+    start_ann_id=0,
 ):
     """Save annotations in coco-format.
 
-    :param data_annotation: list of data annotation.
-    :param img_root: the root dir to load images.
+    :param keypoints_all: keypoint annotations.
+    :param annotated_all: images annotated or not.
+    :param imgs_all: the array of images.
+    :param keypoints_info: information about keypoint name.
+    :param skeleton_info: information about skeleton connection.
+    :param dataset: information about dataset name.
+    :param img_root: the path to save images.
     :param save_path: the path to save transformed annotation file.
     :param start_img_id: the starting point to count the image id.
     :param start_ann_id: the starting point to count the annotation id.
-    :param kpt_num: the number of keypoint.
     """
     images = []
     annotations = []
@@ -45,81 +41,58 @@ def save_coco_anno(
     img_id = start_img_id
     ann_id = start_ann_id
 
-    for i in range(0, len(data_annotation)):
-        data_anno = data_annotation[i]
-        image_name = data_anno[0]
+    num_annotations, keypoints_num, _ = keypoints_all.shape
 
-        img = cv2.imread(os.path.join(img_root, image_name))
+    for i in range(num_annotations):
+        img = imgs_all[i]
+        keypoints = np.concatenate(
+            [keypoints_all[i], annotated_all[i][:, None] * 2], axis=1
+        )
 
-        kp_string = data_anno[1]
-        kps = json.loads(kp_string)
+        min_x, min_y = np.min(keypoints[keypoints[:, 2] > 0, :2], axis=0)
+        max_x, max_y = np.max(keypoints[keypoints[:, 2] > 0, :2], axis=0)
 
-        seg_string = data_anno[2]
-        segs = json.loads(seg_string)
+        anno = {}
+        anno["keypoints"] = keypoints.reshape(-1).tolist()
+        anno["image_id"] = img_id
+        anno["id"] = ann_id
+        anno["num_keypoints"] = int(sum(keypoints[:, 2] > 0))
+        anno["bbox"] = [
+            float(min_x),
+            float(min_y),
+            float(max_x - min_x + 1),
+            float(max_y - min_y + 1),
+        ]
+        anno["iscrowd"] = 0
+        anno["area"] = anno["bbox"][2] * anno["bbox"][3]
+        anno["category_id"] = 1
 
-        for kp, seg in zip(kps, segs):
-            keypoints = np.zeros([kpt_num, 3])
-            for ind, p in enumerate(kp):
-                if p["position"] is None:
-                    continue
-                else:
-                    keypoints[ind, 0] = p["position"][0]
-                    keypoints[ind, 1] = p["position"][1]
-                    keypoints[ind, 2] = 2
-
-            segmentations = []
-
-            max_x = -1
-            max_y = -1
-            min_x = 999999
-            min_y = 999999
-            for segm in seg:
-                if len(segm["segment"]) == 0:
-                    continue
-
-                segmentation = np.array(segm["segment"])
-                segmentations.append(segmentation)
-
-                _max_x, _max_y = segmentation.max(0)
-                _min_x, _min_y = segmentation.min(0)
-
-                max_x = max(max_x, _max_x)
-                max_y = max(max_y, _max_y)
-                min_x = min(min_x, _min_x)
-                min_y = min(min_y, _min_y)
-
-            anno = {}
-            anno["keypoints"] = keypoints.reshape(-1).tolist()
-            anno["image_id"] = img_id
-            anno["id"] = ann_id
-            anno["num_keypoints"] = int(sum(keypoints[:, 2] > 0))
-            anno["bbox"] = [
-                float(min_x),
-                float(min_y),
-                float(max_x - min_x + 1),
-                float(max_y - min_y + 1),
-            ]
-            anno["iscrowd"] = 0
-            anno["area"] = get_seg_area(segmentations)
-            anno["category_id"] = 1
-            anno["segmentation"] = [seg.reshape(-1).tolist() for seg in segmentations]
-
-            annotations.append(anno)
-            ann_id += 1
+        annotations.append(anno)
+        ann_id += 1
 
         image = {}
         image["id"] = img_id
-        image["file_name"] = image_name
+        image["file_name"] = f"{img_id}.jpg"
         image["height"] = img.shape[0]
         image["width"] = img.shape[1]
 
         images.append(image)
         img_id += 1
 
+        cv2.imwrite(os.path.join(img_root, image["file_name"]), img)
+
+    skeleton = (
+        np.concatenate(
+            [np.arange(keypoints_num)[:, None], skeleton_info[:, 0][:, None]], axis=1
+        )
+        + 1
+    )
+    skeleton = skeleton[skeleton.min(axis=1) > 0]
+
     cocotype = {}
 
     cocotype["info"] = {}
-    cocotype["info"]["description"] = "Aihub Dataset"
+    cocotype["info"]["description"] = "DeepPoseKit-Data Generated by MMPose Team"
     cocotype["info"]["version"] = "1.0"
     cocotype["info"]["year"] = time.strftime("%Y", time.localtime())
     cocotype["info"]["date_created"] = time.strftime("%Y/%m/%d", time.localtime())
@@ -128,60 +101,11 @@ def save_coco_anno(
     cocotype["annotations"] = annotations
     cocotype["categories"] = [
         {
-            "supercategory": "person",
+            "supercategory": "animal",
             "id": 1,
-            "name": "aihub",
-            "keypoints": [
-                "nose",
-                "mid_shoulder",
-                "right_shoulder",
-                "right_elbow",
-                "right_wrist",
-                "left_shoulder",
-                "left_elbow",
-                "left_wrist",
-                "middle_hip",
-                "right_hip_1",
-                "right_hip_2",
-                "right_hip_3",
-                "left_hip_1",
-                "left_hip_2",
-                "left_hip_3",
-                "right_eye",
-                "left_eye",
-                "right_cheek",
-                "left_cheek",
-                "left_hip_4",
-                "left_hip_5",
-                "left_hip_6",
-                "right_hip_4",
-                "right_hip_5",
-                "right_hip_6",
-            ],
-            "skeleton": [
-                [18, 16],
-                [16, 0],
-                [0, 15],
-                [15, 17],
-                [7, 6],
-                [6, 5],
-                [5, 1],
-                [1, 2],
-                [2, 3],
-                [3, 4],
-                [12, 13],
-                [13, 14],
-                [14, 19],
-                [19, 20],
-                [19, 21],
-                [8, 12],
-                [8, 9],
-                [9, 10],
-                [10, 11],
-                [11, 22],
-                [22, 23],
-                [22, 24],
-            ],
+            "name": dataset,
+            "keypoints": keypoints_info,
+            "skeleton": skeleton.tolist(),
         }
     ]
 
@@ -192,27 +116,77 @@ def save_coco_anno(
     print(f"done {save_path}")
 
 
-dataset_dir = "/data/aihub/"
-with open(os.path.join(dataset_dir, "annotations.csv"), "r") as fp:
-    data_annotation_all = list(csv.reader(fp, delimiter=","))[1:]
+dataset = "aihub"
+keypoints_info = [
+    "nose",
+    "mid_shoulder",
+    "right_shoulder",
+    "right_elbow",
+    "right_wrist",
+    "left_shoulder",
+    "left_elbow",
+    "left_wrist",
+    "middle_hip",
+    "right_hip_1",
+    "right_hip_2",
+    "right_hip_3",
+    "left_hip_1",
+    "left_hip_2",
+    "left_hip_3",
+    "right_eye",
+    "left_eye",
+    "right_cheek",
+    "left_cheek",
+    "left_hip_4",
+    "left_hip_5",
+    "left_hip_6",
+    "right_hip_4",
+    "right_hip_5",
+    "right_hip_6",
+]
 
-np.random.shuffle(data_annotation_all)
+dataset_dir = f"data/{dataset}"
 
-data_annotation_train = data_annotation_all[0:9440]
-data_annotation_val = data_annotation_all[9440:]
+with h5py.File(os.path.join(dataset_dir, "aihub_annotations.h5"), "r") as f:
+    # List all groups
+    annotations = np.array(f["annotations"])
+    annotated = np.array(f["annotated"])
+    images = np.array(f["images"])
+    skeleton_info = np.array(f["skeleton"])
 
-img_root = os.path.join(dataset_dir, "images")
-save_coco_anno(
-    data_annotation_train,
-    img_root,
-    os.path.join(dataset_dir, "annotations", "aihub_train.json"),
-    kpt_num=25,
-)
-save_coco_anno(
-    data_annotation_val,
-    img_root,
-    os.path.join(dataset_dir, "annotations", "aihub_test.json"),
-    start_img_id=12500,
-    start_ann_id=15672,
-    kpt_num=25,
-)
+    annotation_num, kpt_num, _ = annotations.shape
+
+    data_list = np.arange(0, annotation_num)
+    np.random.shuffle(data_list)
+
+    val_data_num = annotation_num // 10
+    train_data_num = annotation_num - val_data_num
+
+    train_list = data_list[0:train_data_num]
+    val_list = data_list[train_data_num:]
+
+    img_root = os.path.join(dataset_dir, "images")
+    os.makedirs(img_root, exist_ok=True)
+
+    save_coco_anno(
+        annotations[train_list],
+        annotated[train_list],
+        images[train_list],
+        keypoints_info,
+        skeleton_info,
+        dataset,
+        img_root,
+        os.path.join(dataset_dir, "annotations", f"{dataset}_train.json"),
+    )
+    save_coco_anno(
+        annotations[val_list],
+        annotated[val_list],
+        images[val_list],
+        keypoints_info,
+        skeleton_info,
+        dataset,
+        img_root,
+        os.path.join(dataset_dir, "annotations", f"{dataset}_test.json"),
+        start_img_id=train_data_num,
+        start_ann_id=train_data_num,
+    )

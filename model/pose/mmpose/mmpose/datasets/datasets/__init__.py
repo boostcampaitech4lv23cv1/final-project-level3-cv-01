@@ -25,6 +25,7 @@ from .bottom_up import (
     BottomUpCocoWholeBodyDataset,
     BottomUpCrowdPoseDataset,
     BottomUpMhpDataset,
+    BottomUpAihubDataset,
 )
 from .face import (
     Face300WDataset,
@@ -112,4 +113,5 @@ __all__ = [
     "Body3DMviewDirectShelfDataset",
     "Body3DMviewDirectCampusDataset",
     "NVGestureDataset",
+    "BottomUpAihubDataset",
 ]
