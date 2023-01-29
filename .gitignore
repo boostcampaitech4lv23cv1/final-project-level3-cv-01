@@ -173,5 +173,12 @@ cython_debug/
 
 # aihub data
 aihub/
+
 # wandb
 wandb/
+
+# work_dirs
+work_dirs/
+
+# openmim
+.mim/
