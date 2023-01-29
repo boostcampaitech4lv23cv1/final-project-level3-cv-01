@@ -12,6 +12,7 @@ from torchvision.datasets.folder import ImageFolder
 
 from dataset import customDataset
 
+
 def seed_everything(seed=2022):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
@@ -21,62 +22,63 @@ def seed_everything(seed=2022):
     np.random.seed(seed)
     random.seed(seed)
 
+
 def parse_args():
     parser = ArgumentParser()
 
     # Custom args
-    parser.add_argument('--random_seed', type=int, default=2022)
-    
+    parser.add_argument("--random_seed", type=int, default=2022)
+
     # Conventional args
-    parser.add_argument('--train_dir', type=str,
-                        default='/opt/ml/data/train')
-    parser.add_argument('--valid_dir', type=str,
-                        default='/opt/ml/data/valid')
-    parser.add_argument('--saved_dir', type=str, default='trained_models')
+    parser.add_argument("--train_dir", type=str, default="/opt/ml/data/train")
+    parser.add_argument("--valid_dir", type=str, default="/opt/ml/data/valid")
+    parser.add_argument("--saved_dir", type=str, default="trained_models")
 
-    parser.add_argument('--device', default='cuda' if cuda.is_available() else 'cpu')
-    parser.add_argument('--num_workers', type=int, default=4)
+    parser.add_argument("--device", default="cuda" if cuda.is_available() else "cpu")
+    parser.add_argument("--num_workers", type=int, default=4)
 
-    parser.add_argument('--epochs', type=int, default=200)
-    parser.add_argument('--num_classes', type=int, default=7)
-    parser.add_argument('--image_size', type=int, default=112)
-    parser.add_argument('--train_batch_size', type=int, default=64)
-    parser.add_argument('--valid_batch_size', type=int, default=128)
-    parser.add_argument('--learning_rate', type=float, default=1e-2)
-    parser.add_argument('--save_interval', type=int, default=1)
-    
+    parser.add_argument("--epochs", type=int, default=200)
+    parser.add_argument("--num_classes", type=int, default=7)
+    parser.add_argument("--image_size", type=int, default=112)
+    parser.add_argument("--train_batch_size", type=int, default=64)
+    parser.add_argument("--valid_batch_size", type=int, default=128)
+    parser.add_argument("--learning_rate", type=float, default=1e-2)
+    parser.add_argument("--save_interval", type=int, default=1)
+
     args = parser.parse_args()
 
     return args
 
-def train(random_seed,
-          image_size,
-          train_dir, 
-          valid_dir, 
-          train_batch_size,
-          valid_batch_size,
-          num_workers,
-          num_classes,
-          device,
-          lr,
-          epochs, 
-          saved_dir
-          ):
+
+def train(
+    random_seed,
+    image_size,
+    train_dir,
+    valid_dir,
+    train_batch_size,
+    valid_batch_size,
+    num_workers,
+    num_classes,
+    device,
+    lr,
+    epochs,
+    saved_dir,
+):
 
     seed_everything(random_seed)
 
     train_transform = transforms.Compose(
         [
-            transforms.Resize((image_size,image_size)),
+            transforms.Resize((image_size, image_size)),
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )
     valid_transform = transforms.Compose(
         [
-            transforms.Resize((image_size,image_size)),
+            transforms.Resize((image_size, image_size)),
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )
 
@@ -91,7 +93,7 @@ def train(random_seed,
     valid_loader = DataLoader(valid_dataset, valid_batch_size, False)
 
     # model = torch.load('models/affectnet_emotions/enet_b2_8_best.pt')
-    model = torch.load('models/affectnet_emotions/enet_b2_8.pt')
+    model = torch.load("models/affectnet_emotions/enet_b2_8.pt")
     # model = torch.load('models/pretrained_faces/state_vggface2_enet2.pt')
     model.classifier = nn.Linear(1408, num_classes)
     model = model.to(device)
@@ -101,7 +103,7 @@ def train(random_seed,
     # scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
-    best_acc=0
+    best_acc = 0
     for epoch in tqdm(range(epochs)):
         epoch_loss = 0
         epoch_accuracy = 0
@@ -147,13 +149,13 @@ def train(random_seed,
         scheduler.step()
         if not os.path.exists(saved_dir):
             os.makedirs(saved_dir)
-        
-        torch.save(model, os.path.join(saved_dir, 'latest.pt'))
 
-        if best_acc<epoch_val_accuracy:
-            best_acc=epoch_val_accuracy
-            torch.save(model, os.path.join(saved_dir, 'best.pt'))
-    
+        torch.save(model, os.path.join(saved_dir, "latest.pt"))
+
+        if best_acc < epoch_val_accuracy:
+            best_acc = epoch_val_accuracy
+            torch.save(model, os.path.join(saved_dir, "best.pt"))
+
             print(f"Best acc:{best_acc}")
             print(
                 f"val_loss : {epoch_val_loss:.4f} - val_acc: {epoch_val_accuracy:.4f}\n"
@@ -176,19 +178,21 @@ def main():
     lr = args.learning_rate
     epochs = args.epochs
     saved_dir = args.saved_dir
-    train(random_seed,
-          image_size,
-          train_dir, 
-          valid_dir, 
-          train_batch_size,
-          valid_batch_size,
-          num_workers,
-          num_classes,
-          device,
-          lr,
-          epochs, 
-          saved_dir
-          )
+    train(
+        random_seed,
+        image_size,
+        train_dir,
+        valid_dir,
+        train_batch_size,
+        valid_batch_size,
+        num_workers,
+        num_classes,
+        device,
+        lr,
+        epochs,
+        saved_dir,
+    )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
