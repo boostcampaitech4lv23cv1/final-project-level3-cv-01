@@ -15,14 +15,17 @@ st.title("HEY-I")
 # print (os.getcwd()) #현재 디렉토리의
 # print (os.path.realpath(__file__))#파일
 
-#print("isfile : ",os.path.isfile("streamlit/pages/hey-i-375802-e6e402d22694.json"))
+###
+FLAG = True
 print("isfile : ",os.path.isfile("hey-i-375802-e6e402d22694.json"))
 if os.path.isfile("hey-i-375802-e6e402d22694.json"): 
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="hey-i-375802-e6e402d22694.json"
     print("FINDING KEY SUCCEED!")
 else:
     print("COULD NOT FIND KEY")
-
+    FLAG=False
+    
+###
 if "confirm_video" in st.session_state.keys():
     if os.path.exists(st.session_state.confirm_video):
         st.subheader("면접 영상 분석 결과입니다.")
@@ -60,18 +63,19 @@ if "confirm_video" in st.session_state.keys():
             video_list.append(f"{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/pose_recording.webm")
             video_list.append(f"{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm")
             
-            ### UPLOAD
-            ### cloud 권한 설정
-            storage_client = storage.Client()
-            bucket_name = "heyi-storage"  # 서비스 계정 생성한 bucket 이름 입력
-            
-            for vid in video_list:
-                source_file_name = (f"./{vid}")    # GCP에 업로드할 파일 절대경로
-                destination_blob_name = f"{vid}"  # 업로드할 파일을 Cloud Storage에 저장할 때의 이름
-                bucket = storage_client.bucket(bucket_name)
-                blob = bucket.blob(destination_blob_name)
-                blob.upload_from_filename(source_file_name)
-                print(f"{vid} is uploaded!")
+            if FLAG:
+                ### UPLOAD
+                ### cloud 권한 설정
+                storage_client = storage.Client()
+                bucket_name = "heyi-storage"  # 서비스 계정 생성한 bucket 이름 입력
+                
+                for vid in video_list:
+                    source_file_name = (f"./{vid}")    # GCP에 업로드할 파일 절대경로
+                    destination_blob_name = f"{vid}"  # 업로드할 파일을 Cloud Storage에 저장할 때의 이름
+                    bucket = storage_client.bucket(bucket_name)
+                    blob = bucket.blob(destination_blob_name)
+                    blob.upload_from_filename(source_file_name)
+                    print(f"{vid} is uploaded!")
                 
 
             tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])
