@@ -171,5 +171,12 @@ cython_debug/
 # db
 **/db/**
 
+# KEY
+hey-i-375802-e6e402d22694.json
+*.webm
+*.jpg
+
+# pytorch lightning
+#mlflow
 **/logs/
 **/mlruns/
