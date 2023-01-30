@@ -4,9 +4,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import glob
 sys.path.append(os.getcwd())
-import model.face.face_recognition_deepface as fr
+#import model.face.face_recognition_deepface as fr
 from model.pose import pose_with_mediapipe as pwm
 import model.eye.gaze_tracking.gaze_tracking as gt
+import model.face.inference_pl as fer
 
 app = FastAPI(title="HEY-I", description="This is a demo of HEY-I")
 
@@ -26,17 +27,18 @@ def base():
 def get_emotion_df(inp: InferenceFace):
     VIDEO_PATH = inp.VIDEO_PATH
     SAVED_DIR = inp.SAVED_DIR
-    frames = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
-    emotions_mtcnn = fr.analyze_emotion(frames)
-    df = fr.make_emotion_df(emotions_mtcnn)
-    rec_image_list = fr.add_emotion_on_frame(emotions_mtcnn, df, SAVED_DIR)
-    fr.frame_to_video(rec_image_list, VIDEO_PATH)
+    frames_dir = fer.video_to_frame(VIDEO_PATH, SAVED_DIR)
+    emotions_mtcnn = fer.analyze_emotion(frames_dir)
+    df = fer.make_emotion_df(emotions_mtcnn)
+    rec_image_list = fer.add_emotion_on_frame(emotions_mtcnn, df, SAVED_DIR)
+    fer.frame_to_video(rec_image_list, VIDEO_PATH)
 
-    df_binary = fr.make_binary_df(emotions_mtcnn, df)
+    df_binary = fer.make_binary_df(emotions_mtcnn, df)
 
     df_json = df_binary.to_json(orient="records")
     df_response = JSONResponse(json.loads(df_json))
     return df_response
+    #return df_binary
 
 
 @app.post("/shoulder_pose_estimation")
@@ -72,5 +74,5 @@ def get_eye_df(inp: InferenceFace):
     return df_response
 
 
-# if __name__ == '__main__':
-#     uvicorn.run('FastAPI.main:app', host='0.0.0.0', port=8000, reload=True)
+#if __name__ == '__main__':
+#    uvicorn.run('FastAPI.main:app', host='0.0.0.0', port=8000, reload=True)
