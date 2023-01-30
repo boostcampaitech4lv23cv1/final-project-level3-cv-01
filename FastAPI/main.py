@@ -7,7 +7,7 @@ sys.path.append(os.getcwd())
 #import model.face.face_recognition_deepface as fr
 from model.pose import pose_with_mediapipe as pwm
 import model.eye.gaze_tracking.gaze_tracking as gt
-import model.face.inference_pl as fer
+import model.face.fer_pl as fer
 
 app = FastAPI(title="HEY-I", description="This is a demo of HEY-I")
 
