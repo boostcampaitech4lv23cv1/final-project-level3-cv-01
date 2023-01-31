@@ -1,7 +1,7 @@
 import os
 import sys
 import glob
-import json  # , uvicorn
+import json
 
 sys.path.append(os.getcwd())
 
@@ -9,7 +9,6 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 
-# import model.face.face_recognition_deepface as fr
 import model.face.utils.face_recognition_deepface as fr
 from model.pose import pose_with_mediapipe as pwm
 import model.eye.gaze_tracking.gaze_tracking as gt

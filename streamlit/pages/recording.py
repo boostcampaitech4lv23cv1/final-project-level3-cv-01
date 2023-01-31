@@ -122,8 +122,15 @@ if "video_dir" in st.session_state.keys():
                     )
                     st.session_state.upload_dir = upload_path
 
-                    # 녹화한 영상 cloud에 업로드
+                    start = time.time()  # 업로드 시간 측정
+                    # 1. Front에서 녹화한 영상 클라우드에 업로드
                     upload_video(
                         file_path=st.session_state.video_dir, upload_path=upload_path
                     )
-                    print(f"The video has been uploaded to {upload_path}")
+                    print(f"Front에서 클라우드로 업로드한 영상 경로 {upload_path}")
+
+                    # 시간 측정
+                    elapsed_time = int(time.time() - start)
+                    print(
+                        f"[recording에서 녹화한 영상 업로드 시간] {elapsed_time//60:02d}:{elapsed_time%60:02d}"
+                    )
