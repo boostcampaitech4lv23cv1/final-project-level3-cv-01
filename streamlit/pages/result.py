@@ -52,7 +52,8 @@ if "confirm_video" in st.session_state.keys():
                 r_hand = requests.post(BACKEND_POSE_HAND, json=input_json)
                 r_eye = requests.post(BACKEND_EYE, json=input_json)
 
-            result = pd.read_json(r.text, orient="records")
+            #result = pd.read_json(r.text, orient="records")
+            result = r
             eye_result = pd.read_json(r_eye.text, orient="records")
             shoulder_result = pd.read_json(r_shoulder.json(), orient="records")
             hand_result = pd.read_json(r_hand.json(), orient="records")

@@ -7,8 +7,10 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 import pandas as pd
-from fer_pl import LightningModel
-from dataset_pl import testDataset
+#from fer_pl import LightningModel
+from model.face.fer_pl import LightningModel
+from model.face.dataset_pl import testDataset
+#from dataset_pl import testDataset
 
 idx_to_class = {
     0: "angry",
@@ -52,7 +54,7 @@ def video_to_frame(VIDEO_PATH, SAVED_DIR):
     return frames
 
 
-def analyze_emotion(frames_dir, model_ckpt_name, batch_size=8):
+def analyze_emotion(frames_dir, model_ckpt_name="./models/best_val_posneg_acc.ckpt", batch_size=8):
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     model = LightningModel.load_from_checkpoint(model_ckpt_name)
@@ -101,24 +103,15 @@ def add_emotion_on_frame(emotions_mtcnn, saved_dir):
     images = glob.glob(f"{saved_dir}/*.jpg")
     images.sort()
 
+    emotions = [emotion[1] for emotion in emotions_mtcnn.values()]
+
     rec_image_list = []
-    for idx, (region, i) in enumerate(zip(regions, images)):
-        pth = cv2.imread(i)
-        rec = region
-        x = rec[0]
-        y = rec[1] - 10
-        pos = (x, y)
-        rec_image = cv2.rectangle(pth, rec, (0, 255, 0), thickness=4)
-        rec_image = cv2.putText(
-            rec_image,
-            emotions_mtcnn['values'][idx],
-            pos,
-            cv2.FONT_HERSHEY_SIMPLEX,
-            2,
-            (36, 255, 12),
-            3,
-        )
-        rec_image_list.append(rec_image)
+    for idx, (region, img, emotion) in enumerate(zip(regions, images, emotions)):
+        img = cv2.imread(img)
+        xmin, ymin, xmax, ymax = region
+        rec_image = cv2.rectangle(img, (xmin, ymin), (xmax, ymax), (0, 255, 0), thickness=3)
+        cv2.putText(rec_image, emotion, (xmin, ymin-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (36,255,12), 2)
+        rec_image_list.append(rec_image.copy())
     return rec_image_list
 
 
@@ -132,8 +125,15 @@ def frame_to_video(rec_image_list, video_path):
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
     
     vid_save_name = f"./{video_path.split('/')[1]}/{video_path.split('/')[2]}/face_{video_path.split('/')[-1]}"
+    #vid_path, vid_name = os.path.join(*video_path.split("/")[:-1]), video_path.split("/")[-1]
+    #vid_name = "face_"+vid_name
+    #vid_path = "/"+vid_path
+    #vid_save_name = os.path.join(vid_path,vid_name)
+
+    print("vid_save_name:",vid_save_name)
     out = cv2.VideoWriter(vid_save_name, fourcc, 2, (width, height))
     for rec_frame in rec_image_list:
+        print(rec_frame.shape)
         out.write(rec_frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
@@ -142,7 +142,7 @@ def frame_to_video(rec_image_list, video_path):
     out.release()
     cv2.destroyAllWindows()
 
-def make_binary_df(emotions_mtcnn, df_mtcnn):
+def make_binary_df(emotions_mtcnn):
     pos_emo = ("happy", "neutral")
     #neg_emp = ("angry", "disgust", "fear", "sad", "surprise")
     binary_emotion = ["positive" if v in pos_emo else "negative" for v in emotions_mtcnn.values()]

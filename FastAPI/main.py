@@ -7,7 +7,7 @@ sys.path.append(os.getcwd())
 #import model.face.face_recognition_deepface as fr
 from model.pose import pose_with_mediapipe as pwm
 import model.eye.gaze_tracking.gaze_tracking as gt
-import model.face.fer_pl as fer
+import model.face.fastapi_with_fer as fer
 
 app = FastAPI(title="HEY-I", description="This is a demo of HEY-I")
 
@@ -28,17 +28,19 @@ def get_emotion_df(inp: InferenceFace):
     VIDEO_PATH = inp.VIDEO_PATH
     SAVED_DIR = inp.SAVED_DIR
     frames_dir = fer.video_to_frame(VIDEO_PATH, SAVED_DIR)
-    emotions_mtcnn = fer.analyze_emotion(frames_dir)
+    print('frame_dir:', frames_dir)
+    emotions_mtcnn = fer.analyze_emotion(SAVED_DIR)
+    print('emotion_mtcnn:',emotions_mtcnn)
     df = fer.make_emotion_df(emotions_mtcnn)
-    rec_image_list = fer.add_emotion_on_frame(emotions_mtcnn, df, SAVED_DIR)
+    rec_image_list = fer.add_emotion_on_frame(emotions_mtcnn, SAVED_DIR)
     fer.frame_to_video(rec_image_list, VIDEO_PATH)
 
-    df_binary = fer.make_binary_df(emotions_mtcnn, df)
+    df_binary = fer.make_binary_df(emotions_mtcnn)
 
-    df_json = df_binary.to_json(orient="records")
-    df_response = JSONResponse(json.loads(df_json))
-    return df_response
-    #return df_binary
+    #df_json = df_binary.to_json(orient="records")
+    #df_response = JSONResponse(json.loads(df_json))
+    #return df_response
+    return df_binary
 
 
 @app.post("/shoulder_pose_estimation")
