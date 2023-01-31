@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.append(os.getcwd())
 
 import cv2
@@ -49,9 +50,13 @@ if start_recording:
         start_time = datetime.now(timezone("Asia/Seoul")).strftime("%y%m%d_%H%M%S")
         # if not os.path.exists(f"./{st.session_state.name}_{st.session_state.num}"):
         #     os.makedirs(f"./{st.session_state.name}_{st.session_state.num}")
-        if not os.path.exists(f"./{st.session_state.name}_{st.session_state.num}/{start_time}"):
-            os.makedirs(f"./{st.session_state.name}_{st.session_state.num}/{start_time}")    
-        
+        if not os.path.exists(
+            f"./{st.session_state.name}_{st.session_state.num}/{start_time}"
+        ):
+            os.makedirs(
+                f"./{st.session_state.name}_{st.session_state.num}/{start_time}"
+            )
+
         video_dir = f"./{st.session_state.name}_{st.session_state.num}/{start_time}/recording.webm"
         st.session_state.video_dir = video_dir
         out = cv2.VideoWriter(video_dir, fourcc, fps / 4, (w, h))
@@ -90,7 +95,7 @@ if start_recording:
 
     video.release()
     out.release()
-    
+
     cv2.destroyAllWindows()
 
 
@@ -110,16 +115,15 @@ if "video_dir" in st.session_state.keys():
                 if confirm:
                     st.write("분석할 영상이 확인 되었습니다. Result 에서 결과를 확인하세요.")
                     st.session_state.confirm_video = st.session_state.video_dir
-                    
-                    
-                    upload_path = os.path.join(*st.session_state.video_dir.split("/")[-3:])
+
+                    # 녹화한 영상 cloud에 업로드할 경로
+                    upload_path = os.path.join(
+                        *st.session_state.video_dir.split("/")[-3:]
+                    )
                     st.session_state.upload_dir = upload_path
-                    
-                    upload_video(file_path=st.session_state.video_dir, upload_path=upload_path)
+
+                    # 녹화한 영상 cloud에 업로드
+                    upload_video(
+                        file_path=st.session_state.video_dir, upload_path=upload_path
+                    )
                     print(f"The video has been uploaded to {upload_path}")
-
-                    
-
-
-                    
-

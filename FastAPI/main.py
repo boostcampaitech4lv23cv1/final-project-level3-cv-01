@@ -1,14 +1,16 @@
 import os
 import sys
 import glob
-import json #, uvicorn
+import json  # , uvicorn
+
 sys.path.append(os.getcwd())
 
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 
-import model.face.face_recognition_deepface as fr
+# import model.face.face_recognition_deepface as fr
+import model.face.utils.face_recognition_deepface as fr
 from model.pose import pose_with_mediapipe as pwm
 import model.eye.gaze_tracking.gaze_tracking as gt
 from FastAPI.utils import upload_video, download_video
@@ -26,25 +28,23 @@ class InferenceFace(BaseModel):
 def base():
     return {"hello": "world"}
 
+
 @app.post("/save_origin_video")
-#def save_video(storage_path:str, download_path:str):
 def save_video(inp: InferenceFace):
     storage_path = inp.VIDEO_PATH
     download_path = inp.SAVED_DIR
     os.makedirs(os.path.join(*download_path.split("/")[1:-1]), exist_ok=True)
     download_video(storage_path=storage_path, download_path=download_path)
+    print(f"The video was uploaded from {download_path} to {storage_path}")
     return storage_path, download_path
 
+
 @app.post("/upload_predict_video")
-#def save_video(storage_path:str, download_path:str):
 def save_video(inp: InferenceFace):
     storage_path = inp.VIDEO_PATH
     download_path = inp.SAVED_DIR
-    print("!!!!!!storage_path",storage_path)
-    print("!!!!!!download_path",download_path)
-    #os.makedirs(os.path.join(*download_path.split("/")[1:-1]), exist_ok=True)
-    #download_video(storage_path=storage_path, download_path=download_path)
     upload_video(file_path=download_path, upload_path=storage_path)
+    print(f"The video was saved from {storage_path} to {download_path}")
     return storage_path, download_path
 
 
@@ -94,7 +94,7 @@ def get_eye_df(inp: InferenceFace):
     df_json = df.to_json(orient="records")
     df_response = JSONResponse(json.loads(df_json))
 
-    gaze.frame_to_video(VIDEO_PATH,anno_frames)
+    gaze.frame_to_video(VIDEO_PATH, anno_frames)
     return df_response
 
 

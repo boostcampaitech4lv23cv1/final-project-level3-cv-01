@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.append(os.getcwd())
 
 import time
@@ -14,21 +15,23 @@ BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
 BACKEND_POSE_SHOULDER = "http://127.0.0.1:8000/shoulder_pose_estimation"
 BACKEND_POSE_HAND = "http://127.0.0.1:8000/hand_pose_estimation"
 BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
+SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
+UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
 st.set_page_config(layout="wide")
 st.title("HEY-I")
 # print (os.getcwd()) #현재 디렉토리의
 # print (os.path.realpath(__file__))#파일
 
 ###
-FLAG = True
-print("isfile : ",os.path.isfile("hey-i-375802-e6e402d22694.json"))
-if os.path.isfile("hey-i-375802-e6e402d22694.json"): 
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="hey-i-375802-e6e402d22694.json"
+# key 파일 존재여부
+print("isfile : ", os.path.isfile("hey-i-375802-e6e402d22694.json"))
+if os.path.isfile("hey-i-375802-e6e402d22694.json"):
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "hey-i-375802-e6e402d22694.json"
     print("FINDING KEY SUCCEED!")
 else:
     print("COULD NOT FIND KEY")
-    FLAG=False
-    
+
+
 ###
 if "confirm_video" in st.session_state.keys():
     if os.path.exists(st.session_state.confirm_video):
@@ -42,12 +45,17 @@ if "confirm_video" in st.session_state.keys():
 
         inference = st.button("Inference")
         if inference:
-            SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
-            save_input_json = {"VIDEO_PATH": st.session_state.upload_dir, "SAVED_DIR": st.session_state.video_dir}
+
+            save_input_json = {
+                "VIDEO_PATH": st.session_state.upload_dir,
+                "SAVED_DIR": st.session_state.video_dir,
+            }
             temp = requests.post(SAVE_REQUEST_DIR, json=save_input_json)
 
             VIDEO_PATH = st.session_state.confirm_video
-            SAVED_DIR = f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/frames"
+            SAVED_DIR = (
+                f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/frames"
+            )
             input_json = {"VIDEO_PATH": VIDEO_PATH, "SAVED_DIR": SAVED_DIR}
 
             with st.spinner("inferencing..."):
@@ -61,27 +69,35 @@ if "confirm_video" in st.session_state.keys():
             shoulder_result = pd.read_json(r_shoulder.json(), orient="records")
             hand_result = pd.read_json(r_hand.json(), orient="records")
 
-            UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
-            for task in ("face","pose","eye"):
+            for task in ("face", "pose", "eye"):
                 upload_name = task + "_" + st.session_state.upload_dir.split("/")[-1]
-                upload_folder = os.path.join(*st.session_state.upload_dir.split("/")[:-1])
-                upload_dir = os.path.join(upload_folder,upload_name)
+                upload_folder = os.path.join(
+                    *st.session_state.upload_dir.split("/")[:-1]
+                )
+                upload_dir = os.path.join(upload_folder, upload_name)
                 download_name = upload_name
-                download_folder = os.path.join(*st.session_state.video_dir.split("/")[:-1])
-                download_dir = os.path.join(download_folder,download_name)
+                download_folder = os.path.join(
+                    *st.session_state.video_dir.split("/")[:-1]
+                )
+                download_dir = os.path.join(download_folder, download_name)
 
-                upload_input_json = {"VIDEO_PATH": upload_dir, "SAVED_DIR": download_dir}
+                upload_input_json = {
+                    "VIDEO_PATH": upload_dir,
+                    "SAVED_DIR": download_dir,
+                }
                 temp = requests.post(UPLOAD_REQUEST_DIR, json=upload_input_json)
-            
-                download_video(storage_path=upload_dir,download_path=download_dir)
-                
+
+                download_video(storage_path=upload_dir, download_path=download_dir)
 
             tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])
 
             with tab1:
                 st.header("Emotion")
                 st.subheader("니 얼굴 표정 이렇다 임마 표정 좀 풀어라")
-                video_file = open(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/face_recording.webm", "rb")
+                video_file = open(
+                    f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/face_recording.webm",
+                    "rb",
+                )
                 video_bytes = video_file.read()
                 st.video(video_bytes)
                 st.line_chart(result)
@@ -91,7 +107,10 @@ if "confirm_video" in st.session_state.keys():
                 st.subheader("니 자세가 이렇다 삐딱하이 에픽하이")
 
                 # pose estimation
-                pose_video = open(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/pose_recording.webm", "rb")
+                pose_video = open(
+                    f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/pose_recording.webm",
+                    "rb",
+                )
                 pose_video_bytes = pose_video.read()
                 st.video(pose_video_bytes)
 
@@ -108,7 +127,10 @@ if "confirm_video" in st.session_state.keys():
                 st.subheader("동태눈깔 꼬라보노 보노보노")
                 st.write("None : 정면 | Side: 그 외")
                 st.dataframe(eye_result)
-                video_file = open(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm", "rb")
+                video_file = open(
+                    f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm",
+                    "rb",
+                )
                 video_bytes = video_file.read()
                 st.video(video_bytes)
 
