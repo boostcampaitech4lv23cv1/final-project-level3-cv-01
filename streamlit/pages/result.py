@@ -1,10 +1,14 @@
-import streamlit as st
-import sys
 import os
+import sys
+sys.path.append(os.getcwd())
+
+import time
+import streamlit as st
 import requests
 import pandas as pd
-import time
 from google.cloud import storage
+from FastAPI.utils import upload_video, download_video
+
 
 BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
 BACKEND_POSE_SHOULDER = "http://127.0.0.1:8000/shoulder_pose_estimation"
@@ -38,11 +42,11 @@ if "confirm_video" in st.session_state.keys():
 
         inference = st.button("Inference")
         if inference:
+            SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
+            save_input_json = {"VIDEO_PATH": st.session_state.upload_dir, "SAVED_DIR": st.session_state.video_dir}
+            temp = requests.post(SAVE_REQUEST_DIR, json=save_input_json)
 
             VIDEO_PATH = st.session_state.confirm_video
-            # SAVED_DIR = os.path.join(
-            #     os.path.splitext(st.session_state.confirm_video)[0], "_frames"
-            # )
             SAVED_DIR = f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/frames"
             input_json = {"VIDEO_PATH": VIDEO_PATH, "SAVED_DIR": SAVED_DIR}
 
@@ -57,25 +61,19 @@ if "confirm_video" in st.session_state.keys():
             shoulder_result = pd.read_json(r_shoulder.json(), orient="records")
             hand_result = pd.read_json(r_hand.json(), orient="records")
 
-            video_list= []
-            video_list.append(f"{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/recording.webm")
-            video_list.append(f"{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/face_recording.webm")
-            video_list.append(f"{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/pose_recording.webm")
-            video_list.append(f"{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm")
+            UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
+            for task in ("face","pose","eye"):
+                upload_name = task + "_" + st.session_state.upload_dir.split("/")[-1]
+                upload_folder = os.path.join(*st.session_state.upload_dir.split("/")[:-1])
+                upload_dir = os.path.join(upload_folder,upload_name)
+                download_name = upload_name
+                download_folder = os.path.join(*st.session_state.video_dir.split("/")[:-1])
+                download_dir = os.path.join(download_folder,download_name)
+
+                upload_input_json = {"VIDEO_PATH": upload_dir, "SAVED_DIR": download_dir}
+                temp = requests.post(UPLOAD_REQUEST_DIR, json=upload_input_json)
             
-            if FLAG:
-                ### UPLOAD
-                ### cloud 권한 설정
-                storage_client = storage.Client()
-                bucket_name = "heyi-storage"  # 서비스 계정 생성한 bucket 이름 입력
-                
-                for vid in video_list:
-                    source_file_name = (f"./{vid}")    # GCP에 업로드할 파일 절대경로
-                    destination_blob_name = f"{vid}"  # 업로드할 파일을 Cloud Storage에 저장할 때의 이름
-                    bucket = storage_client.bucket(bucket_name)
-                    blob = bucket.blob(destination_blob_name)
-                    blob.upload_from_filename(source_file_name)
-                    print(f"{vid} is uploaded!")
+                download_video(storage_path=upload_dir,download_path=download_dir)
                 
 
             tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])

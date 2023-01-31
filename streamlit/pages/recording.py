@@ -1,18 +1,15 @@
 import os
-import cv2
 import sys
+sys.path.append(os.getcwd())
+
+import cv2
 import time
 import tempfile
 from pytz import timezone
 from datetime import datetime
+
 import streamlit as st
-from google.cloud import storage
-
-
-# st.session_state.start_recording = False
-# st.session_state.end_recording = False
-
-# print(st.session_state)
+from FastAPI.utils import upload_video, download_video
 
 # Basic App Scaffolding
 st.title("HEY-I")
@@ -27,14 +24,11 @@ temp_file = tempfile.NamedTemporaryFile(delete=False)
 
 number = st.sidebar.number_input("분 입력", 1, 10)
 start_recording = st.sidebar.button("Start Recording")
-# start_recording = st.sidebar.button('Start Recordinging', key='start_recording')
 
 if start_recording:
-    # print(st.session_state.start_recording)
     st.markdown("**질문** : 1분 자기 소개를 해주세요")
     stframe = st.empty()
     with st.spinner("Get Ready for Camera"):
-        # video = cv2.VideoCapture('/opt/ml/TEST_VIDEO/ka.mp4')
         video = cv2.VideoCapture(0)
         # Load Web Camera
         if not (video.isOpened()):
@@ -98,14 +92,10 @@ if start_recording:
     out.release()
     
     cv2.destroyAllWindows()
-    
 
-# if end_recording and os.path.exists(st.session_state.video_dir):
-#     st.write(f'{video_dir}에 면접 영상이 저장되었습니다. 수고하셨습니다!')
 
 if "video_dir" in st.session_state.keys():
     if os.path.exists(st.session_state.video_dir):
-        # print(st.session_state.video_dir)
         video_file = open(st.session_state.video_dir, "rb")
         video_bytes = video_file.read()
         st.write("가장 최근 녹화된 영상을 확인하시겠습니까?")
@@ -120,5 +110,16 @@ if "video_dir" in st.session_state.keys():
                 if confirm:
                     st.write("분석할 영상이 확인 되었습니다. Result 에서 결과를 확인하세요.")
                     st.session_state.confirm_video = st.session_state.video_dir
+                    
+                    
+                    upload_path = os.path.join(*st.session_state.video_dir.split("/")[-3:])
+                    st.session_state.upload_dir = upload_path
+                    
+                    upload_video(file_path=st.session_state.video_dir, upload_path=upload_path)
+                    print(f"The video has been uploaded to {upload_path}")
+
+                    
+
+
                     
 

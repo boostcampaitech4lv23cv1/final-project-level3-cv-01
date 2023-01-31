@@ -1,12 +1,17 @@
-import os, sys, json, uvicorn
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+import os
+import sys
 import glob
+import json #, uvicorn
 sys.path.append(os.getcwd())
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+from fastapi.responses import JSONResponse
+
 import model.face.face_recognition_deepface as fr
 from model.pose import pose_with_mediapipe as pwm
 import model.eye.gaze_tracking.gaze_tracking as gt
+from FastAPI.utils import upload_video, download_video
 
 app = FastAPI(title="HEY-I", description="This is a demo of HEY-I")
 
@@ -20,6 +25,27 @@ class InferenceFace(BaseModel):
 @app.get("/")
 def base():
     return {"hello": "world"}
+
+@app.post("/save_origin_video")
+#def save_video(storage_path:str, download_path:str):
+def save_video(inp: InferenceFace):
+    storage_path = inp.VIDEO_PATH
+    download_path = inp.SAVED_DIR
+    os.makedirs(os.path.join(*download_path.split("/")[1:-1]), exist_ok=True)
+    download_video(storage_path=storage_path, download_path=download_path)
+    return storage_path, download_path
+
+@app.post("/upload_predict_video")
+#def save_video(storage_path:str, download_path:str):
+def save_video(inp: InferenceFace):
+    storage_path = inp.VIDEO_PATH
+    download_path = inp.SAVED_DIR
+    print("!!!!!!storage_path",storage_path)
+    print("!!!!!!download_path",download_path)
+    #os.makedirs(os.path.join(*download_path.split("/")[1:-1]), exist_ok=True)
+    #download_video(storage_path=storage_path, download_path=download_path)
+    upload_video(file_path=download_path, upload_path=storage_path)
+    return storage_path, download_path
 
 
 @app.post("/face_emotion")
