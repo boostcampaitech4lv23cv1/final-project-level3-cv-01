@@ -11,7 +11,8 @@ import pytorch_lightning as pl
 class LightningModel(pl.LightningModule):
     def __init__(
         self,
-        model_path: str = "../models/affectnet_emotions",
+        #model_path: str = "./models/affectnet_emotions",
+        model_path: str = "./model/face/models/affectnet_emotions",
         backbone: str = "enet_b2_7.pt",
         num_classes: int = 7,
         batch_size: int = 128,

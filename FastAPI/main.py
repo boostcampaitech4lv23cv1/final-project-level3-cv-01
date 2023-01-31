@@ -53,17 +53,20 @@ def upload_predict_video(inp: InferenceFace):
 def get_emotion_df(inp: InferenceFace):
     VIDEO_PATH = inp.VIDEO_PATH
     SAVED_DIR = inp.SAVED_DIR
-    frames = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
-    emotions_mtcnn = fr.analyze_emotion(frames)
-    df = fr.make_emotion_df(emotions_mtcnn)
-    rec_image_list = fr.add_emotion_on_frame(emotions_mtcnn, df, SAVED_DIR)
-    fr.frame_to_video(rec_image_list, VIDEO_PATH)
+    frames_dir = fer.video_to_frame(VIDEO_PATH, SAVED_DIR)
+    print('frame_dir:', frames_dir)
+    emotions_mtcnn = fer.analyze_emotion(SAVED_DIR)
+    print('emotion_mtcnn:',emotions_mtcnn)
+    df = fer.make_emotion_df(emotions_mtcnn)
+    rec_image_list = fer.add_emotion_on_frame(emotions_mtcnn, SAVED_DIR)
+    fer.frame_to_video(rec_image_list, VIDEO_PATH)
 
-    df_binary = fr.make_binary_df(emotions_mtcnn, df)
+    df_binary = fer.make_binary_df(emotions_mtcnn)
 
-    df_json = df_binary.to_json(orient="records")
-    df_response = JSONResponse(json.loads(df_json))
-    return df_response
+    #df_json = df_binary.to_json(orient="records")
+    #df_response = JSONResponse(json.loads(df_json))
+    #return df_response
+    return df_binary
 
 
 @app.post("/shoulder_pose_estimation")
@@ -99,5 +102,5 @@ def get_eye_df(inp: InferenceFace):
     return df_response
 
 
-# if __name__ == '__main__':
-#     uvicorn.run('FastAPI.main:app', host='0.0.0.0', port=8000, reload=True)
+#if __name__ == '__main__':
+#    uvicorn.run('FastAPI.main:app', host='0.0.0.0', port=8000, reload=True)

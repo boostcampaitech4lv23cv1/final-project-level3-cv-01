@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from tqdm import tqdm
 
+import pandas as pd
 from fer_pl import LightningModel
 from dataset_pl import testDataset
 
@@ -54,3 +55,12 @@ def inference(batch_size, model_ckpt_name, test_data_dir):
                 ]
 
     return bbox_dict
+
+if __name__=="__main__":
+    result = inference(
+        batch_size=4, 
+        model_ckpt_name="/opt/ml/input/final-project-level3-cv-01/model/face/models/best_val_posneg_acc.ckpt", 
+        test_data_dir="/opt/ml/input/final-project-level3-cv-01/db/vis_mhchoi_images"
+    )
+    df = pd.DataFrame({"frame":result.keys(),"values":[r[1] for r in result.values()]})
+    print(df)
