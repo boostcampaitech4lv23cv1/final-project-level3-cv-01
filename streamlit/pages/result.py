@@ -17,20 +17,12 @@ BACKEND_POSE_HAND = "http://127.0.0.1:8000/hand_pose_estimation"
 BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
 SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
 UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
+
 st.set_page_config(layout="wide")
 st.title("HEY-I")
-# print (os.getcwd()) #현재 디렉토리의
-# print (os.path.realpath(__file__))#파일
 
-###
-# key 파일 존재여부
-print("isfile : ", os.path.isfile("hey-i-375802-e6e402d22694.json"))
-if os.path.isfile("hey-i-375802-e6e402d22694.json"):
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "hey-i-375802-e6e402d22694.json"
-    print("FINDING KEY SUCCEED!")
-else:
-    print("COULD NOT FIND KEY")
-
+# key 존재 확인
+assert os.path.exists("./hey-i-375802-e6e402d22694.json"), "Key가 존재하지 않습니다."
 
 ###
 if "confirm_video" in st.session_state.keys():

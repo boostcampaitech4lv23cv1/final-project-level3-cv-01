@@ -29,8 +29,9 @@ def base():
     return {"hello": "world"}
 
 
+# Front에서 cloud에 저장된 원본 영상 Back에 저장
 @app.post("/save_origin_video")
-def save_video(inp: InferenceFace):
+def save_origin_video(inp: InferenceFace):
     storage_path = inp.VIDEO_PATH
     download_path = inp.SAVED_DIR
     os.makedirs(os.path.join(*download_path.split("/")[1:-1]), exist_ok=True)
@@ -39,8 +40,9 @@ def save_video(inp: InferenceFace):
     return storage_path, download_path
 
 
+# Back에서 저장한 모델 예측 영상 cloud에 저장
 @app.post("/upload_predict_video")
-def save_video(inp: InferenceFace):
+def upload_predict_video(inp: InferenceFace):
     storage_path = inp.VIDEO_PATH
     download_path = inp.SAVED_DIR
     upload_video(file_path=download_path, upload_path=storage_path)
