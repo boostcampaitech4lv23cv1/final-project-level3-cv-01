@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 
 import model.face.utils.face_recognition_deepface as fr
+from model.face.inference_pl import inference
 from model.pose import pose_with_mediapipe as pwm
 import model.eye.gaze_tracking.gaze_tracking as gt
 from FastAPI.utils import upload_video, download_video
@@ -51,22 +52,40 @@ def upload_predict_video(inp: InferenceFace):
 
 @app.post("/face_emotion")
 def get_emotion_df(inp: InferenceFace):
-    VIDEO_PATH = inp.VIDEO_PATH
+    VIDEO_PATH = download_path = inp.VIDEO_PATH
+    storage_path = os.path.join(*download_path.split('/')[1:])
     SAVED_DIR = inp.SAVED_DIR
-    frames_dir = fer.video_to_frame(VIDEO_PATH, SAVED_DIR)
+    print(VIDEO_PATH, SAVED_DIR)
+    print(storage_path, download_path)
+    # download_video(VIDEO_PATH, SAVED_DIR + '.webm')
+    # save_origin_video(inp)
+    os.makedirs(os.path.join(*download_path.split("/")[1:-1]), exist_ok=True)
+    download_video(storage_path=storage_path, download_path=download_path)
+    print(f"The video was uploaded from {download_path} to {storage_path}")
+    frames_dir = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
     print('frame_dir:', frames_dir)
-    emotions_mtcnn = fer.analyze_emotion(SAVED_DIR)
-    print('emotion_mtcnn:',emotions_mtcnn)
-    df = fer.make_emotion_df(emotions_mtcnn)
-    rec_image_list = fer.add_emotion_on_frame(emotions_mtcnn, SAVED_DIR)
-    fer.frame_to_video(rec_image_list, VIDEO_PATH)
+    output_dict, output_df = inference(32, './model/face/models/best_val_posneg_acc.ckpt', SAVED_DIR)
+    output_df.sort_values(by=['frame'], ignore_index=True, inplace=True)
+    # print(output_dict)
+    # print(output_df)
+    # output_df.to_csv('ddd.csv')
+    rec_image_list = fr.add_emotion_on_frame_new(output_df)
+    saved_video = fr.frame_to_video(rec_image_list, VIDEO_PATH)
 
-    df_binary = fer.make_binary_df(emotions_mtcnn)
+    # emotions_mtcnn = fr.analyze_emotion(SAVED_DIR)
+    # print('emotion_mtcnn:',emotions_mtcnn)
+    # df = fr.make_emotion_df(emotions_mtcnn)
+    # rec_image_list = fr.add_emotion_on_frame(emotions_mtcnn, SAVED_DIR)
+    # fr.frame_to_video(rec_image_list, VIDEO_PATH)
 
-    #df_json = df_binary.to_json(orient="records")
-    #df_response = JSONResponse(json.loads(df_json))
-    #return df_response
-    return df_binary
+    # df_binary = fr.make_binary_df(emotions_mtcnn)
+
+    uploaded_video = os.path.join(*saved_video.split('/')[1:])
+    upload_video(saved_video, uploaded_video)
+    df_json = output_df.to_json(orient="records")
+    df_response = JSONResponse(json.loads(df_json))
+    return df_response
+    # return df_binary
 
 
 @app.post("/shoulder_pose_estimation")

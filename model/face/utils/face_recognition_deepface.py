@@ -9,7 +9,6 @@ import argparse
 import streamlit as st
 
 
-
 def parse_args():
     """
     argparse 이용해서 실행 할 수 있게 추후 추가 예정
@@ -176,6 +175,35 @@ def add_emotion_on_frame(emotions_mtcnn, df_mtcnn, saved_dir):
     return rec_image_list
 
 
+def add_emotion_on_frame_new(df):
+
+    len_of_df = len(df)
+    rec_image_list = []
+
+    for i in range(len_of_df):
+        info = df.loc[i, :]
+        string = info['emotion']
+        pth = cv2.imread(info['frame'])
+        rec = (info['x'], info['y'], info['w'], info['h'])
+        x = rec[0]
+        y = rec[1]
+        pos = (x, y-10)
+        rec_image = cv2.rectangle(pth, rec, (0, 255, 0), thickness=4)
+        rec_image = cv2.putText(
+            rec_image,
+            string,
+            pos,
+            cv2.FONT_HERSHEY_SIMPLEX,
+            2,
+            (36, 255, 12),
+            3,
+        )
+
+        rec_image_list.append(rec_image)
+
+    return rec_image_list
+
+
 def frame_to_video(rec_image_list, video_path):
     cap = cv2.VideoCapture(video_path)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -195,6 +223,8 @@ def frame_to_video(rec_image_list, video_path):
     cap.release()
     out.release()
     cv2.destroyAllWindows()
+
+    return vid_save_name
 
 
 # def main():

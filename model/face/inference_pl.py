@@ -1,11 +1,16 @@
+import os
+import sys
+sys.path.append(os.getcwd())
+
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from tqdm import tqdm
 
 import pandas as pd
-from fer_pl import LightningModel
-from dataset_pl import testDataset
+
+from model.face.fer_pl import LightningModel
+from model.face.dataset_pl import testDataset
 
 idx_to_class = {
     0: "angry",
@@ -54,7 +59,18 @@ def inference(batch_size, model_ckpt_name, test_data_dir):
                     int(box[3][j]),
                 ]
 
-    return bbox_dict
+    df = pd.DataFrame(
+        {
+            "frame":bbox_dict.keys(),
+            "emotion":[r[1] for r in bbox_dict.values()],
+            "x":[r[2] for r in bbox_dict.values()],
+            "y":[r[3] for r in bbox_dict.values()],
+            "w":[r[4]-r[2] for r in bbox_dict.values()],
+            "h":[r[5]-r[3] for r in bbox_dict.values()],
+        }
+    )
+
+    return bbox_dict, df
 
 if __name__=="__main__":
     result = inference(
