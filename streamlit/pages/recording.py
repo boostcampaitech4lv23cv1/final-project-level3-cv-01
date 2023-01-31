@@ -59,7 +59,7 @@ if start_recording:
 
         video_dir = f"./{st.session_state.name}_{st.session_state.num}/{start_time}/recording.webm"
         st.session_state.video_dir = video_dir
-        out = cv2.VideoWriter(video_dir, fourcc, fps / 4, (w, h))
+        out = cv2.VideoWriter(video_dir, fourcc, fps / 3, (w, h))
         if not (out.isOpened()):
             print("File isn't opened!!")
             video.release()
@@ -121,6 +121,7 @@ if "video_dir" in st.session_state.keys():
                         *st.session_state.video_dir.split("/")[-3:]
                     )
                     st.session_state.upload_dir = upload_path
+                    upload_path = upload_path.replace('\\','/')
 
                     start = time.time()  # 업로드 시간 측정
                     # 1. Front에서 녹화한 영상 클라우드에 업로드
