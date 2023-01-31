@@ -24,7 +24,7 @@ def calculate_angle(a, b):
     return angle
 
 
-def main(video_path="./model/pose/mhchoi.mp4", out_video_root="./db"):
+def main(video_path="./model/pose/recording.webm", out_video_root="./db"):
     pose_config = "model/pose/mmpose/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192.py"
     pose_checkpoint = "https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w48_coco_256x192-b9e0b3ab_20200708.pth"
     show = False
@@ -65,7 +65,8 @@ def main(video_path="./model/pose/mhchoi.mp4", out_video_root="./db"):
     print("save_out_video", save_out_video)
 
     if save_out_video:
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        #fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        fourcc = cv2.VideoWriter_fourcc(*"vp80")
         videoWriter = cv2.VideoWriter(
             os.path.join(out_video_root, f"vis_{os.path.basename(video_path)}"),
             fourcc,

@@ -87,7 +87,7 @@ def get_hand_results(inp: InferenceFace):
 """
 
 
-@app.post("/demo_with_mmpose")
+@app.post("/pose_with_mmpose")
 def demo_with_mmpose(inp: InferenceFace):
     VIDEO_PATH = inp.VIDEO_PATH
     SAVED_DIR = inp.SAVED_DIR
