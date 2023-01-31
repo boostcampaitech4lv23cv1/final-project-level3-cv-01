@@ -61,19 +61,21 @@ if "confirm_video" in st.session_state.keys():
             input_json = {"VIDEO_PATH": VIDEO_PATH, "SAVED_DIR": SAVED_DIR}
 
             with st.spinner("inferencing..."):
-                r = requests.post(BACKEND_FACE, json=input_json)
-                r_shoulder = requests.post(BACKEND_POSE_SHOULDER, json=input_json)
-                r_hand = requests.post(BACKEND_POSE_HAND, json=input_json)
+                r_face = requests.post(BACKEND_FACE, json=input_json)
+                #r_shoulder = requests.post(BACKEND_POSE_SHOULDER, json=input_json)
+                #r_hand = requests.post(BACKEND_POSE_HAND, json=input_json)
+                r_pose = requests.post(BACKEND_POSE, json=input_json)
                 r_eye = requests.post(BACKEND_EYE, json=input_json)
 
             elapsed_time["inference_on_backend"] = (
                 int(time.time()) - elapsed_time["start"]
             )  # 시간 측정
 
-            result = pd.read_json(r.text, orient="records")
+            result = pd.read_json(r_face.text, orient="records")
             eye_result = pd.read_json(r_eye.text, orient="records")
-            shoulder_result = pd.read_json(r_shoulder.json(), orient="records")
-            hand_result = pd.read_json(r_hand.json(), orient="records")
+            #shoulder_result = pd.read_json(r_shoulder.json(), orient="records")
+            #hand_result = pd.read_json(r_hand.json(), orient="records")
+            pose_result = pd.read_json(r_pose.text, orient="records")
 
             # Back에서 저장한 모델 예측 영상 경로 만들기
             for task in ("face", "pose", "eye"):
