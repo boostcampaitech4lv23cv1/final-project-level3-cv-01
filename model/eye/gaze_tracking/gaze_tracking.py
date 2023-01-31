@@ -5,7 +5,7 @@ import dlib
 from .eye import Eye
 from .calibration import Calibration
 import pandas as pd
-
+import streamlit as st
 
 class GazeTracking(object):
     """
@@ -240,14 +240,14 @@ class GazeTracking(object):
 
         return frame
 
-    def frame_to_video(self, rec_image_list):
-        cap = cv2.VideoCapture(self.VIDEO_PATH)
+    def frame_to_video(self, VIDEO_PATH, rec_image_list):
+        cap = cv2.VideoCapture(VIDEO_PATH)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         fourcc = cv2.VideoWriter_fourcc(*"vp80")
-
-        out = cv2.VideoWriter(f"./db/eye.webm", fourcc, 2, (width, height))
+        vid_save_name = f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_{VIDEO_PATH.split('/')[-1]}"
+        out = cv2.VideoWriter(vid_save_name, fourcc, 2, (width, height))
 
         for rec_frame in rec_image_list:
             out.write(rec_frame)
