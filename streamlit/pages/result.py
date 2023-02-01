@@ -1,6 +1,7 @@
 import os
 import sys
 import cv2
+import ast
 from copy import deepcopy
 
 sys.path.append(os.getcwd())
@@ -144,6 +145,41 @@ if 'result_dir' in st.session_state.keys():
 
             st.dataframe(pose_result)
 
+            a = pose_result[['nose','left_eye','right_eye','left_ear','right_ear','left_shoulder','right_shoulder','left_elbow','right_elbow','left_wrist','right_wrist']]
+            ax = pd.DataFrame(columns = a.columns)
+            ay = pd.DataFrame(columns = a.columns)
+
+            for i in range(len(a)):
+                info = a.loc[i, :]
+                xlst = []
+                ylst = []
+                for j in info:
+                    x, y = ast.literal_eval(j)
+                    if x < 0 or x > 640:
+                        xlst.append(-1)
+                        ylst.append(-1)
+                    elif y < 0 or y > 640:
+                        xlst.append(-1)
+                        ylst.append(-1)        
+                    else:
+                        xlst.append(x)
+                        ylst.append(y)
+                ax.loc[i, :] = xlst
+                ay.loc[i, :] = ylst
+            info = pd.DataFrame(columns = ['eye-eye','ear-ear','shoulder-shoulder','nose-chest','right_hand-yes','left_hand-yes'])
+            for i in range(len(a)):
+                bx = ax.loc[i,:]
+                by = ay.loc[i,:]
+                lst = []
+                lst.append((by['right_eye'] - by['left_eye']) / (bx['right_eye'] - bx['left_eye']))
+                lst.append((by['right_ear'] - by['left_ear']) / (bx['right_ear'] - bx['left_ear']))
+                lst.append((by['right_shoulder'] - by['left_shoulder']) / (bx['right_shoulder'] - bx['left_shoulder']))
+                lst.append((by['nose'] - (by['right_shoulder'] + by['left_shoulder']) / 2) / (bx['nose'] - (bx['right_shoulder'] + bx['left_shoulder']) / 2))
+                lst.append(bx['right_wrist'] != -1)
+                lst.append(bx['left_wrist'] != -1)
+                info.loc[i, :] = lst
+            info['seconds'] = pose_sec
+            st.dataframe(info)
         # with tab3:
         #     st.header("Eye")
         #     st.subheader("동태눈깔 꼬라보노 보노보노")
