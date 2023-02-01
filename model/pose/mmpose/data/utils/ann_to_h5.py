@@ -19,8 +19,9 @@ for root, dirnames, filenames in os.walk(SOURCE_ANNOTATIONS):
     for filename in fnmatch.filter(filenames, "*.*"):
         annotations.append(os.path.join(root, filename))
 
-annotations = annotations[1:]
+# annotations = annotations[1:]
 
+indexes = range(20, 111)
 total_annotations = []
 for annotation in tqdm.tqdm(annotations):
     with open(annotation) as a:
@@ -30,13 +31,14 @@ for annotation in tqdm.tqdm(annotations):
         y_points = np.array(anno["people"]["pose_keypoints_2d"][1::3]) / 6
         new_xy = list(zip(x_points, y_points))
         total_annotations.append(new_xy)
+annotations_amount = len(total_annotations)
 total_annotations = np.array(total_annotations)
-print("total_annotations shape: ", np.array(total_annotations).shape)
+print("total_annotations shape: ", total_annotations.shape)
 
 
-total_annotated = [[True for _ in range(25)] for _ in range(12440)]
+total_annotated = [[True for _ in range(25)] for _ in range(annotations_amount)]
 total_annotated = np.array(total_annotated)
-print("total_annotated shape: ", np.array(total_annotated).shape)
+print("total_annotated shape: ", total_annotated.shape)
 
 
 total_images = []
@@ -72,18 +74,26 @@ skeletons = [
     [11, 22],
     [22, 23],
     [22, 24],
-    [0, 8],
-    [23, 24],
-    [20, 21],
+    [0, 1],
+    [1, 8],
+    [15, 16],
 ]
 skeletons = np.array(skeletons)
 print("skeletons shape: ", skeletons.shape)
 
 with h5py.File("../aihub/aihub_annotations.h5", "w") as f:
-    f.create_dataset("annotations", total_annotations.shape)
-    f.create_dataset("annotated", total_annotated.shape)
-    f.create_dataset("images", total_images.shape)
-    f.create_dataset("skeleton", skeletons.shape)
+    f.create_dataset(
+        "annotations", total_annotations.shape, compression="gzip", compression_opts=9
+    )
+    f.create_dataset(
+        "annotated", total_annotated.shape, compression="gzip", compression_opts=9
+    )
+    f.create_dataset(
+        "images", total_images.shape, compression="gzip", compression_opts=9
+    )
+    f.create_dataset(
+        "skeleton", skeletons.shape, compression="gzip", compression_opts=9
+    )
 
     f["annotations"][:] = total_annotations
     f["annotated"][:] = total_annotated
