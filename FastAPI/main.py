@@ -74,19 +74,9 @@ def get_emotion_df(inp: InferenceFace):
     print('frame_dir:', frames_dir)
     output_dict, output_df = inference(32, './model/face/models/best_val_posneg_acc.ckpt', SAVED_DIR)
     output_df.sort_values(by=['frame'], ignore_index=True, inplace=True)
-    # print(output_dict)
-    # print(output_df)
-    # output_df.to_csv('ddd.csv')
+
     rec_image_list = fr.add_emotion_on_frame_new(output_df)
     saved_video = fr.frame_to_video(rec_image_list, VIDEO_PATH)
-
-    # emotions_mtcnn = fr.analyze_emotion(SAVED_DIR)
-    # print('emotion_mtcnn:',emotions_mtcnn)
-    # df = fr.make_emotion_df(emotions_mtcnn)
-    # rec_image_list = fr.add_emotion_on_frame(emotions_mtcnn, SAVED_DIR)
-    # fr.frame_to_video(rec_image_list, VIDEO_PATH)
-
-    # df_binary = fr.make_binary_df(emotions_mtcnn)
 
     uploaded_video = os.path.join(*saved_video.split('/')[1:])
     upload_video(saved_video, uploaded_video)
@@ -100,7 +90,17 @@ def get_emotion_df(inp: InferenceFace):
 def demo_with_mmpose(inp: InferenceFace):
     VIDEO_PATH = inp.VIDEO_PATH
     SAVED_DIR = inp.SAVED_DIR
-    pose_df = pd.DataFrame(main(VIDEO_PATH, SAVED_DIR))
+    print(VIDEO_PATH, SAVED_DIR)
+    pose_dict = main(VIDEO_PATH, SAVED_DIR)
+    print(pose_dict)
+    pose_df = pd.DataFrame(pose_dict)
+
+    saved_video = "/".join(SAVED_DIR.split("/")[:-1]) +"/pose_"+os.path.basename(VIDEO_PATH)
+    uploaded_video = os.path.join(*saved_video.split('/')[1:])
+    print(saved_video)
+    print(uploaded_video)
+    upload_video(saved_video, uploaded_video)
+
     pose_json = pose_df.to_json(orient="records")
     pose_response = JSONResponse(json.loads(pose_json))
     return pose_response

@@ -111,16 +111,25 @@ def main(video_path="./model/pose/recording.webm", out_video_root="./db"):
         # -> 나중에 fps frame 번호에 해당하는 동영상 초 계산해서 추가할 예정
         frame_cnt += 1
         result["frame_id"].append(frame_cnt)
+        result['nose'].append(tuple(keypoints[0][:2]) if keypoints[0][:2].any() else (-1, -1))
+        result['left_eye'].append(tuple(keypoints[1][:2]) if keypoints[1][:2].any() else (-1, -1))
+        result['right_eye'].append((keypoints[2][:2]) if keypoints[2][:2].any() else (-1, -1))
+        result['left_ear'].append((keypoints[3][:2]) if keypoints[3][:2].any() else (-1, -1))
+        result['right_ear'].append((keypoints[4][:2]) if keypoints[4][:2].any() else (-1, -1))
+        result['left_shoulder'].append((keypoints[5][:2]) if keypoints[5][:2].any() else (-1, -1))
+        result['right_shoulder'].append((keypoints[6][:2]) if keypoints[6][:2].any() else (-1, -1))
+        result['left_elbow'].append((keypoints[7][:2]) if keypoints[7][:2].any() else (-1, -1))
+        result['right_elbow'].append((keypoints[8][:2]) if keypoints[8][:2].any() else (-1, -1))
+        result['left_wrist'].append((keypoints[9][:2]) if keypoints[9][:2].any() else (-1, -1))
+        result['right_wrist'].append((keypoints[10][:2]) if keypoints[10][:2].any() else (-1, -1))
+        # shoulder_angle = round(calculate_angle(left_shoulder, right_shoulder))
+        # result["shoulder_angle"].append(shoulder_angle)
 
-        left_shoulder = keypoints[5][:2]
-        right_shoulder = keypoints[6][:2]
-        shoulder_angle = round(calculate_angle(left_shoulder, right_shoulder))
-        result["shoulder_angle"].append(shoulder_angle)
+        # left_wrist = keypoints[9][:2]
+        # right_wrist = keypoints[10][:2]
 
-        left_wrist = keypoints[9][:2]
-        right_wrist = keypoints[10][:2]
-        hands_on = True if left_wrist.any() or right_wrist.any() else False
-        result["hands_on"].append(hands_on)
+        # hands_on = True if left_wrist.any() or right_wrist.any() else False
+        # result["hands_on"].append(hands_on)
 
         # show the results
         vis_frame = vis_pose_result(
