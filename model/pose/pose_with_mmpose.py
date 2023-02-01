@@ -62,13 +62,16 @@ def main(video_path="./model/pose/recording.webm", out_video_root="./db"):
         os.makedirs(out_video_root, exist_ok=True)
         save_out_video = True
 
-    print("save_out_video", save_out_video)
+    print("!!!!!save_out_video", out_video_root)
+    save_dir = "/".join(out_video_root.split("/")[:-1]) +"/pose_"+os.path.basename(video_path)
+    print("!!!!!videowriter path",save_dir)
 
     if save_out_video:
         #fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         fourcc = cv2.VideoWriter_fourcc(*"vp80")
+        print("out_video_root",out_video_root)
         videoWriter = cv2.VideoWriter(
-            os.path.join(out_video_root, f"vis_{os.path.basename(video_path)}"),
+            save_dir,
             fourcc,
             fps,
             size,
@@ -146,9 +149,10 @@ def main(video_path="./model/pose/recording.webm", out_video_root="./db"):
     if show:
         cv2.destroyAllWindows()
 
-    df = pd.DataFrame({k: v for k, v in result.items()})
+    #df = pd.DataFrame({k: v for k, v in result.items()})
 
-    return df
+    #return df
+    return dict(result)
 
 
 if __name__ == "__main__":

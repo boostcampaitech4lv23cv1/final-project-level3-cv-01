@@ -15,8 +15,6 @@ from FastAPI.utils import upload_video, download_video
 elapsed_time = dict()
 
 BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
-BACKEND_POSE_SHOULDER = "http://127.0.0.1:8000/shoulder_pose_estimation"
-BACKEND_POSE_HAND = "http://127.0.0.1:8000/hand_pose_estimation"
 BACKEND_POSE = "http://127.0.0.1:8000/pose_with_mmpose"
 BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
 SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
@@ -62,19 +60,16 @@ if "confirm_video" in st.session_state.keys():
 
             with st.spinner("inferencing..."):
                 r_face = requests.post(BACKEND_FACE, json=input_json)
-                #r_shoulder = requests.post(BACKEND_POSE_SHOULDER, json=input_json)
-                #r_hand = requests.post(BACKEND_POSE_HAND, json=input_json)
-                r_pose = requests.post(BACKEND_POSE, json=input_json)
                 r_eye = requests.post(BACKEND_EYE, json=input_json)
+                r_pose = requests.post(BACKEND_POSE, json=input_json)
 
             elapsed_time["inference_on_backend"] = (
                 int(time.time()) - elapsed_time["start"]
             )  # 시간 측정
 
-            result = pd.read_json(r_face.text, orient="records")
+            face_result = pd.read_json(r_face.text, orient="records")
             eye_result = pd.read_json(r_eye.text, orient="records")
-            #shoulder_result = pd.read_json(r_shoulder.json(), orient="records")
-            #hand_result = pd.read_json(r_hand.json(), orient="records")
+            
             pose_result = pd.read_json(r_pose.text, orient="records")
 
             # Back에서 저장한 모델 예측 영상 경로 만들기
@@ -130,7 +125,7 @@ if "confirm_video" in st.session_state.keys():
                 )
                 video_bytes = video_file.read()
                 st.video(video_bytes)
-                st.line_chart(result)
+                st.line_chart(face_result)
 
             with tab2:
                 st.header("Pose")
@@ -144,13 +139,9 @@ if "confirm_video" in st.session_state.keys():
                 pose_video_bytes = pose_video.read()
                 st.video(pose_video_bytes)
 
-                shoulder_result = pd.read_json(r_shoulder.json(), orient="records")
-                st.write("SHOULDER")
-                st.dataframe(shoulder_result)
-
-                hand_result = pd.read_json(r_hand.json(), orient="records")
-                st.write("HAND")
-                st.dataframe(hand_result)
+                pose_result = pd.read_json(r_pose.text, orient="records")
+                st.write("POSE")
+                st.dataframe(pose_result)
 
             with tab3:
                 st.header("Eye")
