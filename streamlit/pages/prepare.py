@@ -4,6 +4,11 @@ import numpy as np
 import streamlit as st
 
 st.set_page_config(layout='wide')
+
+if not 'name' in st.session_state.keys():
+    st.warning('HEY-I 페이지에서 이름과 번호를 입력하세요')
+    st.stop()
+
 st.markdown('# 면접 자세를 확인하세요')
 st.markdown('## 어깨와 얼굴을 선에 맞춰주세요')
 
@@ -35,6 +40,7 @@ with col1:
         w = round(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = round(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = cap.get(cv2.CAP_PROP_FPS)
+        # print(w, h)
 
         person = np.array(cv2.resize(cv2.imread('streamlit/person.png'), (w, h))) / 255
         person = np.array(person, dtype = 'u1')
