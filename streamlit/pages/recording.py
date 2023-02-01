@@ -157,16 +157,27 @@ if "video_dir" in st.session_state.keys():
                         )
                         print(VIDEO_PATH, SAVED_DIR)
                         input_json = {"VIDEO_PATH": VIDEO_PATH, "SAVED_DIR": SAVED_DIR}
+                        from concurrent.futures import ThreadPoolExecutor, as_completed
 
-                        r = requests.post(BACKEND_FACE, json=input_json)
-                        r_pose = requests.post(BACKEND_POSE_MMPOSE, json=input_json)
+                        r_ = []
+                        r_pose_=[]
+                        with ThreadPoolExecutor () as executor:
+                            r = executor.submit(requests.post, BACKEND_FACE, json=input_json)
+                            r_pose = executor.submit(requests.post, BACKEND_POSE_MMPOSE, json=input_json)
+                            r_.append(r)
+                            r_pose_.append(r_pose)
+                        # r = requests.post(BACKEND_FACE, json=input_json)
+                        # r_pose = requests.post(BACKEND_POSE_MMPOSE, json=input_json)
                         # r_eye = requests.post(BACKEND_EYE, json=input_json)
 
                         result_dir = st.session_state.result_dir = os.path.join(*SAVED_DIR.split('/')[:-1])
-
-                        result = pd.read_json(r.text, orient="records")
+                        for i in as_completed(r_):
+                            r_result = i.result().text
+                        for i in as_completed(r_pose_):
+                            r_pose_result = i.result().text
+                        result = pd.read_json(r_result, orient="records")
                         result.to_csv(os.path.join(result_dir, 'result.csv'))
-                        pose_result = pd.read_json(r_pose.text, orient="records")
+                        pose_result = pd.read_json(r_pose_result, orient="records")
                         pose_result.to_csv(os.path.join(result_dir, 'pose_result.csv'))
                         # hand_result = pd.read_json(r_hand.json(), orient="records")
 
