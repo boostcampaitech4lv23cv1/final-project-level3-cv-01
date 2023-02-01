@@ -88,9 +88,12 @@ def get_emotion_df(inp: InferenceFace):
 
 @app.post("/pose_with_mmpose")
 def demo_with_mmpose(inp: InferenceFace):
-    VIDEO_PATH = inp.VIDEO_PATH
+    VIDEO_PATH = download_path = inp.VIDEO_PATH
     SAVED_DIR = inp.SAVED_DIR
     print(VIDEO_PATH, SAVED_DIR)
+    storage_path = os.path.join(*download_path.split('/')[1:])
+    download_video(storage_path=storage_path, download_path=download_path)
+
     pose_dict = main(VIDEO_PATH, SAVED_DIR)
     print(pose_dict)
     pose_df = pd.DataFrame(pose_dict)
