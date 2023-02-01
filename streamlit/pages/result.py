@@ -33,8 +33,7 @@ if not 'name' in st.session_state.keys():
     st.stop()
 
 BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
-BACKEND_POSE_SHOULDER = "http://127.0.0.1:8000/shoulder_pose_estimation"
-BACKEND_POSE_HAND = "http://127.0.0.1:8000/hand_pose_estimation"
+BACKEND_POSE = "http://127.0.0.1:8000/pose_with_mmpose"
 BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
 SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
 UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"

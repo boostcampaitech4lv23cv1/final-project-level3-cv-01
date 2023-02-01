@@ -2,6 +2,7 @@ import os
 import sys
 import glob
 import json
+import pandas as pd
 
 sys.path.append(os.getcwd())
 
@@ -13,7 +14,9 @@ import model.face.utils.face_recognition_deepface as fr
 from model.face.inference_pl import inference
 from model.pose import pose_with_mediapipe as pwm
 import model.eye.gaze_tracking.gaze_tracking as gt
+from model.pose.pose_with_mmpose import main
 from FastAPI.utils import upload_video, download_video
+from typing import List
 
 app = FastAPI(title="HEY-I", description="This is a demo of HEY-I")
 
@@ -22,6 +25,11 @@ app = FastAPI(title="HEY-I", description="This is a demo of HEY-I")
 class InferenceFace(BaseModel):
     VIDEO_PATH: str
     SAVED_DIR: str
+
+class Item(BaseModel):
+    frame_id: List[int]
+    shoulder_angle: List[int]
+    hands_on: List[int]
 
 
 @app.get("/")
@@ -88,22 +96,14 @@ def get_emotion_df(inp: InferenceFace):
     # return df_binary
 
 
-@app.post("/shoulder_pose_estimation")
-def get_shoulder_results(inp: InferenceFace):
+@app.post("/pose_with_mmpose")
+def demo_with_mmpose(inp: InferenceFace):
     VIDEO_PATH = inp.VIDEO_PATH
-    shoulder_info, _ = pwm.run(VIDEO_PATH)
-    shoulder_json = pwm.dict_to_json(shoulder_info)
-    shoulder_response = JSONResponse(shoulder_json)
-    return shoulder_response
-
-
-@app.post("/hand_pose_estimation")
-def get_hand_results(inp: InferenceFace):
-    VIDEO_PATH = inp.VIDEO_PATH
-    _, hand_info = pwm.run(VIDEO_PATH)
-    hand_json = pwm.dict_to_json(hand_info)
-    hand_response = JSONResponse(hand_json)
-    return hand_response
+    SAVED_DIR = inp.SAVED_DIR
+    pose_df = pd.DataFrame(main(VIDEO_PATH, SAVED_DIR))
+    pose_json = pose_df.to_json(orient="records")
+    pose_response = JSONResponse(json.loads(pose_json))
+    return pose_response
 
 
 @app.post("/eye_tracking")
