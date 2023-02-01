@@ -35,7 +35,7 @@ def video_to_frame(VIDEO_PATH, SAVED_DIR):
 
         if not ret:  # 새로운 프레임을 못받아 왔을 때 braek
             break
-        if int(cap.get(1)) % int(fps) == 0:
+        if int(cap.get(1)) % int(fps / 3) == 0:
             cv2.imwrite(SAVED_DIR + "/frame%d.jpg" % count, frame)
             print("Saved frame number : ", str(int(cap.get(1))))
             count += 1
@@ -214,7 +214,7 @@ def frame_to_video(rec_image_list, video_path):
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
     
     vid_save_name = f"./{video_path.split('/')[1]}/{video_path.split('/')[2]}/face_{video_path.split('/')[-1]}"
-    out = cv2.VideoWriter(vid_save_name, fourcc, 2, (width, height))
+    out = cv2.VideoWriter(vid_save_name, fourcc, fps/3, (width, height))
     for rec_frame in rec_image_list:
         out.write(rec_frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
