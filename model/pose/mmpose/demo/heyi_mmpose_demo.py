@@ -132,7 +132,7 @@ def main():
         elapsed_time = f"{(current_time - start_time).total_seconds():.3f}초"
 
         left_shoulder = keypoints[5][:2]
-        right_shoulder = keypoints[6][:2]
+        right_shoulder = keypoints[2][:2]
         left_wrist = keypoints[9][:2]
         right_wrist = keypoints[10][:2]
 
