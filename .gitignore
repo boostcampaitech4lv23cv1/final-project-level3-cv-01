@@ -182,3 +182,9 @@ work_dirs/
 
 # openmim
 .mim/
+
+# vis_results
+vis_results/
+
+# mlflow
+mlruns/
