@@ -2,11 +2,11 @@ _base_ = [
     "../../../../_base_/default_runtime.py",
     "../../../../_base_/datasets/aihub.py",
 ]
-evaluation = dict(interval=10, metric="mAP", save_best="AP")
+evaluation = dict(interval=5, metric="mAP", save_best="AP")
 
 optimizer = dict(
     type="Adam",
-    lr=5e-4,
+    lr=5e-5,
 )
 optimizer_config = dict(grad_clip=None)
 # learning policy
@@ -15,68 +15,14 @@ lr_config = dict(
     warmup="linear",
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[170, 200],
+    step=[17, 20],
 )
-total_epochs = 210
+total_epochs = 21
 channel_cfg = dict(
     num_output_channels=25,
     dataset_joints=25,
-    dataset_channel=[
-        [
-            0,
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-        ],
-    ],
-    inference_channel=[
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-    ],
+    dataset_channel=[list(range(25))],
+    inference_channel=list(range(25)),
 )
 
 
@@ -203,7 +149,7 @@ test_pipeline = val_pipeline
 data_root = "data/aihub"
 dataset_type = "TopDownAihubDataset"
 data = dict(
-    samples_per_gpu=64,
+    samples_per_gpu=32,
     workers_per_gpu=2,
     val_dataloader=dict(samples_per_gpu=32),
     test_dataloader=dict(samples_per_gpu=32),
@@ -232,3 +178,5 @@ data = dict(
         dataset_info={{_base_.dataset_info}},
     ),
 )
+
+load_from = "https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w32_coco_256x192-c78dce93_20200708.pth"
