@@ -18,11 +18,15 @@ if not 'name' in st.session_state.keys():
     st.warning('HEY-I 페이지에서 이름과 번호를 입력하세요')
     st.stop()
 
-BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
-BACKEND_POSE_MMPOSE = "http://127.0.0.1:8000/pose_with_mmpose"
-BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
-SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
-UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
+# BACKEND_POSE_MMPOSE = "http://49.50.175.182:30001/pose_with_mmpose"
+BACKEND_FACE = "http://49.50.175.182:30001/face_emotion"
+BACKEND_POSE_MMPOSE = "http://49.50.175.182:30001/pose_with_mmpose"
+BACKEND_EYE = "http://49.50.175.182:30001/eye_tracking"
+SAVE_REQUEST_DIR = "http://49.50.175.182:30001/save_origin_video"
+UPLOAD_REQUEST_DIR = "http://49.50.175.182:30001/upload_predict_video"
+# BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
+# SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
+# UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
 
 # Basic App Scaffolding
 st.title("HEY-I")
