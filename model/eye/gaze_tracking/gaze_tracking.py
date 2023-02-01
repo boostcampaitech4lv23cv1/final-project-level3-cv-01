@@ -257,3 +257,5 @@ class GazeTracking(object):
         cap.release()
         out.release()
         cv2.destroyAllWindows()
+
+        return vid_save_name
