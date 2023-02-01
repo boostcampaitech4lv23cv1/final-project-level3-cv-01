@@ -19,8 +19,7 @@ if not 'name' in st.session_state.keys():
     st.stop()
 
 BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
-BACKEND_POSE_SHOULDER = "http://127.0.0.1:8000/shoulder_pose_estimation"
-BACKEND_POSE_HAND = "http://127.0.0.1:8000/hand_pose_estimation"
+BACKEND_POSE_MMPOSE = "http://127.0.0.1:8000/pose_with_mmpose"
 BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
 SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
 UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
@@ -159,22 +158,21 @@ if "video_dir" in st.session_state.keys():
                         print(VIDEO_PATH, SAVED_DIR)
                         input_json = {"VIDEO_PATH": VIDEO_PATH, "SAVED_DIR": SAVED_DIR}
 
-                        with st.spinner("inferencing..."):
-                            r = requests.post(BACKEND_FACE, json=input_json)
-                            # r_shoulder = requests.post(BACKEND_POSE_SHOULDER, json=input_json)
-                            # r_hand = requests.post(BACKEND_POSE_HAND, json=input_json)
-                            # r_eye = requests.post(BACKEND_EYE, json=input_json)
+                        r = requests.post(BACKEND_FACE, json=input_json)
+                        r_pose = requests.post(BACKEND_POSE_MMPOSE, json=input_json)
+                        # r_eye = requests.post(BACKEND_EYE, json=input_json)
+
+                        result_dir = st.session_state.result_dir = os.path.join(*SAVED_DIR.split('/')[:-1])
 
                         result = pd.read_json(r.text, orient="records")
-                        result_dir = st.session_state.result_dir = os.path.join(*SAVED_DIR.split('/')[:-1])
                         result.to_csv(os.path.join(result_dir, 'result.csv'))
-                        # eye_result = pd.read_json(r_eye.text, orient="records")
-                        # shoulder_result = pd.read_json(r_shoulder.json(), orient="records")
+                        pose_result = pd.read_json(r_pose.text, orient="records")
+                        pose_result.to_csv(os.path.join(result_dir, 'pose_result.csv'))
                         # hand_result = pd.read_json(r_hand.json(), orient="records")
 
                         # Back에서 저장한 모델 예측 영상 경로 만들기
                         # for task in ("face", "pose", "eye"):
-                        for task in ["face"]:
+                        for task in ["face", "pose"]:
                             upload_name = task + "_" + st.session_state.upload_dir.split("\\")[-1]
                             upload_folder = os.path.join(
                                 *st.session_state.upload_dir.split("\\")[:-1]
@@ -188,3 +186,4 @@ if "video_dir" in st.session_state.keys():
 
                             # 4. 클라우드에 저장된 모델 예측 영상 Front에 다운 받기
                             download_video(storage_path=upload_dir.replace('\\', '/'), download_path=download_dir)
+                        st.success('분석이 완료 되었습니다!!!', icon = '🔥')

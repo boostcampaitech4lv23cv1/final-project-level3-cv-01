@@ -48,17 +48,9 @@ if 'result_dir' in st.session_state.keys():
     if os.path.exists(st.session_state.confirm_video):
         st.subheader("면접 영상 분석 결과입니다.")
 
-        # check = st.checkbox('선택된 면접 영상을 확인하시겠습니까?')
-
-        # if check:
-        #     with st.expander("선택된 면접 영상입니다."):
-        #         video_file = open(st.session_state.confirm_video, "rb")
-        #         video_bytes = video_file.read()
-        #         st.write("선택된 영상입니다.")
-        #         st.video(video_bytes)
-
         VIDEO_PATH = st.session_state.confirm_video
         result = pd.read_csv(os.path.join(st.session_state.result_dir, 'result.csv'), index_col=0)
+        pose_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'pose_result.csv'), index_col=0)
         tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])
 
         with tab1:
@@ -135,25 +127,22 @@ if 'result_dir' in st.session_state.keys():
             else:
                 st.success('표정을 잘 지었습니다.')
 
-        # with tab2:
-        #     st.header("Pose")
-        #     st.subheader("니 자세가 이렇다 삐딱하이 에픽하이")
+        with tab2:
+            st.header("Pose")
+            st.subheader("니 자세가 이렇다 삐딱하이 에픽하이")
 
-        #     # pose estimation
-        #     pose_video = open(
-        #         f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/pose_recording.webm",
-        #         "rb",
-        #     )
-        #     pose_video_bytes = pose_video.read()
-        #     st.video(pose_video_bytes)
+            pose_video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/pose_recording.webm")
+            pose_video_len = pose_video.get(cv2.CAP_PROP_FRAME_COUNT) / pose_video.get(cv2.CAP_PROP_FPS)
+            pose_sec = [pose_video_len / len(pose_result) * (i + 1) for i in range(len(pose_result))]
+            pose_result['seconds'] = pose_sec
+            pose_video_file = open(
+                f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/pose_recording.webm",
+                "rb",
+            )
+            pose_video_bytes = pose_video_file.read()
+            st.video(pose_video_bytes)
 
-        #     shoulder_result = pd.read_json(r_shoulder.json(), orient="records")
-        #     st.write("SHOULDER")
-        #     st.dataframe(shoulder_result)
-
-        #     hand_result = pd.read_json(r_hand.json(), orient="records")
-        #     st.write("HAND")
-        #     st.dataframe(hand_result)
+            st.dataframe(pose_result)
 
         # with tab3:
         #     st.header("Eye")
