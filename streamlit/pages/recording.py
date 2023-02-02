@@ -20,8 +20,8 @@ import streamlit as st
 from google.cloud import storage
 from FastAPI.utils import upload_video, download_video
 
-if not 'name' in st.session_state.keys():
-    st.warning('HEY-I 페이지에서 이름과 번호를 입력하세요')
+if not "name" in st.session_state.keys():
+    st.warning("HEY-I 페이지에서 이름과 번호를 입력하세요")
     st.stop()
 
 # BACKEND_POSE_MMPOSE = "http://49.50.175.182:30001/pose_with_mmpose"
@@ -37,8 +37,7 @@ UPLOAD_REQUEST_DIR = "http://49.50.175.182:30001/upload_predict_video"
 # Basic App Scaffolding
 st.title("HEY-I")
 st.subheader("면접 영상을 녹화하세요")
-st.write("❗ 카메라 접근 권한을 승인해주세요 ❗")
-st.markdown("##### 선택한 시간이 지나거나 End Recording 버튼을 누르면 녹화가 종료됩니다.")
+st.write("❗ 카메라 접근 권한을 승인해주세요")
 
 # Create Sidebar
 st.sidebar.title("Settings")
@@ -131,80 +130,87 @@ if "video_dir" in st.session_state.keys():
                 st.write("분석할 영상이 확인 되었습니다. Result 에서 결과를 확인하세요.")
                 st.session_state.confirm_video = st.session_state.video_dir
 
-                        # 녹화한 영상 cloud에 업로드할 경로
-                        upload_path = os.path.join(
-                            *st.session_state.video_dir.split("/")[-3:]
-                        )
-                        st.session_state.upload_dir = upload_path
-                        upload_path = upload_path.replace('\\','/')
+                # 녹화한 영상 cloud에 업로드할 경로
+                upload_path = os.path.join(*st.session_state.video_dir.split("/")[-3:])
+                st.session_state.upload_dir = upload_path
+                upload_path = upload_path.replace("\\", "/")
 
-                        start = time.time()  # 업로드 시간 측정
-                        # 1. Front에서 녹화한 영상 클라우드에 업로드
-                        upload_video(
-                            file_path=st.session_state.video_dir, upload_path=upload_path
-                        )
-                        print(f"Front에서 클라우드로 업로드한 영상 경로 {upload_path}")
+                start = time.time()  # 업로드 시간 측정
+                # 1. Front에서 녹화한 영상 클라우드에 업로드
+                upload_video(
+                    file_path=st.session_state.video_dir, upload_path=upload_path
+                )
+                print(f"Front에서 클라우드로 업로드한 영상 경로 {upload_path}")
 
-                        # Front 에서 저장한 영상 경로와 저장할 클라우드 경로
-                        save_input_json = {
-                            "VIDEO_PATH": st.session_state.upload_dir,
-                            "SAVED_DIR": st.session_state.video_dir,
-                        }
-                        # 2. 클라우드에 저장된 영상 Back에 다운
-                        temp = requests.post(SAVE_REQUEST_DIR, json=save_input_json)
+                # Front 에서 저장한 영상 경로와 저장할 클라우드 경로
+                save_input_json = {
+                    "VIDEO_PATH": st.session_state.upload_dir,
+                    "SAVED_DIR": st.session_state.video_dir,
+                }
+                # 2. 클라우드에 저장된 영상 Back에 다운
+                temp = requests.post(SAVE_REQUEST_DIR, json=save_input_json)
 
-                        VIDEO_PATH = st.session_state.confirm_video
-                        SAVED_DIR = (
-                            f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/frames"
-                        )
-                        print(VIDEO_PATH, SAVED_DIR)
-                        input_json = {"VIDEO_PATH": VIDEO_PATH, "SAVED_DIR": SAVED_DIR}
-                        from concurrent.futures import ThreadPoolExecutor, as_completed
+                VIDEO_PATH = st.session_state.confirm_video
+                SAVED_DIR = (
+                    f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/frames"
+                )
+                print(VIDEO_PATH, SAVED_DIR)
+                input_json = {"VIDEO_PATH": VIDEO_PATH, "SAVED_DIR": SAVED_DIR}
+                from concurrent.futures import ThreadPoolExecutor, as_completed
 
-                        r_ = []
-                        r_pose_=[]
-                        r_eye_=[]
-                        with ThreadPoolExecutor () as executor:
-                            r = executor.submit(requests.post, BACKEND_FACE, json=input_json)
-                            r_.append(r)
-                            r_pose = executor.submit(requests.post, BACKEND_POSE_MMPOSE, json=input_json)
-                            r_pose_.append(r_pose)
-                            r_eye = executor.submit(requests.post, BACKEND_EYE, json=input_json)
-                            r_eye_.append(r_eye)
-                        # r = requests.post(BACKEND_FACE, json=input_json)
-                        # r_pose = requests.post(BACKEND_POSE_MMPOSE, json=input_json)
-                        # r_eye = requests.post(BACKEND_EYE, json=input_json)
+                r_ = []
+                r_pose_ = []
+                r_eye_ = []
+                with ThreadPoolExecutor() as executor:
+                    r = executor.submit(requests.post, BACKEND_FACE, json=input_json)
+                    r_.append(r)
+                    r_pose = executor.submit(
+                        requests.post, BACKEND_POSE_MMPOSE, json=input_json
+                    )
+                    r_pose_.append(r_pose)
+                    r_eye = executor.submit(requests.post, BACKEND_EYE, json=input_json)
+                    r_eye_.append(r_eye)
+                # r = requests.post(BACKEND_FACE, json=input_json)
+                # r_pose = requests.post(BACKEND_POSE_MMPOSE, json=input_json)
+                # r_eye = requests.post(BACKEND_EYE, json=input_json)
 
-                        result_dir = st.session_state.result_dir = os.path.join(*SAVED_DIR.split('/')[:-1])
-                        
-                        for i in as_completed(r_):
-                            r_result = i.result().text
-                        for i in as_completed(r_pose_):
-                            r_pose_result = i.result().text
-                        for i in as_completed(r_eye_):
-                            r_eye_result = i.result().text
+                result_dir = st.session_state.result_dir = os.path.join(
+                    *SAVED_DIR.split("/")[:-1]
+                )
 
-                        result = pd.read_json(r_result, orient="records")
-                        result.to_csv(os.path.join(result_dir, 'result.csv'))
-                        pose_result = pd.read_json(r_pose_result, orient="records")
-                        pose_result.to_csv(os.path.join(result_dir, 'pose_result.csv'))
-                        eye_result = pd.read_json(r_eye_result, orient='records')
-                        eye_result.to_csv(os.path.join(result_dir, 'eye_result.csv'))
+                for i in as_completed(r_):
+                    r_result = i.result().text
+                for i in as_completed(r_pose_):
+                    r_pose_result = i.result().text
+                for i in as_completed(r_eye_):
+                    r_eye_result = i.result().text
 
-                        # Back에서 저장한 모델 예측 영상 경로 만들기
-                        # for task in ("face", "pose", "eye"):
-                        for task in ["face","pose","eye"]:
-                            upload_name = task + "_" + st.session_state.upload_dir.split("\\")[-1]
-                            upload_folder = os.path.join(
-                                *st.session_state.upload_dir.split("\\")[:-1]
-                            )
-                            upload_dir = os.path.join(upload_folder, upload_name)
-                            download_name = upload_name
-                            download_folder = os.path.join(
-                                *st.session_state.video_dir.split("/")[:-1]
-                            )
-                            download_dir = os.path.join(download_folder, download_name)
+                result = pd.read_json(r_result, orient="records")
+                result.to_csv(os.path.join(result_dir, "result.csv"))
+                pose_result = pd.read_json(r_pose_result, orient="records")
+                pose_result.to_csv(os.path.join(result_dir, "pose_result.csv"))
+                eye_result = pd.read_json(r_eye_result, orient="records")
+                eye_result.to_csv(os.path.join(result_dir, "eye_result.csv"))
 
-                            # 4. 클라우드에 저장된 모델 예측 영상 Front에 다운 받기
-                            download_video(storage_path=upload_dir.replace('\\', '/'), download_path=download_dir)
-                        st.success('분석이 완료 되었습니다!!! Result 페이지에서 결과를 확인하세요!!!', icon = '🔥')
+                # Back에서 저장한 모델 예측 영상 경로 만들기
+                # for task in ("face", "pose", "eye"):
+                for task in ["face", "pose", "eye"]:
+                    upload_name = (
+                        task + "_" + st.session_state.upload_dir.split("\\")[-1]
+                    )
+                    upload_folder = os.path.join(
+                        *st.session_state.upload_dir.split("\\")[:-1]
+                    )
+                    upload_dir = os.path.join(upload_folder, upload_name)
+                    download_name = upload_name
+                    download_folder = os.path.join(
+                        *st.session_state.video_dir.split("/")[:-1]
+                    )
+                    download_dir = os.path.join(download_folder, download_name)
+
+                    # 4. 클라우드에 저장된 모델 예측 영상 Front에 다운 받기
+                    download_video(
+                        storage_path=upload_dir.replace("\\", "/"),
+                        download_path=download_dir,
+                    )
+                st.success("분석이 완료 되었습니다!!! Result 페이지에서 결과를 확인하세요!!!", icon="🔥")
