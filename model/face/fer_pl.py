@@ -41,7 +41,7 @@ class LightningModel(pl.LightningModule):
 
     def __build_model(self):
         # backbone = torch.load(self.model_backbone_path)
-        backbone = torch.load("./model/face/models/affectnet_emotions/enet_b2_7.pt")
+        backbone = torch.load("./model/face/models/affectnet_emotions/enet_b0_8_va_mtl.pt")
         _layers = list(backbone.children())
 
         self.feature_extractor = nn.Sequential(*_layers[:-1])
