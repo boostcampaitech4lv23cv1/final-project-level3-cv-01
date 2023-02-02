@@ -52,6 +52,7 @@ if 'result_dir' in st.session_state.keys():
         VIDEO_PATH = st.session_state.confirm_video
         result = pd.read_csv(os.path.join(st.session_state.result_dir, 'result.csv'), index_col=0)
         pose_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'pose_result.csv'), index_col=0)
+        eye_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'eye_result.csv'), index_col=0)
         tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])
 
         with tab1:
@@ -174,23 +175,36 @@ if 'result_dir' in st.session_state.keys():
                 lst.append((by['right_eye'] - by['left_eye']) / (bx['right_eye'] - bx['left_eye']))
                 lst.append((by['right_ear'] - by['left_ear']) / (bx['right_ear'] - bx['left_ear']))
                 lst.append((by['right_shoulder'] - by['left_shoulder']) / (bx['right_shoulder'] - bx['left_shoulder']))
-                lst.append((by['nose'] - (by['right_shoulder'] + by['left_shoulder']) / 2) / (bx['nose'] - (bx['right_shoulder'] + bx['left_shoulder']) / 2))
+                lst.append((by['nose'] - (by['right_shoulder'] + by['left_shoulder']) / 2) / max((bx['nose'] - (bx['right_shoulder'] + bx['left_shoulder']) / 2), 1e-5))
                 lst.append(bx['right_wrist'] != -1)
                 lst.append(bx['left_wrist'] != -1)
                 info.loc[i, :] = lst
             info['seconds'] = pose_sec
             st.dataframe(info)
-        # with tab3:
-        #     st.header("Eye")
-        #     st.subheader("동태눈깔 꼬라보노 보노보노")
-        #     st.write("None : 정면 | Side: 그 외")
-        #     st.dataframe(eye_result)
-        #     video_file = open(
-        #         f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm",
-        #         "rb",
-        #     )
-        #     video_bytes = video_file.read()
-        #     st.video(video_bytes)
+
+        with tab3:
+            st.header("Eye")
+            st.subheader("동태눈깔 꼬라보노 보노보노")
+            eye_video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm")
+            eye_video_len = eye_video.get(cv2.CAP_PROP_FRAME_COUNT) / eye_video.get(cv2.CAP_PROP_FPS)
+            eye_sec = [eye_video_len / len(eye_result) * (i + 1) for i in range(len(eye_result))]
+            eye_result['seconds'] = eye_sec
+            eye_video_file = open(
+                f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm",
+                "rb",
+            )
+            eye_video_bytes = eye_video_file.read()
+            st.video(eye_video_bytes)
+
+            st.dataframe(eye_result)
+            # st.write("None : 정면 | Side: 그 외")
+            # st.dataframe(eye_result)
+            # video_file = open(
+            #     f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm",
+            #     "rb",
+            # )
+            # video_bytes = video_file.read()
+            # st.video(video_bytes)
 
     else:
         st.subheader("면접 영상이 제대로 저장되지 않았습니다. 다시 면접 영상을 녹화해주세요.")
