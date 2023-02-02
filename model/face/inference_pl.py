@@ -1,10 +1,16 @@
+import os
+import sys
+sys.path.append(os.getcwd())
+
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from tqdm import tqdm
 
-from fer_pl import LightningModel
-from dataset_pl import testDataset
+import pandas as pd
+
+from model.face.fer_pl import LightningModel
+from model.face.dataset_pl import testDataset
 
 idx_to_class = {
     0: "angry",
@@ -14,6 +20,16 @@ idx_to_class = {
     4: "neutral",
     5: "sad",
     6: "surprise",
+}
+
+class_to_posneg = {
+    0: "negative",
+    1: "negative",
+    2: "positive",
+    3: "negative",
+    4: "positive",
+    5: "negative",
+    6: "negative",
 }
 
 
@@ -47,10 +63,32 @@ def inference(batch_size, model_ckpt_name, test_data_dir):
                 bbox_dict[path[j]] = [
                     pred[j],
                     idx_to_class[pred[j]],
+                    class_to_posneg[pred[j]],
                     int(box[0][j]),
                     int(box[1][j]),
                     int(box[2][j]),
                     int(box[3][j]),
                 ]
 
-    return bbox_dict
+    df = pd.DataFrame(
+        {
+            "frame":bbox_dict.keys(),
+            "emotion":[r[1] for r in bbox_dict.values()],
+            "posneg":[r[2] for r in bbox_dict.values()],
+            "x":[r[3] for r in bbox_dict.values()],
+            "y":[r[4] for r in bbox_dict.values()],
+            "w":[r[5]-r[3] for r in bbox_dict.values()],
+            "h":[r[6]-r[4] for r in bbox_dict.values()],
+        }
+    )
+
+    return bbox_dict, df
+
+if __name__=="__main__":
+    result = inference(
+        batch_size=4, 
+        model_ckpt_name="/opt/ml/input/final-project-level3-cv-01/model/face/models/best_val_posneg_acc.ckpt", 
+        test_data_dir="/opt/ml/input/final-project-level3-cv-01/db/vis_mhchoi_images"
+    )
+    df = pd.DataFrame({"frame":result.keys(),"values":[r[1] for r in result.values()]})
+    print(df)

@@ -244,10 +244,11 @@ class GazeTracking(object):
         cap = cv2.VideoCapture(VIDEO_PATH)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
 
         fourcc = cv2.VideoWriter_fourcc(*"vp80")
         vid_save_name = f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_{VIDEO_PATH.split('/')[-1]}"
-        out = cv2.VideoWriter(vid_save_name, fourcc, 2, (width, height))
+        out = cv2.VideoWriter(vid_save_name, fourcc, fps/3, (width, height))
 
         for rec_frame in rec_image_list:
             out.write(rec_frame)
@@ -257,3 +258,5 @@ class GazeTracking(object):
         cap.release()
         out.release()
         cv2.destroyAllWindows()
+
+        return vid_save_name

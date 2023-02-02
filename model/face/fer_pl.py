@@ -11,7 +11,7 @@ import pytorch_lightning as pl
 class LightningModel(pl.LightningModule):
     def __init__(
         self,
-        model_path: str = "../models/affectnet_emotions",
+        model_path: str = "./model/face/models/affectnet_emotions",
         backbone: str = "enet_b2_7.pt",
         num_classes: int = 7,
         batch_size: int = 128,
@@ -40,7 +40,8 @@ class LightningModel(pl.LightningModule):
         self.save_hyperparameters()
 
     def __build_model(self):
-        backbone = torch.load(os.path.join(self.model_path, self.backbone))
+        # backbone = torch.load(self.model_backbone_path)
+        backbone = torch.load("./model/face/models/affectnet_emotions/enet_b0_8_va_mtl.pt")
         _layers = list(backbone.children())
 
         self.feature_extractor = nn.Sequential(*_layers[:-1])

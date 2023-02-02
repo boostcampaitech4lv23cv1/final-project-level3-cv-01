@@ -1,5 +1,8 @@
 import os
 import sys
+import cv2
+import ast
+from copy import deepcopy
 
 sys.path.append(os.getcwd())
 
@@ -7,16 +10,31 @@ import time
 import requests
 import pandas as pd
 import streamlit as st
+import matplotlib.pyplot as plt
 from collections import defaultdict
 from google.cloud import storage
 from FastAPI.utils import upload_video, download_video
 
 # 시간 측정
+
+cls_to_idx = {
+    "angry":0,
+    "anxiety":1,
+    "happy":2,
+    "hurt":3,
+    "neutral":4,
+    "sad":5,
+    "surprise":6,
+}
+
 elapsed_time = dict()
 
+if not 'name' in st.session_state.keys():
+    st.warning('HEY-I 페이지에서 이름과 번호를 입력하세요')
+    st.stop()
+
 BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
-BACKEND_POSE_SHOULDER = "http://127.0.0.1:8000/shoulder_pose_estimation"
-BACKEND_POSE_HAND = "http://127.0.0.1:8000/hand_pose_estimation"
+BACKEND_POSE = "http://127.0.0.1:8000/pose_with_mmpose"
 BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
 SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
 UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
@@ -27,139 +45,166 @@ st.title("HEY-I")
 # key 존재 확인
 assert os.path.exists("./hey-i-375802-e6e402d22694.json"), "Key가 존재하지 않습니다."
 
-if "confirm_video" in st.session_state.keys():
+if 'result_dir' in st.session_state.keys():
     if os.path.exists(st.session_state.confirm_video):
         st.subheader("면접 영상 분석 결과입니다.")
 
-        with st.expander("선택된 면접 영상입니다."):
-            video_file = open(st.session_state.confirm_video, "rb")
-            video_bytes = video_file.read()
-            st.write("선택된 영상입니다.")
-            st.video(video_bytes)
+        VIDEO_PATH = st.session_state.confirm_video
+        result = pd.read_csv(os.path.join(st.session_state.result_dir, 'result.csv'), index_col=0)
+        pose_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'pose_result.csv'), index_col=0)
+        eye_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'eye_result.csv'), index_col=0)
+        tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])
 
-        inference = st.button("Inference")
-        if inference:
-            elapsed_time["start"] = int(time.time())  # 시간 측정
-
-            # Front 에서 저장한 영상 경로와 저장할 클라우드 경로
-            save_input_json = {
-                "VIDEO_PATH": st.session_state.upload_dir,
-                "SAVED_DIR": st.session_state.video_dir,
-            }
-            # 2. 클라우드에 저장된 영상 Back에 다운
-            temp = requests.post(SAVE_REQUEST_DIR, json=save_input_json)
-
-            elapsed_time["save_from_cloud_to_backend"] = (
-                int(time.time()) - elapsed_time["start"]
-            )  # 시간 측정
-
-            VIDEO_PATH = st.session_state.confirm_video
-            SAVED_DIR = (
-                f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/frames"
+        with tab1:
+            st.header("Emotion")
+            st.subheader("니 얼굴 표정 이렇다 임마 표정 좀 풀어라")
+            video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/face_recording.webm")
+            video_len = video.get(cv2.CAP_PROP_FRAME_COUNT) / video.get(cv2.CAP_PROP_FPS)
+            sec = [video_len / len(result) * (i + 1) for i in range(len(result))]
+            result['seconds'] = sec
+            video_file = open(
+                f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/face_recording.webm",
+                "rb",
             )
-            input_json = {"VIDEO_PATH": VIDEO_PATH, "SAVED_DIR": SAVED_DIR}
-
-            with st.spinner("inferencing..."):
-                r = requests.post(BACKEND_FACE, json=input_json)
-                r_shoulder = requests.post(BACKEND_POSE_SHOULDER, json=input_json)
-                r_hand = requests.post(BACKEND_POSE_HAND, json=input_json)
-                r_eye = requests.post(BACKEND_EYE, json=input_json)
-
-            elapsed_time["inference_on_backend"] = (
-                int(time.time()) - elapsed_time["start"]
-            )  # 시간 측정
-
-            result = pd.read_json(r.text, orient="records")
-            eye_result = pd.read_json(r_eye.text, orient="records")
-            shoulder_result = pd.read_json(r_shoulder.json(), orient="records")
-            hand_result = pd.read_json(r_hand.json(), orient="records")
-
-            # Back에서 저장한 모델 예측 영상 경로 만들기
-            for task in ("face", "pose", "eye"):
-                upload_name = task + "_" + st.session_state.upload_dir.split("/")[-1]
-                upload_folder = os.path.join(
-                    *st.session_state.upload_dir.split("/")[:-1]
+            video_bytes = video_file.read()
+            st.video(video_bytes)
+            # st.line_chart([cls_to_idx[i] for i in result.emotion])
+            
+            linechart = st.selectbox(
+                'What kind of line chart do you want?',
+                ('Emotion (7 classes)', 'Positive or Negative', 'Both')
                 )
-                upload_dir = os.path.join(upload_folder, upload_name)
-                download_name = upload_name
-                download_folder = os.path.join(
-                    *st.session_state.video_dir.split("/")[:-1]
-                )
-                download_dir = os.path.join(download_folder, download_name)
 
-                upload_input_json = {
-                    "VIDEO_PATH": upload_dir,
-                    "SAVED_DIR": download_dir,
-                }
-                # 3. Back에서 저장한 모델 예측 영상 클라우드에 저장하기
-                temp = requests.post(UPLOAD_REQUEST_DIR, json=upload_input_json)
+            fig, ax = plt.subplots()
+            ax.set_xlabel('Time(sec)')
+            ax.set_ylabel('Emotion')
+            ax.set_xticks([i+1 for i in range(len(result)) if i%5 == 0])
+            ax.set_xticklabels([round(j, 1) for i, j in enumerate(result.seconds) if i%5==0])
+            ax.tick_params(axis='x', rotation=30)
 
-                elapsed_time[f"predict_{task}_on_backend"] = (
-                    int(time.time()) - elapsed_time["start"]
-                )  # 시간 측정
+            if linechart == 'Emotion (7 classes)':
+                ax.plot(result.emotion, color = 'skyblue', label = 'emotion')
+                # ax.tick_params(bottom=False)
+                ax.set_yticks(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
+                ax.set_yticklabels(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
+                st.pyplot(fig)
 
-                # 4. 클라우드에 저장된 모델 예측 영상 Front에 다운 받기
-                download_video(storage_path=upload_dir, download_path=download_dir)
+            elif linechart == 'Positive or Negative':
+                ax.plot(result.posneg, color = 'salmon')
+                ax.set_yticks(['positive','negative'])
+                ax.set_yticklabels(['Positive', 'Negative'])
+                st.pyplot(fig)
+            
+            elif linechart == 'Both':
+                ax.plot(result.emotion, color = 'skyblue', label = 'emotion')
+                # ax.tick_params(bottom=False)
+                ax.set_yticks(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
+                ax.set_yticklabels(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
+                ax1 = ax.twinx()
+                ax1.plot(result.posneg, color = 'salmon')
+                ax1.set_yticks(['positive','negative'])
+                ax1.set_yticklabels(['Positive', 'Negative'])
+                st.pyplot(fig)
+            count = 0
+            lst_all = []
+            lst = []
+            for idx, i in enumerate(result.posneg):
+                # print(i)
+                if i == 'negative':
+                    count += 1
+                    lst.append(idx)
+                else:
+                    if count >= 5:
+                        lst_all.append(deepcopy(lst))
+                    count = 0
+                    lst = []
+            
+            if len(lst_all) > 0:
+                for seq in lst_all:
+                    start = seq[0]
+                    end = seq[-1]
+                    start_sec = result.loc[start, 'seconds']
+                    end_sec = result.loc[end, 'seconds']
+                    st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 표정이 좋지 않습니다.')
+            else:
+                st.success('표정을 잘 지었습니다.')
 
-                elapsed_time[f"download_{task}_video_on_frontend"] = (
-                    int(time.time()) - elapsed_time["start"]
-                )  # 시간 측정
+        with tab2:
+            st.header("Pose")
+            st.subheader("니 자세가 이렇다 삐딱하이 에픽하이")
 
-            # 시간 측정 결과 출력
-            title = []
-            start_time = 0
-            for k, v in elapsed_time.items():
-                if k == "start":
-                    continue
-                time_measure = v - start_time
-                start_time = v
-                title.append(f"[{k}] {time_measure//60:02d}:{time_measure%60:02d}")
-            print(" | ".join(title))
+            pose_video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/pose_recording.webm")
+            pose_video_len = pose_video.get(cv2.CAP_PROP_FRAME_COUNT) / pose_video.get(cv2.CAP_PROP_FPS)
+            pose_sec = [pose_video_len / len(pose_result) * (i + 1) for i in range(len(pose_result))]
+            pose_result['seconds'] = pose_sec
+            pose_video_file = open(
+                f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/pose_recording.webm",
+                "rb",
+            )
+            pose_video_bytes = pose_video_file.read()
+            st.video(pose_video_bytes)
 
-            tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])
+            st.dataframe(pose_result)
 
-            with tab1:
-                st.header("Emotion")
-                st.subheader("니 얼굴 표정 이렇다 임마 표정 좀 풀어라")
-                video_file = open(
-                    f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/face_recording.webm",
-                    "rb",
-                )
-                video_bytes = video_file.read()
-                st.video(video_bytes)
-                st.line_chart(result)
+            a = pose_result[['nose','left_eye','right_eye','left_ear','right_ear','left_shoulder','right_shoulder','left_elbow','right_elbow','left_wrist','right_wrist']]
+            ax = pd.DataFrame(columns = a.columns)
+            ay = pd.DataFrame(columns = a.columns)
 
-            with tab2:
-                st.header("Pose")
-                st.subheader("니 자세가 이렇다 삐딱하이 에픽하이")
+            for i in range(len(a)):
+                info = a.loc[i, :]
+                xlst = []
+                ylst = []
+                for j in info:
+                    x, y = ast.literal_eval(j)
+                    if x < 0 or x > 640:
+                        xlst.append(-1)
+                        ylst.append(-1)
+                    elif y < 0 or y > 640:
+                        xlst.append(-1)
+                        ylst.append(-1)        
+                    else:
+                        xlst.append(x)
+                        ylst.append(y)
+                ax.loc[i, :] = xlst
+                ay.loc[i, :] = ylst
+            info = pd.DataFrame(columns = ['eye-eye','ear-ear','shoulder-shoulder','nose-chest','right_hand-yes','left_hand-yes'])
+            for i in range(len(a)):
+                bx = ax.loc[i,:]
+                by = ay.loc[i,:]
+                lst = []
+                lst.append((by['right_eye'] - by['left_eye']) / (bx['right_eye'] - bx['left_eye']))
+                lst.append((by['right_ear'] - by['left_ear']) / (bx['right_ear'] - bx['left_ear']))
+                lst.append((by['right_shoulder'] - by['left_shoulder']) / (bx['right_shoulder'] - bx['left_shoulder']))
+                lst.append((by['nose'] - (by['right_shoulder'] + by['left_shoulder']) / 2) / max((bx['nose'] - (bx['right_shoulder'] + bx['left_shoulder']) / 2), 1e-5))
+                lst.append(bx['right_wrist'] != -1)
+                lst.append(bx['left_wrist'] != -1)
+                info.loc[i, :] = lst
+            info['seconds'] = pose_sec
+            st.dataframe(info)
 
-                # pose estimation
-                pose_video = open(
-                    f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/pose_recording.webm",
-                    "rb",
-                )
-                pose_video_bytes = pose_video.read()
-                st.video(pose_video_bytes)
+        with tab3:
+            st.header("Eye")
+            st.subheader("동태눈깔 꼬라보노 보노보노")
+            eye_video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm")
+            eye_video_len = eye_video.get(cv2.CAP_PROP_FRAME_COUNT) / eye_video.get(cv2.CAP_PROP_FPS)
+            eye_sec = [eye_video_len / len(eye_result) * (i + 1) for i in range(len(eye_result))]
+            eye_result['seconds'] = eye_sec
+            eye_video_file = open(
+                f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm",
+                "rb",
+            )
+            eye_video_bytes = eye_video_file.read()
+            st.video(eye_video_bytes)
 
-                shoulder_result = pd.read_json(r_shoulder.json(), orient="records")
-                st.write("SHOULDER")
-                st.dataframe(shoulder_result)
-
-                hand_result = pd.read_json(r_hand.json(), orient="records")
-                st.write("HAND")
-                st.dataframe(hand_result)
-
-            with tab3:
-                st.header("Eye")
-                st.subheader("동태눈깔 꼬라보노 보노보노")
-                st.write("None : 정면 | Side: 그 외")
-                st.dataframe(eye_result)
-                video_file = open(
-                    f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm",
-                    "rb",
-                )
-                video_bytes = video_file.read()
-                st.video(video_bytes)
+            st.dataframe(eye_result)
+            # st.write("None : 정면 | Side: 그 외")
+            # st.dataframe(eye_result)
+            # video_file = open(
+            #     f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm",
+            #     "rb",
+            # )
+            # video_bytes = video_file.read()
+            # st.video(video_bytes)
 
     else:
         st.subheader("면접 영상이 제대로 저장되지 않았습니다. 다시 면접 영상을 녹화해주세요.")

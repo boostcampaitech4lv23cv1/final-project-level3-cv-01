@@ -9,7 +9,6 @@ import argparse
 import streamlit as st
 
 
-
 def parse_args():
     """
     argparse 이용해서 실행 할 수 있게 추후 추가 예정
@@ -36,7 +35,7 @@ def video_to_frame(VIDEO_PATH, SAVED_DIR):
 
         if not ret:  # 새로운 프레임을 못받아 왔을 때 braek
             break
-        if int(cap.get(1)) % int(fps) == 0:
+        if int(cap.get(1)) % int(fps / 3) == 0:
             cv2.imwrite(SAVED_DIR + "/frame%d.jpg" % count, frame)
             print("Saved frame number : ", str(int(cap.get(1))))
             count += 1
@@ -176,6 +175,35 @@ def add_emotion_on_frame(emotions_mtcnn, df_mtcnn, saved_dir):
     return rec_image_list
 
 
+def add_emotion_on_frame_new(df):
+
+    len_of_df = len(df)
+    rec_image_list = []
+
+    for i in range(len_of_df):
+        info = df.loc[i, :]
+        string = info['emotion']
+        pth = cv2.imread(info['frame'])
+        rec = (info['x'], info['y'], info['w'], info['h'])
+        x = rec[0]
+        y = rec[1]
+        pos = (x, y-10)
+        rec_image = cv2.rectangle(pth, rec, (0, 255, 0), thickness=4)
+        rec_image = cv2.putText(
+            rec_image,
+            string,
+            pos,
+            cv2.FONT_HERSHEY_SIMPLEX,
+            2,
+            (36, 255, 12),
+            3,
+        )
+
+        rec_image_list.append(rec_image)
+
+    return rec_image_list
+
+
 def frame_to_video(rec_image_list, video_path):
     cap = cv2.VideoCapture(video_path)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -186,7 +214,7 @@ def frame_to_video(rec_image_list, video_path):
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
     
     vid_save_name = f"./{video_path.split('/')[1]}/{video_path.split('/')[2]}/face_{video_path.split('/')[-1]}"
-    out = cv2.VideoWriter(vid_save_name, fourcc, 2, (width, height))
+    out = cv2.VideoWriter(vid_save_name, fourcc, fps/3, (width, height))
     for rec_frame in rec_image_list:
         out.write(rec_frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -195,6 +223,8 @@ def frame_to_video(rec_image_list, video_path):
     cap.release()
     out.release()
     cv2.destroyAllWindows()
+
+    return vid_save_name
 
 
 # def main():
