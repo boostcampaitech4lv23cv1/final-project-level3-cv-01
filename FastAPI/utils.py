@@ -13,8 +13,8 @@ def upload_video(file_path, upload_path, bucket_name="heyi-storage"):
     """
     if '\\' in file_path:
         file_path = file_path.replace('\\', '/')
-    if '\\' in download_path:
-        download_path = download_path.replace('\\', '/')
+    if '\\' in upload_path:
+        upload_path = upload_path.replace('\\', '/')
 
     assert os.path.exists(file_path), f"{file_path}에 영상이 존재하지 않습니다."
     storage_client = storage.Client.from_service_account_json(
