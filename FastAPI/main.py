@@ -130,7 +130,7 @@ def get_eye_df(inp: InferenceFace):
     frames.sort()
     df, anno_frames = gaze.analyze_eye(frames)
     saved_video = gaze.frame_to_video(VIDEO_PATH, anno_frames)
-    
+
     uploaded_video = os.path.join(*saved_video.split("/")[1:])
     upload_video(saved_video, uploaded_video)
 
