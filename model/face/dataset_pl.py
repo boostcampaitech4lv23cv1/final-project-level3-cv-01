@@ -5,7 +5,7 @@ from PIL import Image
 from typing import Any, Callable, Optional, Tuple
 from torch.utils.data import Dataset
 from torchvision.datasets.folder import DatasetFolder, default_loader, IMG_EXTENSIONS
-from utils.facial_analysis import FacialImageProcessing
+from model.face.utils.facial_analysis import FacialImageProcessing
 
 
 imgProcessing = FacialImageProcessing()
