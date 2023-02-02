@@ -74,7 +74,7 @@ def get_emotion_df(inp: InferenceFace):
     print("frame_dir:", frames_dir)
 
     output_dict, output_df = inference(
-        32, "./model/face/models/best_val_posneg_acc.ckpt", SAVED_DIR
+        32, "./model/face/models/custom_fer_model.ckpt", SAVED_DIR
     )
     output_df.sort_values(by=["frame"], ignore_index=True, inplace=True)
 
