@@ -126,6 +126,9 @@ def get_eye_df(inp: InferenceFace):
         download_video(storage_path=storage_path, download_path=download_path)
         print(f"The video was uploaded from {download_path} to {storage_path}")
 
+    frames_dir = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
+    print("frame_dir:", frames_dir)
+
     frames = glob.glob(f"{SAVED_DIR}/*.jpg")
     frames.sort()
     df, anno_frames = gaze.analyze_eye(frames)
