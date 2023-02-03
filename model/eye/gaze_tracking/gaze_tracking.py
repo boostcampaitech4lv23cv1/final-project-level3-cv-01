@@ -248,7 +248,7 @@ class GazeTracking(object):
 
         fourcc = cv2.VideoWriter_fourcc(*"vp80")
         vid_save_name = f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_{VIDEO_PATH.split('/')[-1]}"
-        out = cv2.VideoWriter(vid_save_name, fourcc, fps/3, (width, height))
+        out = cv2.VideoWriter(vid_save_name, fourcc, fps, (width, height))
 
         for rec_frame in rec_image_list:
             out.write(rec_frame)

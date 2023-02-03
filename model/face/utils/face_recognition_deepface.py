@@ -214,7 +214,7 @@ def frame_to_video(rec_image_list, video_path):
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
     
     vid_save_name = f"./{video_path.split('/')[1]}/{video_path.split('/')[2]}/face_{video_path.split('/')[-1]}"
-    out = cv2.VideoWriter(vid_save_name, fourcc, fps/3, (width, height))
+    out = cv2.VideoWriter(vid_save_name, fourcc, fps, (width, height))
     for rec_frame in rec_image_list:
         out.write(rec_frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
