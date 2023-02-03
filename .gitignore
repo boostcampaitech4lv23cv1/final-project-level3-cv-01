@@ -178,6 +178,7 @@ cython_debug/
 *.jpg
 *.csv
 
+*.flv
 # pytorch lightning
 #mlflow
 **/logs/
