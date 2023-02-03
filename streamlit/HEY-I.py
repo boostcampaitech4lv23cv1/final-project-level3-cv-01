@@ -14,9 +14,8 @@ with st.form("my_form"):
         if len(name) > 1:
             st.session_state.name = name
             st.session_state.num = num
-            st.write(f"{name}_{num} 확인됐습니다!")
+            st.success(f"{name}_{num} 확인됐습니다! 다음 단계로 넘어가세요!", icon='👍')
             print(st.session_state.name, st.session_state.num)
-            st.write('다음 단계로 넘어가세요!') 
         else:
             st.warning('이름을 두 글자 이상 입력해주세요!', icon="⚠️")
 

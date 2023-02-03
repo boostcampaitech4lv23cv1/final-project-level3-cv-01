@@ -2,13 +2,12 @@ import os
 import sys
 import cv2
 import time
-import tempfile
-import uuid
+import shutil
 from pathlib import Path
 from pytz import timezone
 from datetime import datetime
 import streamlit as st
-from google.cloud import storage
+import io
 
 sys.path.append(os.getcwd())
 import av
@@ -24,71 +23,13 @@ if not "name" in st.session_state.keys():
     st.warning("HEY-I 페이지에서 이름과 번호를 입력하세요")
     st.stop()
 
-# BACKEND_POSE_MMPOSE = "http://49.50.175.182:30001/pose_with_mmpose"
-BACKEND_FACE = "http://49.50.175.182:30001/face_emotion"
-BACKEND_POSE_MMPOSE = "http://49.50.175.182:30001/pose_with_mmpose"
-BACKEND_EYE = "http://49.50.175.182:30001/eye_tracking"
-SAVE_REQUEST_DIR = "http://49.50.175.182:30001/save_origin_video"
-UPLOAD_REQUEST_DIR = "http://49.50.175.182:30001/upload_predict_video"
-# BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
-# SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
-# UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
-
-# Basic App Scaffolding
-st.title("HEY-I")
-st.subheader("면접 영상을 녹화하세요")
-st.write("❗ 카메라 접근 권한을 승인해주세요")
-
-# Create Sidebar
-st.sidebar.title("Settings")
-
-## Get Video
-# temp_file = tempfile.NamedTemporaryFile(delete=False)
-# number = st.sidebar.number_input("분 입력", 1, 10)
-# stframe = st.empty()
-
-st.markdown("**질문** : 1분 자기 소개를 해주세요")
-
-start_time = datetime.now(timezone("Asia/Seoul")).strftime("%y%m%d_%H%M%S")
-if "prefix" not in st.session_state:
-    st.session_state["prefix"] = start_time
-    # st.session_state["prefix"] = str(uuid.uuid4())
-prefix = st.session_state["prefix"]
-
-if not os.path.exists(f"./{st.session_state.name}_{st.session_state.num}/{prefix}"):
-    os.makedirs(f"./{st.session_state.name}_{st.session_state.num}/{prefix}")
-in_file = f"./{st.session_state.name}_{st.session_state.num}/{prefix}/recording.flv"
-st.session_state.video_dir = in_file
-
-
 ########################################################### WebRTC
 def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
     img = frame.to_ndarray(format="bgr24")
     return av.VideoFrame.from_ndarray(img, format="bgr24")
 
 
-def in_recorder_factory() -> MediaRecorder:
-    return MediaRecorder(
-        in_file, format="flv"
-    )  # HLS does not work. See https://github.com/aiortc/aiortc/issues/331
-
-
-webrtc_streamer(
-    key="record",
-    mode=WebRtcMode.SENDRECV,
-    rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-    media_stream_constraints={
-        "video": True,
-        "audio": False,
-    },
-    video_frame_callback=video_frame_callback,
-    in_recorder_factory=in_recorder_factory,
-)
-###########################################################
-st.session_state.video_dir = (
-    f"./{st.session_state.name}_{st.session_state.num}/{prefix}/recording.webm"
-)
-with st.spinner("✔ 확인됐습니다. 변환 중입니다..."):
+def convert_to_webm(in_file, video_dir):
     start = time.process_time()
     cap = cv2.VideoCapture(in_file)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -98,7 +39,7 @@ with st.spinner("✔ 확인됐습니다. 변환 중입니다..."):
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
 
     out = cv2.VideoWriter(
-        st.session_state.video_dir,
+        video_dir,
         fourcc,
         fps,
         (width, height),
@@ -114,20 +55,100 @@ with st.spinner("✔ 확인됐습니다. 변환 중입니다..."):
     out.release()
     cv2.destroyAllWindows()
     end = time.process_time()
-    print(f"Convert Complete: {st.session_state.video_dir} on {end-start}")
+    
+    print(f"Convert Complete: {video_dir} on {end-start}")
 
-if "video_dir" in st.session_state.keys():
+
+# BACKEND_FACE = "http://49.50.175.182:30001/face_emotion"
+# BACKEND_POSE_MMPOSE = "http://49.50.175.182:30001/pose_with_mmpose"
+# BACKEND_EYE = "http://49.50.175.182:30001/eye_tracking"
+# SAVE_REQUEST_DIR = "http://49.50.175.182:30001/save_origin_video"
+# UPLOAD_REQUEST_DIR = "http://49.50.175.182:30001/upload_predict_video"
+BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
+BACKEND_POSE_MMPOSE = "http://127.0.0.1:8000/pose_with_mmpose"
+BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
+SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
+UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
+
+st.session_state.complete = False
+st.session_state.cancel = False
+st.session_state.recording = False
+
+# Basic App Scaffolding
+st.title("HEY-I")
+st.subheader("면접 영상을 녹화하세요")
+
+        
+start_time = datetime.now(timezone("Asia/Seoul")).strftime("%y%m%d_%H%M%S")
+if "prefix" not in st.session_state.keys() or st.session_state.prefix is None:
+    st.session_state["prefix"] = start_time
+    # st.session_state["prefix"] = str(uuid.uuid4())
+
+if not os.path.exists(f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}"):
+    os.makedirs(f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}")
+
+flv_file = f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording.flv"
+webm_file = f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording.webm"
+
+uploaded_video = st.sidebar.file_uploader("영상 업로드", type=['mp4'])
+if uploaded_video:
+    st.session_state.recording = True
+    g = io.BytesIO(uploaded_video.read())
+    ext = uploaded_video.type.split('/')[-1]
+    uploaded_file = f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording."+ext
+    with open(uploaded_file, 'wb') as out:
+        out.write(g.read())
+
+    convert = st.button('영상이 업로드 되었습니다. 이 버튼을 눌러 변환하세요.')
+    if convert:
+        with st.spinner("✔ 변환 중입니다..."):
+            convert_to_webm(uploaded_file, webm_file)
+            st.session_state.video_dir = webm_file
+
+
+def in_recorder_factory():
+    return MediaRecorder(
+        flv_file, format="flv"
+    )  # HLS does not work. See https://github.com/aiortc/aiortc/issues/331
+
+
+if not st.session_state.recording and not os.path.exists(webm_file):
+    st.write("❗ 카메라 접근 권한을 승인해주세요")
+    st.markdown("**질문** : 1분 자기 소개를 해주세요")
+    webrtc_streamer(
+        key="record",
+        mode=WebRtcMode.SENDRECV,
+        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+        media_stream_constraints={
+            "video": True,
+            "audio": False,
+        },
+        video_frame_callback=video_frame_callback,
+        in_recorder_factory=in_recorder_factory,
+    )
+    ###########################################################
+    
+    convert = st.button('영상을 다 녹화한 후 이 버튼을 눌러 저장하세요.')
+    if convert:
+        with st.spinner("✔ 확인됐습니다. 변환 중입니다..."):
+            convert_to_webm(flv_file, webm_file)
+            st.session_state.video_dir = webm_file
+
+if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm_file:
     if os.path.exists(st.session_state.video_dir):
         video_file = open(st.session_state.video_dir, "rb")
         video_bytes = video_file.read()
-        st.write("녹화된 영상을 확인하시겠습니까?")
-        with st.expander("가장 최근 녹화된 영상입니다. 이 영상을 분석 할 지 결정해주세요"):
+        with st.expander("이 영상을 분석 할 지 결정해주세요"):
             st.video(video_bytes)
             # 분석할 영상 결정
-            st.write("이 영상으로 분석을 진행할까요?")
-            confirm = st.button("Comfirm")
-            if confirm:
-                st.write("분석할 영상이 확인 되었습니다. Result 에서 결과를 확인하세요.")
+
+        st.write("이 영상으로 분석을 진행할까요?")
+
+        confirm = st.button("Inference")
+        cancel = st.button("Re-Recording")
+
+        if confirm:
+            with st.spinner('선택한 영상을 분석하고 있습니다. 잠시 기다려주세요!'):
                 st.session_state.confirm_video = st.session_state.video_dir
 
                 # 녹화한 영상 cloud에 업로드할 경로
@@ -213,4 +234,16 @@ if "video_dir" in st.session_state.keys():
                         storage_path=upload_dir.replace("\\", "/"),
                         download_path=download_dir,
                     )
-                st.success("분석이 완료 되었습니다!!! Result 페이지에서 결과를 확인하세요!!!", icon="🔥")
+            st.session_state.complete = True
+
+        elif cancel:
+            st.session_state.cancel = True
+            st.session_state.prefix = None
+
+if 'complete' in st.session_state.keys() and st.session_state.complete:
+    st.success("분석이 완료 되었습니다!!! Result 페이지에서 결과를 확인하세요!!!", icon="🔥")
+    st.session_state.complete = False
+
+if 'cancel' in st.session_state.keys() and st.session_state.cancel:
+    restart = st.button('다시 녹화하세요')
+    st.session_state.cancel = False
