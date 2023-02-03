@@ -2,10 +2,10 @@ from __future__ import division
 import os
 import cv2
 import dlib
+import mmcv
 from .eye import Eye
 from .calibration import Calibration
 import pandas as pd
-import streamlit as st
 
 class GazeTracking(object):
     """
@@ -245,10 +245,12 @@ class GazeTracking(object):
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = cap.get(cv2.CAP_PROP_FPS)
+        # fps = mmcv.VideoReader(VIDEO_PATH).fps
 
         fourcc = cv2.VideoWriter_fourcc(*"vp80")
         vid_save_name = f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_{VIDEO_PATH.split('/')[-1]}"
-        out = cv2.VideoWriter(vid_save_name, fourcc, fps/3, (width, height))
+        out = cv2.VideoWriter(vid_save_name, fourcc, fps, (width, height))
+        # out = cv2.VideoWriter(vid_save_name, fourcc, fps/2, (width, height))
 
         for rec_frame in rec_image_list:
             out.write(rec_frame)
