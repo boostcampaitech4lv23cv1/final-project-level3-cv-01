@@ -85,36 +85,35 @@ webrtc_streamer(
     in_recorder_factory=in_recorder_factory,
 )
 ###########################################################
-st.session_state.video_dir = (
-    f"./{st.session_state.name}_{st.session_state.num}/{prefix}/recording.webm"
-)
-with st.spinner("✔ 확인됐습니다. 변환 중입니다..."):
-    start = time.process_time()
-    cap = cv2.VideoCapture(in_file)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    fourcc = cv2.VideoWriter_fourcc(*"vp80")
+if not os.path.isfile(f"./{st.session_state.name}_{st.session_state.num}/{prefix}/recording.webm"):
+    with st.spinner("✔ 확인됐습니다. 변환 중입니다..."):
+        start = time.process_time()
+        cap = cv2.VideoCapture(in_file)
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        fourcc = cv2.VideoWriter_fourcc(*"vp80")
 
-    out = cv2.VideoWriter(
-        st.session_state.video_dir,
-        fourcc,
-        fps,
-        (width, height),
-    )
-    while True:
-        ret, frame = cap.read()
-        if not ret:  # 새로운 프레임을 못받아 왔을 때 braek
-            break
-        out.write(frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-    cap.release()
-    out.release()
-    cv2.destroyAllWindows()
-    end = time.process_time()
-    print(f"Convert Complete: {st.session_state.video_dir} on {end-start}")
+        out = cv2.VideoWriter(
+            st.session_state.video_dir,
+            fourcc,
+            fps,
+            (width, height),
+        )
+        while True:
+            ret, frame = cap.read()
+            if not ret:  # 새로운 프레임을 못받아 왔을 때 braek
+                break
+            out.write(frame)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+        cap.release()
+        out.release()
+        cv2.destroyAllWindows()
+        end = time.process_time()
+        print(f"Convert Complete: {st.session_state.video_dir} on {end-start}")
+        st.session_state.video_dir = (f"./{st.session_state.name}_{st.session_state.num}/{prefix}/recording.webm")
 
 if "video_dir" in st.session_state.keys():
     if os.path.exists(st.session_state.video_dir):
