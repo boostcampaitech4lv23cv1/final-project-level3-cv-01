@@ -210,6 +210,7 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                 result.to_csv(os.path.join(result_dir, "result.csv"))
                 pose_result = pd.read_json(r_pose_result, orient="records")
                 pose_result.to_csv(os.path.join(result_dir, "pose_result.csv"))
+                # eye_result = pd.read_json(r_eye.text, orient="records")
                 eye_result = pd.read_json(r_eye_result, orient="records")
                 eye_result.to_csv(os.path.join(result_dir, "eye_result.csv"))
 
