@@ -5,7 +5,7 @@ now = datetime.datetime.now(timezone("Asia/Seoul")).strftime("_%y%m%d_%H%M%S")
 
 checkpoint_config = dict(interval=100)
 
-model_name = "hrnet_w48_dark"
+model_name = "hrnet_w48"
 log_config = dict(
     interval=50,
     hooks=[
