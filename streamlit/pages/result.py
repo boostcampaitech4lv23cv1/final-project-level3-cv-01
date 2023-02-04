@@ -15,6 +15,19 @@ from collections import defaultdict
 from google.cloud import storage
 from FastAPI.utils import upload_video, download_video
 
+
+def vectors2angle(vector1, vector2):
+    if (vector1[0]==0 and vector1[1]==0) or (vector2[0]==0 and vector2[1]==0):
+        return 0
+    import numpy as np
+    norm1 = vector1 / np.linalg.norm(vector1)
+    norm2 = vector2 / np.linalg.norm(vector2)
+
+    return np.rad2deg(np.arccos(np.clip(np.dot(norm1, norm2), -1.0, 1.0)))
+    #return np.tan(np.rad2deg(np.arccos(np.clip(np.dot(norm1, norm2), -1.0, 1.0))))
+    #return np.tan(np.arccos(np.clip(np.dot(norm1, norm2), -1.0, 1.0)))
+
+
 # 시간 측정
 
 cls_to_idx = {
@@ -50,9 +63,12 @@ if 'result_dir' in st.session_state.keys():
         st.subheader("면접 영상 분석 결과입니다.")
 
         VIDEO_PATH = st.session_state.confirm_video
-        result = pd.read_csv(os.path.join(st.session_state.result_dir, 'result.csv'), index_col=0)
-        pose_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'pose_result.csv'), index_col=0)
-        eye_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'eye_result.csv'), index_col=0)
+        #result = pd.read_csv(os.path.join(st.session_state.result_dir, 'result.csv'), index_col=0)
+        result = pd.read_csv("/".join([st.session_state.result_dir, 'result.csv']), index_col=0)
+        #pose_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'pose_result.csv'), index_col=0)
+        pose_result = pd.read_csv("/".join([st.session_state.result_dir, 'pose_result.csv']), index_col=0)
+        #eye_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'eye_result.csv'), index_col=0)
+        eye_result = pd.read_csv("/".join([st.session_state.result_dir, 'eye_result.csv']), index_col=0)
         tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])
 
         with tab1:
@@ -172,10 +188,21 @@ if 'result_dir' in st.session_state.keys():
                 bx = ax.loc[i,:]
                 by = ay.loc[i,:]
                 lst = []
-                lst.append((by['right_eye'] - by['left_eye']) / (bx['right_eye'] - bx['left_eye']))
-                lst.append((by['right_ear'] - by['left_ear']) / (bx['right_ear'] - bx['left_ear']))
-                lst.append((by['right_shoulder'] - by['left_shoulder']) / (bx['right_shoulder'] - bx['left_shoulder']))
-                lst.append((by['nose'] - (by['right_shoulder'] + by['left_shoulder']) / 2) / max((bx['nose'] - (bx['right_shoulder'] + bx['left_shoulder']) / 2), 1e-5))
+                
+                # 원래 코드에 분모 0일때 기울기 999. 로 처리하게 했음 -> 좀 그래서 기울기 말고 각도로 할까 싶어서 밑에 4줄 추가함
+                #lst.append((by['right_eye'] - by['left_eye']) / (bx['right_eye'] - bx['left_eye']) if bx['right_eye'] != bx['left_eye'] else 999.)
+                #lst.append((by['right_ear'] - by['left_ear']) / (bx['right_ear'] - bx['left_ear']) if bx['right_ear'] != bx['left_ear'] else 999.)
+                #lst.append((by['right_shoulder'] - by['left_shoulder']) / (bx['right_shoulder'] - bx['left_shoulder']) if bx['right_shoulder'] != bx['left_shoulder'] else 999.)
+                #lst.append((by['nose'] - (by['right_shoulder'] + by['left_shoulder']) / 2) / (bx['nose'] - (bx['right_shoulder'] + bx['left_shoulder']) / 2) if bx['nose'] != (bx['right_shoulder'] + bx['left_shoulder']) / 2 else 999.)
+                
+                # 기울기 말고 각도로 출력하는거 -> 이거는 문제가 radian 대신 degree로는 바꿨는데 뭔가 안맞는거 같기도 하고
+                ########################################################################################################################
+                lst.append(vectors2angle([bx["right_eye"],by["right_eye"]], [bx["left_eye"],by["left_eye"]]))
+                lst.append(vectors2angle([bx["right_ear"],by["right_ear"]], [bx["left_ear"],by["left_ear"]]))
+                lst.append(vectors2angle([bx["right_shoulder"],by["right_shoulder"]], [bx["left_shoulder"],by["left_shoulder"]]))
+                lst.append(vectors2angle([bx["nose"],by["nose"]], [(bx["right_shoulder"]+bx["left_shoulder"])/2,(by["right_shoulder"]+by["left_shoulder"])/2]))
+                ########################################################################################################################
+
                 lst.append(bx['right_wrist'] != -1)
                 lst.append(bx['left_wrist'] != -1)
                 info.loc[i, :] = lst
