@@ -187,3 +187,14 @@ cython_debug/
 # aihub data
 aihub/
 
+# openmim 
+.mim/
+
+# vis_results
+vis_results/
+
+# wandb
+wandb/
+
+# work_dirs
+work_dirs/
