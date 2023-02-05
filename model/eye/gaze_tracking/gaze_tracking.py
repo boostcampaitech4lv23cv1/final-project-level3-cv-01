@@ -108,7 +108,7 @@ class GazeTracking(object):
     def is_right(self):
         """Returns true if the user is looking to the right"""
         if self.pupils_located:
-            return self.horizontal_ratio() <= 0.55
+            return self.horizontal_ratio() <= 0.65
 
     def is_left(self):
         """Returns true if the user is looking to the left"""
@@ -187,6 +187,8 @@ class GazeTracking(object):
             right.append(right_pupil)
             vertical.append(vertical_ratio)
             horizontal.append(horizontal_ratio)
+
+            anno_frame = self.get_annotated_frame(frame, text, left_pupil, right_pupil)
 
         df = pd.DataFrame({"tracking": ret, "left": left, "right": right, "verical" : vertical, "horizontal" : horizontal})
         print(df)
