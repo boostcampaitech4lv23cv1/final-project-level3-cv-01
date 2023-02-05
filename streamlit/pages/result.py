@@ -15,6 +15,19 @@ from collections import defaultdict
 from google.cloud import storage
 from FastAPI.utils import upload_video, download_video
 
+
+def vectors2angle(vector1, vector2):
+    if (vector1[0]==0 and vector1[1]==0) or (vector2[0]==0 and vector2[1]==0):
+        return 0
+    import numpy as np
+    norm1 = vector1 / np.linalg.norm(vector1)
+    norm2 = vector2 / np.linalg.norm(vector2)
+
+    return np.rad2deg(np.arccos(np.clip(np.dot(norm1, norm2), -1.0, 1.0)))
+    #return np.tan(np.rad2deg(np.arccos(np.clip(np.dot(norm1, norm2), -1.0, 1.0))))
+    #return np.tan(np.arccos(np.clip(np.dot(norm1, norm2), -1.0, 1.0)))
+
+
 # 시간 측정
 
 cls_to_idx = {
@@ -48,14 +61,12 @@ if 'result_dir' in st.session_state.keys():
         st.subheader("면접 영상 분석 결과입니다.")
 
         VIDEO_PATH = st.session_state.confirm_video
-        result = pd.read_csv(os.path.join(st.session_state.result_dir, 'result.csv'), index_col=0)
-        pose_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'pose_result.csv'), index_col=0)
-        eye_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'eye_result.csv'), index_col=0)
-
-        # VIDEO_PATH = st.session_state.confirm_video
-        # result = pd.read_csv(os.path.join(st.session_state.result_dir, 'result.csv'), index_col=0)
-        # pose_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'pose_result.csv'), index_col=0)
-        # eye_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'eye_result.csv'), index_col=0)
+        #result = pd.read_csv(os.path.join(st.session_state.result_dir, 'result.csv'), index_col=0)
+        result = pd.read_csv("/".join([st.session_state.result_dir, 'result.csv']), index_col=0)
+        #pose_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'pose_result.csv'), index_col=0)
+        pose_result = pd.read_csv("/".join([st.session_state.result_dir, 'pose_result.csv']), index_col=0)
+        #eye_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'eye_result.csv'), index_col=0)
+        eye_result = pd.read_csv("/".join([st.session_state.result_dir, 'eye_result.csv']), index_col=0)
         tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])
 
         with tab1:
