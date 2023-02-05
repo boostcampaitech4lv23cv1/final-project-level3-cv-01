@@ -83,67 +83,71 @@ if 'result_dir' in st.session_state.keys():
             video_bytes = video_file.read()
             st.video(video_bytes)
             # st.line_chart([cls_to_idx[i] for i in result.emotion])
-            
-            linechart = st.selectbox(
-                'What kind of line chart do you want?',
-                ('Emotion (7 classes)', 'Positive or Negative', 'Both')
-                )
 
-            fig, ax = plt.subplots()
-            ax.set_xlabel('Time(sec)')
-            ax.set_ylabel('Emotion')
-            ax.set_xticks([i+1 for i in range(len(result)) if i%20 == 0])
-            ax.set_xticklabels([round(j, 1) for i, j in enumerate(result.seconds) if i%20==0])
-            ax.tick_params(axis='x', rotation=30)
+            col1, col2 = st.columns(2)
+            with col1:
+                linechart = st.selectbox(
+                    'What kind of line chart do you want?',
+                    ('Emotion (7 classes)', 'Positive or Negative', 'Both')
+                    )
 
-            if linechart == 'Emotion (7 classes)':
-                ax.plot(result.emotion, color = 'skyblue', label = 'emotion')
-                # ax.tick_params(bottom=False)
-                ax.set_yticks(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
-                ax.set_yticklabels(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
-                st.pyplot(fig)
+                fig, ax = plt.subplots()
+                ax.set_xlabel('Time(sec)')
+                ax.set_ylabel('Emotion')
+                ax.set_xticks([i+1 for i in range(len(result)) if i%30 == 0])
+                ax.set_xticklabels([round(j, 1) for i, j in enumerate(result.seconds) if i%30==0])
+                ax.tick_params(axis='x', rotation=30)
 
-            elif linechart == 'Positive or Negative':
-                ax.plot(result.posneg, color = 'salmon')
-                ax.set_yticks(['positive','negative'])
-                ax.set_yticklabels(['Positive', 'Negative'])
-                st.pyplot(fig)
-            
-            elif linechart == 'Both':
-                ax.plot(result.emotion, color = 'skyblue', label = 'emotion')
-                # ax.tick_params(bottom=False)
-                ax.set_yticks(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
-                ax.set_yticklabels(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
-                ax1 = ax.twinx()
-                ax1.plot(result.posneg, color = 'salmon')
-                ax1.set_yticks(['positive','negative'])
-                ax1.set_yticklabels(['Positive', 'Negative'])
-                st.pyplot(fig)
-            count = 0
-            lst_all = []
-            lst = []
-            threshold_sec = 0.4
-            threshold = 20 * threshold_sec
-            for idx, i in enumerate(result.posneg):
-                # print(i)
-                if i == 'negative':
-                    count += 1
-                    lst.append(idx)
+                if linechart == 'Emotion (7 classes)':
+                    ax.plot(result.emotion, color = 'skyblue', label = 'emotion')
+                    # ax.tick_params(bottom=False)
+                    ax.set_yticks(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
+                    ax.set_yticklabels(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
+                    st.pyplot(fig)
+
+                elif linechart == 'Positive or Negative':
+                    ax.plot(result.posneg, color = 'salmon')
+                    ax.set_yticks(['positive','negative'])
+                    ax.set_yticklabels(['Positive', 'Negative'])
+                    st.pyplot(fig)
+                
+                elif linechart == 'Both':
+                    ax.plot(result.emotion, color = 'skyblue', label = 'emotion')
+                    # ax.tick_params(bottom=False)
+                    ax.set_yticks(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
+                    ax.set_yticklabels(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
+                    ax1 = ax.twinx()
+                    ax1.plot(result.posneg, color = 'salmon')
+                    ax1.set_yticks(['positive','negative'])
+                    ax1.set_yticklabels(['Positive', 'Negative'])
+                    st.pyplot(fig)
+
+            with col2:
+                count = 0
+                lst_all = []
+                lst = []
+                threshold_sec = 0.4
+                threshold = 20 * threshold_sec
+                for idx, i in enumerate(result.posneg):
+                    # print(i)
+                    if i == 'negative':
+                        count += 1
+                        lst.append(idx)
+                    else:
+                        if count >= threshold:
+                            lst_all.append(deepcopy(lst))
+                        count = 0
+                        lst = []
+                
+                if len(lst_all) > 0:
+                    for seq in lst_all:
+                        start = seq[0]
+                        end = seq[-1]
+                        start_sec = result.loc[start, 'seconds']
+                        end_sec = result.loc[end, 'seconds']
+                        st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 표정이 좋지 않습니다.')
                 else:
-                    if count >= threshold:
-                        lst_all.append(deepcopy(lst))
-                    count = 0
-                    lst = []
-            
-            if len(lst_all) > 0:
-                for seq in lst_all:
-                    start = seq[0]
-                    end = seq[-1]
-                    start_sec = result.loc[start, 'seconds']
-                    end_sec = result.loc[end, 'seconds']
-                    st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 표정이 좋지 않습니다.')
-            else:
-                st.success('표정을 잘 지었습니다.')
+                    st.success('표정을 잘 지었습니다.')
 
         with tab2:
             st.header("Pose")
@@ -160,7 +164,7 @@ if 'result_dir' in st.session_state.keys():
             pose_video_bytes = pose_video_file.read()
             st.video(pose_video_bytes)
 
-            st.dataframe(pose_result)
+            # st.dataframe(pose_result)
 
             a = pose_result[['nose','left_eye','right_eye','left_ear','right_ear','left_shoulder','right_shoulder','left_elbow','right_elbow','left_wrist','right_wrist']]
             ax = pd.DataFrame(columns = a.columns)
@@ -197,7 +201,7 @@ if 'result_dir' in st.session_state.keys():
                 lst.append(bx['left_wrist'] != -1)
                 info.loc[i, :] = lst
             info['seconds'] = pose_sec
-            st.dataframe(info)
+            # st.dataframe(info)
 
             horizontal_threshold = 0.1
             vertical_threshold = 11.4
@@ -219,12 +223,12 @@ if 'result_dir' in st.session_state.keys():
                 else: lst.append(False)
                 lst.append(secs)
                 info_.loc[i, :] = lst
-            st.dataframe(info_)
+            # st.dataframe(info_)
 
             count1, count2, count3, count4 = 0, 0, 0, 0
             lst_all1, lst_all2, lst_all3, lst_all4 = [], [], [], []
             lst1, lst2, lst3, lst4 = [], [], [], []
-            threshold_sec = 1
+            threshold_sec = 0.5
             threshold = 20 * threshold_sec
             for i in range(len(info_)):
                 face, body, vert, hand, _ = info_.loc[i, :]
@@ -252,7 +256,7 @@ if 'result_dir' in st.session_state.keys():
                         lst_all3.append(deepcopy(lst3))
                     count3 = 0
                     lst3 = []
-                if not hand:
+                if hand:
                     count4 += 1
                     lst4.append(i)
                 else:
@@ -318,9 +322,10 @@ if 'result_dir' in st.session_state.keys():
             eye_video_bytes = eye_video_file.read()
             st.video(eye_video_bytes)
 
-            st.dataframe(eye_result.replace('None', method='bfill'))
+            st.dataframe(eye_result)
             
-            # eye_result = eye_result.fillna('bfill')
+            # for i in range(len(eye_result)):
+                
 
     else:
         st.subheader("면접 영상이 제대로 저장되지 않았습니다. 다시 면접 영상을 녹화해주세요.")

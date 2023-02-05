@@ -94,7 +94,7 @@ if not os.path.exists(f"./{st.session_state.name}_{st.session_state.num}/{st.ses
 flv_file = f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording.flv"
 webm_file = f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording.webm"
 
-uploaded_video = st.sidebar.file_uploader("영상 업로드", type=['mp4'])
+uploaded_video = st.sidebar.file_uploader("영상 업로드", type=['mp4', 'flv'])
 if uploaded_video:
     st.session_state.recording = True
     g = io.BytesIO(uploaded_video.read())
