@@ -18,7 +18,7 @@ def upload_video(file_path, upload_path, bucket_name="heyi-storage"):
 
     assert os.path.exists(file_path), f"{file_path}에 영상이 존재하지 않습니다."
     storage_client = storage.Client.from_service_account_json(
-        "./hey-i-375802-e6e402d22694.json"
+        "./hey-i-375802-d3dcfd2b25d1.json"
     )
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.blob(upload_path)
@@ -42,7 +42,7 @@ def download_video(storage_path, download_path, bucket_name="heyi-storage"):
         download_path = download_path.replace('\\', '/')
 
     storage_client = storage.Client.from_service_account_json(
-        "./hey-i-375802-e6e402d22694.json"
+        "./hey-i-375802-d3dcfd2b25d1.json"
     )
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(storage_path)
