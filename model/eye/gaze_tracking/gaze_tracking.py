@@ -108,20 +108,20 @@ class GazeTracking(object):
     def is_right(self):
         """Returns true if the user is looking to the right"""
         if self.pupils_located:
-            return self.horizontal_ratio() <= 0.38
+            return self.horizontal_ratio() <= 0.55
 
     def is_left(self):
         """Returns true if the user is looking to the left"""
         if self.pupils_located:
-            return self.horizontal_ratio() >= 0.62
+            return self.horizontal_ratio() >= 0.75
 
-    def is_up(self):
-        if self.pupils_located:
-            return self.vertical_ratio() >= 0.62
+    # def is_up(self):
+    #     if self.pupils_located:
+    #         return self.vertical_ratio() <= 1.0
 
-    def is_down(self):
-        if self.pupils_located:
-            return self.vertical_ratio() <= 0.38
+    # def is_down(self):
+    #     if self.pupils_located:
+    #         return self.vertical_ratio() >= 1.6
 
     def is_center(self):
         """Returns true if the user is looking to the center"""
@@ -129,8 +129,8 @@ class GazeTracking(object):
             return (
                 self.is_right() is not True
                 and self.is_left() is not True
-                and self.is_up() is not True
-                and self.is_down() is not True
+                # and self.is_up() is not True
+                # and self.is_down() is not True
             )
 
     def is_blinking(self):
@@ -159,13 +159,17 @@ class GazeTracking(object):
         ret = []
         left = []
         right = []
+        vertical = []
+        horizontal = []
         anno_frames = []
 
         for frame in frames:
 
             # self.annotated_frame()
-            if self.is_right() or self.is_left() or self.is_up() or self.is_down():
-                text = "Side"
+            if self.is_right():
+                text = 'Right'
+            elif self.is_left():
+                text = "Left"
             elif self.is_center():
                 text = "Center"
             else:
@@ -175,15 +179,23 @@ class GazeTracking(object):
             left_pupil = self.pupil_left_coords()
             right_pupil = self.pupil_right_coords()
 
+            vertical_ratio = self.vertical_ratio()
+            horizontal_ratio = self.horizontal_ratio()
+
             ret.append(text)
             left.append(left_pupil)
             right.append(right_pupil)
+            vertical.append(vertical_ratio)
+            horizontal.append(horizontal_ratio)
 
-            # annotation
+        df = pd.DataFrame({"tracking": ret, "left": left, "right": right, "verical" : vertical, "horizontal" : horizontal})
+        print(df)
+        df = df.replace('None', method='bfill')
+
+        for i, frame in enumerate(frames):
+            text, left_pupil, right_pupil, _, _ = df.loc[i, :]
             anno_frame = self.get_annotated_frame(frame, text, left_pupil, right_pupil)
             anno_frames.append(anno_frame)
-
-        df = pd.DataFrame({"tracking": ret, "left": left, "right": right})
 
         return df, anno_frames
 
