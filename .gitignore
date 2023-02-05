@@ -184,3 +184,6 @@ cython_debug/
 **/logs/
 **/mlruns/
 
+# aihub data
+aihub/
+
