@@ -64,6 +64,7 @@ def convert_to_webm(in_file, video_dir):
 # BACKEND_EYE = "http://49.50.175.182:30001/eye_tracking"
 # SAVE_REQUEST_DIR = "http://49.50.175.182:30001/save_origin_video"
 # UPLOAD_REQUEST_DIR = "http://49.50.175.182:30001/upload_predict_video"
+BACKEND_FRAME = "http://127.0.0.1:8000/frames"
 BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
 BACKEND_POSE_MMPOSE = "http://127.0.0.1:8000/pose_with_mmpose"
 BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
@@ -178,6 +179,8 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                 print(VIDEO_PATH, SAVED_DIR)
                 input_json = {"VIDEO_PATH": VIDEO_PATH, "SAVED_DIR": SAVED_DIR}
                 from concurrent.futures import ThreadPoolExecutor, as_completed
+                
+                requests.post(BACKEND_FRAME, json=input_json)
 
                 r_ = []
                 r_pose_ = []

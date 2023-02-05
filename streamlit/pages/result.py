@@ -33,17 +33,15 @@ if not 'name' in st.session_state.keys():
     st.warning('HEY-I 페이지에서 이름과 번호를 입력하세요')
     st.stop()
 
-BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
-BACKEND_POSE = "http://127.0.0.1:8000/pose_with_mmpose"
-BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
-SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
-UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
-
 st.set_page_config(layout="wide")
 st.title("HEY-I")
 
 # key 존재 확인
 assert os.path.exists("./hey-i-375802-e6e402d22694.json"), "Key가 존재하지 않습니다."
+
+
+# st.session_state.result_dir = "./최명헌_5126/230204_021257"
+# st.session_state.confirm_video = st.session_state.result_dir
 
 if 'result_dir' in st.session_state.keys():
     if os.path.exists(st.session_state.confirm_video):
@@ -53,11 +51,16 @@ if 'result_dir' in st.session_state.keys():
         result = pd.read_csv(os.path.join(st.session_state.result_dir, 'result.csv'), index_col=0)
         pose_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'pose_result.csv'), index_col=0)
         eye_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'eye_result.csv'), index_col=0)
+
+        # VIDEO_PATH = st.session_state.confirm_video
+        # result = pd.read_csv(os.path.join(st.session_state.result_dir, 'result.csv'), index_col=0)
+        # pose_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'pose_result.csv'), index_col=0)
+        # eye_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'eye_result.csv'), index_col=0)
         tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])
 
         with tab1:
             st.header("Emotion")
-            st.subheader("니 얼굴 표정 이렇다 임마 표정 좀 풀어라")
+            # st.subheader("니 얼굴 표정 이렇다 임마 표정 좀 풀어라")
             video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/face_recording.webm")
             video_len = video.get(cv2.CAP_PROP_FRAME_COUNT) / video.get(cv2.CAP_PROP_FPS)
             sec = [video_len / len(result) * (i + 1) for i in range(len(result))]
@@ -133,7 +136,7 @@ if 'result_dir' in st.session_state.keys():
 
         with tab2:
             st.header("Pose")
-            st.subheader("니 자세가 이렇다 삐딱하이 에픽하이")
+            # st.subheader("니 자세가 이렇다 삐딱하이 에픽하이")
 
             pose_video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/pose_recording.webm")
             pose_video_len = pose_video.get(cv2.CAP_PROP_FRAME_COUNT) / pose_video.get(cv2.CAP_PROP_FPS)
@@ -185,8 +188,8 @@ if 'result_dir' in st.session_state.keys():
             info['seconds'] = pose_sec
             st.dataframe(info)
 
-            horizontal_threshold = 0.008
-            vertical_threshold = 115
+            horizontal_threshold = 0.1
+            vertical_threshold = 11.4
             info_ = pd.DataFrame(columns = ['face_align', 'body_align', 'vertical_align', 'hand', 'seconds'])
             for i in range(len(info)):
                 lst = []
@@ -210,7 +213,7 @@ if 'result_dir' in st.session_state.keys():
             count1, count2, count3, count4 = 0, 0, 0, 0
             lst_all1, lst_all2, lst_all3, lst_all4 = [], [], [], []
             lst1, lst2, lst3, lst4 = [], [], [], []
-            threshold_sec = 0.4
+            threshold_sec = 1
             threshold = 20 * threshold_sec
             for i in range(len(info_)):
                 face, body, vert, hand, _ = info_.loc[i, :]
@@ -292,7 +295,7 @@ if 'result_dir' in st.session_state.keys():
 
         with tab3:
             st.header("Eye")
-            st.subheader("동태눈깔 꼬라보노 보노보노")
+            # st.subheader("동태눈깔 꼬라보노 보노보노")
             eye_video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm")
             eye_video_len = eye_video.get(cv2.CAP_PROP_FRAME_COUNT) / max(eye_video.get(cv2.CAP_PROP_FPS), 1e-6)
             eye_sec = [eye_video_len / len(eye_result) * (i + 1) for i in range(len(eye_result))]
@@ -304,15 +307,9 @@ if 'result_dir' in st.session_state.keys():
             eye_video_bytes = eye_video_file.read()
             st.video(eye_video_bytes)
 
-            st.dataframe(eye_result)
-            # st.write("None : 정면 | Side: 그 외")
-            # st.dataframe(eye_result)
-            # video_file = open(
-            #     f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm",
-            #     "rb",
-            # )
-            # video_bytes = video_file.read()
-            # st.video(video_bytes)
+            st.dataframe(eye_result.replace('None', method='bfill'))
+            
+            # eye_result = eye_result.fillna('bfill')
 
     else:
         st.subheader("면접 영상이 제대로 저장되지 않았습니다. 다시 면접 영상을 녹화해주세요.")
