@@ -50,7 +50,7 @@ st.set_page_config(layout="wide")
 st.title("HEY-I")
 
 # key 존재 확인
-assert os.path.exists("./hey-i-375802-e6e402d22694.json"), "Key가 존재하지 않습니다."
+assert os.path.exists("./hey-i-375802-d3dcfd2b25d1.json"), "Key가 존재하지 않습니다."
 
 
 # st.session_state.result_dir = "./최명헌_5126/230204_021257"
