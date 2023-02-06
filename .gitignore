@@ -173,8 +173,13 @@ cython_debug/
 
 
 # KEY
-**/hey-i-375802-e6e402d22694.json
+**/hey-i-375802-d3dcfd2b25d1.json
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8a7b0a1860332fc523365670d09cd8b2d6c8856a
 *.webm
+*.octet-stream
 *.jpg
 *.csv
 
