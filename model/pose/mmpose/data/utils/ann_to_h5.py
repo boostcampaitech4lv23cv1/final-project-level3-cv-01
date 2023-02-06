@@ -27,16 +27,20 @@ for annotation in tqdm.tqdm(annotations):
     with open(annotation) as a:
         anno = json.load(a)
         # 1920 x 1080 -> 320 x 180
-        x_points = np.array(anno["people"]["pose_keypoints_2d"][::3]) / 6
-        y_points = np.array(anno["people"]["pose_keypoints_2d"][1::3]) / 6
-        new_xy = list(zip(x_points, y_points))
-        total_annotations.append(new_xy)
+        x_kpts = anno["people"]["pose_keypoints_2d"][::3]
+        y_kpts = anno["people"]["pose_keypoints_2d"][1::3]
+
+        needed_x_kpts = np.array(x_kpts[:8] + x_kpts[15:19]) / 6
+        needed_y_kpts = np.array(y_kpts[:8] + y_kpts[15:19]) / 6
+
+        needed_xy = list(zip(needed_x_kpts, needed_y_kpts))
+        total_annotations.append(needed_xy)
 annotations_amount = len(total_annotations)
 total_annotations = np.array(total_annotations)
 print("total_annotations shape: ", total_annotations.shape)
 
 
-total_annotated = [[True for _ in range(25)] for _ in range(annotations_amount)]
+total_annotated = [[True for _ in range(12)] for _ in range(annotations_amount)]
 total_annotated = np.array(total_annotated)
 print("total_annotated shape: ", total_annotated.shape)
 
@@ -52,31 +56,18 @@ total_images = np.array(total_images)
 print("total_images shape: ", total_images.shape)
 
 skeletons = [
-    [18, 16],
-    [16, 0],
-    [0, 15],
-    [15, 17],
+    [11, 9],
+    [9, 0],
+    [0, 8],
+    [8, 10],
     [7, 6],
     [6, 5],
     [5, 1],
     [1, 2],
     [2, 3],
     [3, 4],
-    [12, 13],
-    [13, 14],
-    [14, 19],
-    [19, 20],
-    [19, 21],
-    [8, 12],
-    [8, 9],
-    [9, 10],
-    [10, 11],
-    [11, 22],
-    [22, 23],
-    [22, 24],
     [0, 1],
-    [1, 8],
-    [15, 16],
+    [9, 8],
 ]
 skeletons = np.array(skeletons)
 print("skeletons shape: ", skeletons.shape)
