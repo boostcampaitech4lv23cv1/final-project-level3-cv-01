@@ -179,6 +179,7 @@ cython_debug/
 
 >>>>>>> 8a7b0a1860332fc523365670d09cd8b2d6c8856a
 *.webm
+*.octet-stream
 *.jpg
 *.csv
 

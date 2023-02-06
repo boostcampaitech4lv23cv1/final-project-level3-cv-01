@@ -86,7 +86,6 @@ st.subheader("면접 영상을 녹화하세요")
 start_time = datetime.now(timezone("Asia/Seoul")).strftime("%y%m%d_%H%M%S")
 if "prefix" not in st.session_state.keys() or st.session_state.prefix is None:
     st.session_state["prefix"] = start_time
-    # st.session_state["prefix"] = str(uuid.uuid4())
 
 if not os.path.exists(f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}"):
     os.makedirs(f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}")
@@ -156,7 +155,6 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                 st.session_state.confirm_video = st.session_state.video_dir
 
                 # 녹화한 영상 cloud에 업로드할 경로
-                #upload_path = os.path.join(*st.session_state.video_dir.split("/")[-3:])
                 upload_path = "/".join(st.session_state.video_dir.split("/")[-3:])
                 st.session_state.upload_dir = upload_path
                 upload_path = upload_path.replace("\\", "/")
@@ -198,13 +196,7 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                     r_pose_.append(r_pose)
                     r_eye = executor.submit(requests.post, BACKEND_EYE, json=input_json)
                     r_eye_.append(r_eye)
-                # r = requests.post(BACKEND_FACE, json=input_json)
-                # r_pose = requests.post(BACKEND_POSE_MMPOSE, json=input_json)
-                # r_eye = requests.post(BACKEND_EYE, json=input_json)
 
-                #result_dir = st.session_state.result_dir = os.path.join(
-                #    *SAVED_DIR.split("/")[:-1]
-                #)
                 result_dir = "/".join(SAVED_DIR.split("/")[:-1])
                 st.session_state.result_dir = result_dir 
 
@@ -216,36 +208,24 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                     r_eye_result = i.result().text
 
                 result = pd.read_json(r_result, orient="records")
-                #result.to_csv(os.path.join(result_dir, "result.csv"))
                 result.to_csv("/".join([result_dir, "result.csv"]))
                 pose_result = pd.read_json(r_pose_result, orient="records")
-                #pose_result.to_csv(os.path.join(result_dir, "pose_result.csv"))
                 pose_result.to_csv("/".join([result_dir, "pose_result.csv"]))
                 eye_result = pd.read_json(r_eye_result, orient="records")
-                #eye_result.to_csv(os.path.join(result_dir, "eye_result.csv"))
                 eye_result.to_csv("/".join([result_dir, "eye_result.csv"]))
 
                 # Back에서 저장한 모델 예측 영상 경로 만들기
                 # for task in ("face", "pose", "eye"):
                 for task in ["face", "pose", "eye"]:
-                    #upload_name = (task + "_" + st.session_state.upload_dir.split("\\")[-1])
                     upload_name = (task + "_" + st.session_state.upload_dir.split("/")[-1])
-                    #upload_folder = os.path.join(
-                    #    *st.session_state.upload_dir.split("\\")[:-1]
-                    #)
-                    #upload_folder = "/".join(*st.session_state.upload_dir.split("\\")[:-1])
                     upload_folder = "/".join(st.session_state.upload_dir.split("/")[:-1])
-                    #upload_dir = os.path.join(upload_folder, upload_name)
                     upload_dir = "/".join([upload_folder, upload_name])
                     download_name = upload_name
-                    #download_folder = os.path.join(*st.session_state.video_dir.split("/")[:-1])
                     download_folder = "/".join(st.session_state.video_dir.split("/")[:-1])
-                    #download_dir = os.path.join(download_folder, download_name)
                     download_dir = "/".join([download_folder, download_name])
 
                     # 4. 클라우드에 저장된 모델 예측 영상 Front에 다운 받기
                     download_video(
-                        #storage_path=upload_dir.replace("\\", "/"),
                         storage_path=upload_dir,
                         download_path=download_dir,
                     )
