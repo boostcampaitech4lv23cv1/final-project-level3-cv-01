@@ -64,13 +64,7 @@ def upload_predict_video(inp: InferenceFace):
 @app.post("/frames")
 def make_frame(inp: InferenceFace):
     VIDEO_PATH = download_path = inp.VIDEO_PATH
-    # storage_path = os.path.join(*download_path.split("/")[1:])
     SAVED_DIR = inp.SAVED_DIR
-
-    # if not os.path.exists(download_path):
-    #     os.makedirs(os.path.join(*download_path.split("/")[1:-1]), exist_ok=True)
-    #     download_video(storage_path=storage_path, download_path=download_path)
-    #     print(f"The video was uploaded from {download_path} to {storage_path}")
 
     frames_dir = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
     print("frame_dir:", frames_dir)
@@ -82,25 +76,13 @@ def get_emotion_df(inp: InferenceFace):
     storage_path = os.path.join(*download_path.split("/")[1:])
     SAVED_DIR = inp.SAVED_DIR
 
-    # if not os.path.exists(download_path):
-    #     os.makedirs(os.path.join(*download_path.split("/")[1:-1]), exist_ok=True)
-    #     download_video(storage_path=storage_path, download_path=download_path)
-    #     print(f"The video was uploaded from {download_path} to {storage_path}")
-
-    # frames_dir = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
-    # print("frame_dir:", frames_dir)
-
     output_dict, output_df = inference(
         32, "./model/face/models/custom_fer_model.ckpt", SAVED_DIR
     )
     output_df.sort_values(by=["frame"], ignore_index=True, inplace=True)
-    # output_df.to_csv('./최명헌_5126/230204_021257/result.csv')
 
     rec_image_list = fr.add_emotion_on_frame_new(output_df)
     saved_video = fr.frame_to_video(rec_image_list, VIDEO_PATH)
-
-    # frame_idx = face_analyze(df = output_df, threshold_sec = 0.4)
-    # make_video_slice(df=output_df, frame_idx=frame_idx, video_path=saved_video, type='face')
 
     uploaded_video = os.path.join(*saved_video.split("/")[1:])
     upload_video(saved_video, uploaded_video)
@@ -142,14 +124,6 @@ def get_eye_df(inp: InferenceFace):
     VIDEO_PATH = download_path = inp.VIDEO_PATH
     storage_path = os.path.join(*download_path.split("/")[1:])
     SAVED_DIR = inp.SAVED_DIR
-
-    # if not os.path.exists(download_path):
-    #     os.makedirs(os.path.join(*download_path.split("/")[1:-1]), exist_ok=True)
-    #     download_video(storage_path=storage_path, download_path=download_path)
-    #     print(f"The video was uploaded from {download_path} to {storage_path}")
-
-    # frames_dir = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
-    # print("frame_dir:", frames_dir)
 
     frames = glob.glob(f"{SAVED_DIR}/*.jpg")
     frames.sort()
@@ -200,7 +174,6 @@ def make_video_slice(df, frame_idx, video_path, type):
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS)
-    # fps = mmcv.VideoReader(VIDEO_PATH).fps
 
     if not os.path.exists("./{video_path.split('/')[1]}/{video_path.split('/')[2]}/slice"):
         os.makedirs("./{video_path.split('/')[1]}/{video_path.split('/')[2]}/slice")
