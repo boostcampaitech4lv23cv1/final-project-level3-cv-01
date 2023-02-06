@@ -63,9 +63,9 @@ st.session_state.video_dir = in_file
 
 # Upload User info in DB
 userdb = UserDB(st.session_state.name, st.session_state.num, start_time, "/".join(in_file.split('/')[:-1]))
-posedb = PoseDB()
-eyedb = EyeDB()
-facedb = FaceDB()
+posedb = PoseDB(st.session_state.name, st.session_state.num, start_time, "/".join(in_file.split('/')[:-1]))
+eyedb = EyeDB(st.session_state.name, st.session_state.num, start_time, "/".join(in_file.split('/')[:-1]))
+facedb = FaceDB(st.session_state.name, st.session_state.num, start_time, "/".join(in_file.split('/')[:-1]))
 
 if "userdb" not in st.session_state:
     st.session_state["userdb"] = userdb
