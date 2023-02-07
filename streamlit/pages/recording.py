@@ -35,7 +35,7 @@ def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
 
 
 def convert_to_webm(in_file, video_dir):
-    def convert_to_webm(in_file, video_dir):
+    
     start = time.process_time()
     cap = cv2.VideoCapture(in_file)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
