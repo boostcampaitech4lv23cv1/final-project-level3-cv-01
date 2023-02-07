@@ -175,6 +175,7 @@ cython_debug/
 # KEY
 **/hey-i-375802-d3dcfd2b25d1.json
 *.webm
+*.octet-stream
 *.jpg
 *.csv
 

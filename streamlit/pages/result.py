@@ -1,19 +1,32 @@
+import ast
 import os
 import sys
-import cv2
-import ast
 from copy import deepcopy
+
+import cv2
 
 sys.path.append(os.getcwd())
 
-import time
-import requests
+import numpy as np
+from collections import defaultdict
+
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import streamlit as st
-import matplotlib.pyplot as plt
-from collections import defaultdict
+from DBconnect.main import EyeDB, FaceDB, PoseDB, UserDB
+from FastAPI.utils import download_video, upload_video
 from google.cloud import storage
-from FastAPI.utils import upload_video, download_video
+from scipy.interpolate import make_interp_spline
+
+for name in ['posedb', 'eyedb', 'facedb']:
+    if name not in st.session_state:
+        print("DB 요청 실패")
+        st.write("DB 요청 실패")
+        
+posedb = st.session_state["posedb"]
+eyedb = st.session_state["eyedb"]
+facedb = st.session_state["facedb"]
 
 # 시간 측정
 
@@ -33,31 +46,31 @@ if not 'name' in st.session_state.keys():
     st.warning('HEY-I 페이지에서 이름과 번호를 입력하세요')
     st.stop()
 
-BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
-BACKEND_POSE = "http://127.0.0.1:8000/pose_with_mmpose"
-BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
-SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
-UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
-
 st.set_page_config(layout="wide")
 st.title("HEY-I")
 
 # key 존재 확인
 assert os.path.exists("./hey-i-375802-d3dcfd2b25d1.json"), "Key가 존재하지 않습니다."
 
+# threshold 지정
+emotion_threshold_sec = 1
+pose_horizontal_threshold = 0.1
+pose_vertical_threshold = 11.4
+pose_threshold_sec = 1
+eye_threshold_sec = 1
+
 if 'result_dir' in st.session_state.keys():
     if os.path.exists(st.session_state.confirm_video):
         st.subheader("면접 영상 분석 결과입니다.")
 
         VIDEO_PATH = st.session_state.confirm_video
-        result = pd.read_csv(os.path.join(st.session_state.result_dir, 'result.csv'), index_col=0)
-        pose_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'pose_result.csv'), index_col=0)
-        eye_result = pd.read_csv(os.path.join(st.session_state.result_dir, 'eye_result.csv'), index_col=0)
+        result = facedb.load_data_inf()
+        pose_result = posedb.load_data_inf()
+        eye_result = eyedb.load_data_inf()
         tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])
 
         with tab1:
             st.header("Emotion")
-            st.subheader("니 얼굴 표정 이렇다 임마 표정 좀 풀어라")
             video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/face_recording.webm")
             video_len = video.get(cv2.CAP_PROP_FRAME_COUNT) / video.get(cv2.CAP_PROP_FPS)
             sec = [video_len / len(result) * (i + 1) for i in range(len(result))]
@@ -68,70 +81,92 @@ if 'result_dir' in st.session_state.keys():
             )
             video_bytes = video_file.read()
             st.video(video_bytes)
-            # st.line_chart([cls_to_idx[i] for i in result.emotion])
-            
-            linechart = st.selectbox(
-                'What kind of line chart do you want?',
-                ('Emotion (7 classes)', 'Positive or Negative', 'Both')
+            with st.expander('More Information - Facial Emotion Result'):
+                st.dataframe(result)
+
+            col1, col2 = st.columns(2)
+            with col1:
+                linechart = st.selectbox(
+                    'What kind of line chart do you want?',
+                    ('Emotion (7 classes)', 'Positive or Negative', 'Both')
+                    )
+
+                fig, ax = plt.subplots()
+                ax.set_xlabel('Time(sec)')
+                ax.set_ylabel('Emotion')
+
+                x = np.linspace(0, len(result), 200)
+
+                ax.set_xticks([i for idx, i in enumerate(x) if idx % 15 == 1])
+                ax.set_xticklabels([round(i/30, 1) for idx, i in enumerate(x) if idx % 15 == 1])
+                ax.set_ylim(-0.5, 6.5)
+                ax.tick_params(axis='x', rotation=30)
+
+                numemo = result.emotion.replace(
+                    ['angry', 'anxiety', 'sad', 'surprise', 'hurt', 'neutral', 'happy'],
+                    [0, 1, 2, 3, 4, 5, 6]
+                )
+                numposneg = result.posneg.replace(
+                    ['positive', 'negative'], [1, 0]
                 )
 
-            fig, ax = plt.subplots()
-            ax.set_xlabel('Time(sec)')
-            ax.set_ylabel('Emotion')
-            ax.set_xticks([i+1 for i in range(len(result)) if i%5 == 0])
-            ax.set_xticklabels([round(j, 1) for i, j in enumerate(result.seconds) if i%5==0])
-            ax.tick_params(axis='x', rotation=30)
+                model_emo = make_interp_spline([i for i in range(len(result))], numemo)
+                model_posneg = make_interp_spline([i for i in range(len(result))], numposneg)
 
-            if linechart == 'Emotion (7 classes)':
-                ax.plot(result.emotion, color = 'skyblue', label = 'emotion')
-                # ax.tick_params(bottom=False)
-                ax.set_yticks(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
-                ax.set_yticklabels(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
-                st.pyplot(fig)
+                interpol_emo = model_emo(x)
+                interpol_posneg = model_posneg(x)
 
-            elif linechart == 'Positive or Negative':
-                ax.plot(result.posneg, color = 'salmon')
-                ax.set_yticks(['positive','negative'])
-                ax.set_yticklabels(['Positive', 'Negative'])
-                st.pyplot(fig)
-            
-            elif linechart == 'Both':
-                ax.plot(result.emotion, color = 'skyblue', label = 'emotion')
-                # ax.tick_params(bottom=False)
-                ax.set_yticks(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
-                ax.set_yticklabels(['neutral','happy','angry','anxiety','sad','surprise', 'hurt'])
-                ax1 = ax.twinx()
-                ax1.plot(result.posneg, color = 'salmon')
-                ax1.set_yticks(['positive','negative'])
-                ax1.set_yticklabels(['Positive', 'Negative'])
-                st.pyplot(fig)
-            count = 0
-            lst_all = []
-            lst = []
-            for idx, i in enumerate(result.posneg):
-                # print(i)
-                if i == 'negative':
-                    count += 1
-                    lst.append(idx)
+                if linechart == 'Emotion (7 classes)':
+                    ax.plot(x, interpol_emo, color = 'skyblue', label = 'emotion')
+                    ax.set_yticks([0, 1, 2, 3, 4, 5, 6])
+                    ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'hurt', 'neutral', 'happy'])
+                    st.pyplot(fig)
+
+                elif linechart == 'Positive or Negative':
+                    ax.plot(x, interpol_posneg, color = 'salmon')
+                    ax.set_yticks([1, 0])
+                    ax.set_yticklabels(['Positive', 'Negative'])
+                    st.pyplot(fig)
+                
+                elif linechart == 'Both':
+                    ax.plot(x, interpol_emo, color = 'skyblue', label = 'emotion')
+                    ax.set_yticks([0, 1, 2, 3, 4, 5, 6])
+                    ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'hurt', 'neutral', 'happy'])
+                    ax1 = ax.twinx()
+                    ax1.plot(x, interpol_posneg, color = 'salmon')
+                    ax1.set_yticks([1, 0])
+                    ax1.set_yticklabels(['Positive', 'Negative'])
+                    st.pyplot(fig)
+
+            with col2:
+                count = 0
+                lst_all = []
+                lst = []
+                threshold_sec = emotion_threshold_sec
+                threshold = 30 * threshold_sec
+                for idx, i in enumerate(result.posneg):
+                    # print(i)
+                    if i == 'negative':
+                        count += 1
+                        lst.append(idx)
+                    else:
+                        if count >= threshold:
+                            lst_all.append(deepcopy(lst))
+                        count = 0
+                        lst = []
+                
+                if len(lst_all) > 0:
+                    for seq in lst_all:
+                        start = seq[0]
+                        end = seq[-1]
+                        start_sec = result.loc[start, 'seconds']
+                        end_sec = result.loc[end, 'seconds']
+                        st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 표정이 부정적입니다.')
                 else:
-                    if count >= 5:
-                        lst_all.append(deepcopy(lst))
-                    count = 0
-                    lst = []
-            
-            if len(lst_all) > 0:
-                for seq in lst_all:
-                    start = seq[0]
-                    end = seq[-1]
-                    start_sec = result.loc[start, 'seconds']
-                    end_sec = result.loc[end, 'seconds']
-                    st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 표정이 좋지 않습니다.')
-            else:
-                st.success('표정을 잘 지었습니다.')
+                    st.success('표정이 긍정적입니다.')
 
         with tab2:
             st.header("Pose")
-            st.subheader("니 자세가 이렇다 삐딱하이 에픽하이")
 
             pose_video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/pose_recording.webm")
             pose_video_len = pose_video.get(cv2.CAP_PROP_FRAME_COUNT) / pose_video.get(cv2.CAP_PROP_FPS)
@@ -144,8 +179,6 @@ if 'result_dir' in st.session_state.keys():
             pose_video_bytes = pose_video_file.read()
             st.video(pose_video_bytes)
 
-            st.dataframe(pose_result)
-
             a = pose_result[['nose','left_eye','right_eye','left_ear','right_ear','left_shoulder','right_shoulder','left_elbow','right_elbow','left_wrist','right_wrist']]
             ax = pd.DataFrame(columns = a.columns)
             ay = pd.DataFrame(columns = a.columns)
@@ -155,7 +188,7 @@ if 'result_dir' in st.session_state.keys():
                 xlst = []
                 ylst = []
                 for j in info:
-                    x, y = ast.literal_eval(j)
+                    x, y = j[0], j[1]
                     if x < 0 or x > 640:
                         xlst.append(-1)
                         ylst.append(-1)
@@ -167,26 +200,144 @@ if 'result_dir' in st.session_state.keys():
                         ylst.append(y)
                 ax.loc[i, :] = xlst
                 ay.loc[i, :] = ylst
-            info = pd.DataFrame(columns = ['eye-eye','ear-ear','shoulder-shoulder','nose-chest','right_hand-yes','left_hand-yes'])
+
+            info = pd.DataFrame(columns = ['eye-eye','ear-ear','shoulder-shoulder','nose-chest', 'eye-chest','right_hand-yes','left_hand-yes'])
             for i in range(len(a)):
                 bx = ax.loc[i,:]
                 by = ay.loc[i,:]
                 lst = []
-                lst.append((by['right_eye'] - by['left_eye']) / (bx['right_eye'] - bx['left_eye']))
-                lst.append((by['right_ear'] - by['left_ear']) / (bx['right_ear'] - bx['left_ear']))
-                lst.append((by['right_shoulder'] - by['left_shoulder']) / (bx['right_shoulder'] - bx['left_shoulder']))
-                lst.append((by['nose'] - (by['right_shoulder'] + by['left_shoulder']) / 2) / max((bx['nose'] - (bx['right_shoulder'] + bx['left_shoulder']) / 2), 1e-5))
-                lst.append(bx['right_wrist'] != -1)
-                lst.append(bx['left_wrist'] != -1)
+                # lst.append((by['right_eye'] - by['left_eye']) / (bx['right_eye'] - bx['left_eye']))
+                # lst.append((by['right_ear'] - by['left_ear']) / (bx['right_ear'] - bx['left_ear']))
+                # lst.append((by['right_shoulder'] - by['left_shoulder']) / (bx['right_shoulder'] - bx['left_shoulder']))
+                # lst.append((by['nose'] - (by['right_shoulder'] + by['left_shoulder']) / 2) / max((bx['nose'] - (bx['right_shoulder'] + bx['left_shoulder']) / 2), 1e-6))
+                lst.append((by['right_eye'] - by['left_eye']) / (bx['right_eye'] - bx['left_eye']) if bx['right_eye'] != bx['left_eye'] else 999.)
+                lst.append((by['right_ear'] - by['left_ear']) / (bx['right_ear'] - bx['left_ear']) if bx['right_ear'] != bx['left_ear'] else 999.)
+                lst.append((by['right_shoulder'] - by['left_shoulder']) / (bx['right_shoulder'] - bx['left_shoulder']) if bx['right_shoulder'] != bx['left_shoulder'] else 999.)
+                lst.append((by['nose'] - (by['right_shoulder'] + by['left_shoulder']) / 2) / (bx['nose'] - (bx['right_shoulder'] + bx['left_shoulder']) / 2) if bx['nose'] != (bx['right_shoulder'] + bx['left_shoulder']) / 2 else 999.)
+                
+                lst.append(((by['right_eye'] + by['left_eye']) / 2 - (by['right_shoulder'] + by['left_shoulder']) / 2) / max(((bx['right_eye'] + bx['left_eye']) / 2 - (bx['right_shoulder'] + bx['left_shoulder']) / 2), 1e-6))
+                lst.append(bx['right_wrist'] != -1 and bx['right_elbow'] != -1)
+                lst.append(bx['left_wrist'] != -1 and bx['left_elbow'] != -1)
                 info.loc[i, :] = lst
             info['seconds'] = pose_sec
-            st.dataframe(info)
+
+            vertical_threshold = pose_vertical_threshold
+            horizontal_threshold = pose_horizontal_threshold
+            info_ = pd.DataFrame(columns = ['face_align', 'body_align', 'vertical_align', 'hand', 'seconds'])
+            for i in range(len(info)):
+                lst = []
+                eye_eye, ear_ear, shd_shd, nose_chest, eye_chest, rhand, lhand, secs = info.loc[i, :]
+                # 얼굴 align
+                if abs(eye_eye) < horizontal_threshold or abs(ear_ear) < horizontal_threshold: lst.append(True)
+                else: lst.append(False)
+                # 몸통 align
+                if abs(shd_shd) < horizontal_threshold: lst.append(True)
+                else: lst.append(False)
+                # 얼굴-몸통 삐딱
+                if abs(nose_chest) > vertical_threshold or abs(eye_chest) > vertical_threshold: lst.append(True)
+                else: lst.append(False)
+                # 손 출현
+                if rhand or lhand: lst.append(True)
+                else: lst.append(False)
+                lst.append(secs)
+                info_.loc[i, :] = lst
+                
+            with st.expander('More Information - Pose Estimation Result'):
+                st.subheader('Pose result')
+                st.dataframe(pose_result)
+                st.subheader('Pose Angle')
+                st.dataframe(info)
+                st.subheader('Pose is Align?')
+                st.dataframe(info_)
+                    
+
+            count1, count2, count3, count4 = 0, 0, 0, 0
+            lst_all1, lst_all2, lst_all3, lst_all4 = [], [], [], []
+            lst1, lst2, lst3, lst4 = [], [], [], []
+            threshold_sec = pose_threshold_sec
+            threshold = 30 * threshold_sec
+            for i in range(len(info_)):
+                face, body, vert, hand, _ = info_.loc[i, :]
+                if not face:
+                    count1 += 1
+                    lst1.append(i)
+                else:
+                    if count1 >= threshold:
+                        lst_all1.append(deepcopy(lst1))
+                    count1 = 0
+                    lst1 = []
+                if not body:
+                    count2 += 1
+                    lst2.append(i)
+                else:
+                    if count2 >= threshold:
+                        lst_all2.append(deepcopy(lst2))
+                    count2 = 0
+                    lst2 = []
+                if not vert:
+                    count3 += 1
+                    lst3.append(i)
+                else:
+                    if count3 >= threshold:
+                        lst_all3.append(deepcopy(lst3))
+                    count3 = 0
+                    lst3 = []
+                if hand:
+                    count4 += 1
+                    lst4.append(i)
+                else:
+                    if count4 >= threshold:
+                        lst_all4.append(deepcopy(lst4))
+                    count4 = 0
+                    lst4 = []
+            
+            tab1_, tab2_, tab3_, tab4_ = st.tabs(["Face Align", "Body Align", "Vertical Align", "Hand"])
+            with tab1_:
+                if len(lst_all1) > 0:
+                    for seq in lst_all1:
+                        start = seq[0]
+                        end = seq[-1]
+                        start_sec = info_.loc[start, 'seconds']
+                        end_sec = info_.loc[end, 'seconds']
+                        st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 고개가 기울어졌습니다.')
+                else:
+                    st.success('얼굴이 잘 정렬되어 있습니다.')
+            with tab2_:
+                if len(lst_all2) > 0:
+                    for seq in lst_all2:
+                        start = seq[0]
+                        end = seq[-1]
+                        start_sec = info_.loc[start, 'seconds']
+                        end_sec = info_.loc[end, 'seconds']
+                        st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 어깨선이 기울어졌습니다.')
+                else:
+                    st.success('어깨선이 잘 정렬되어 있습니다.')
+            with tab3_:
+                if len(lst_all3) > 0:
+                    for seq in lst_all3:
+                        start = seq[0]
+                        end = seq[-1]
+                        start_sec = info_.loc[start, 'seconds']
+                        end_sec = info_.loc[end, 'seconds']
+                        st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 몸이 기울어졌습니다.')
+                else:
+                    st.success('몸과 얼굴이 잘 정렬되어 있습니다.')
+            with tab4_:
+                if len(lst_all4) > 0:
+                    for seq in lst_all4:
+                        start = seq[0]
+                        end = seq[-1]
+                        start_sec = info_.loc[start, 'seconds']
+                        end_sec = info_.loc[end, 'seconds']
+                        st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초에 손이 나왔습니다.')
+                else:
+                    st.success('손이 나오지 않았습니다.')
+
 
         with tab3:
             st.header("Eye")
-            st.subheader("동태눈깔 꼬라보노 보노보노")
             eye_video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm")
-            eye_video_len = eye_video.get(cv2.CAP_PROP_FRAME_COUNT) / eye_video.get(cv2.CAP_PROP_FPS)
+            eye_video_len = eye_video.get(cv2.CAP_PROP_FRAME_COUNT) / max(eye_video.get(cv2.CAP_PROP_FPS), 1e-6)
             eye_sec = [eye_video_len / len(eye_result) * (i + 1) for i in range(len(eye_result))]
             eye_result['seconds'] = eye_sec
             eye_video_file = open(
@@ -196,15 +347,85 @@ if 'result_dir' in st.session_state.keys():
             eye_video_bytes = eye_video_file.read()
             st.video(eye_video_bytes)
 
-            st.dataframe(eye_result)
-            # st.write("None : 정면 | Side: 그 외")
-            # st.dataframe(eye_result)
-            # video_file = open(
-            #     f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_recording.webm",
-            #     "rb",
-            # )
-            # video_bytes = video_file.read()
-            # st.video(video_bytes)
+            with st.expander('More Information - Eye Tracking Result'):
+                st.dataframe(eye_result)
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                fig, ax = plt.subplots()
+                ax.set_xlabel('Time(sec)')
+                ax.set_ylabel('Emotion')
+
+                x = np.linspace(0, len(eye_result), 200)
+
+                ax.set_xticks([i for idx, i in enumerate(x) if idx % 15 == 1])
+                ax.set_xticklabels([round(i/30, 1) for idx, i in enumerate(x) if idx % 15 == 1])
+                ax.tick_params(axis='x', rotation=30)
+                
+                numeye = eye_result.tracking.replace(
+                    ['Right', 'Center', 'Left'], [-1, 0, 1]
+                )
+
+                model_eye = make_interp_spline([i for i in range(len(eye_result))], numeye)
+
+                interpol_eye = model_eye(x)
+
+                ax.plot(x, interpol_eye, color = 'skyblue', label = 'emotion')
+                ax.set_ylim(-1.3, 1.3)
+                ax.set_yticks([-1, 0, 1])
+                ax.set_yticklabels(['Right', 'Center', 'Left'])
+                st.pyplot(fig)
+
+            with col2:
+                count = 0
+                right_lst_all = []
+                left_lst_all = []
+                right_lst = []
+                left_lst = []
+                threshold_sec = eye_threshold_sec
+                threshold = 30 * threshold_sec
+                for idx, i in enumerate(eye_result.tracking):
+                    if i == 'Right':
+                        count += 1
+                        right_lst.append(idx)
+                    else:
+                        if count >= threshold:
+                            right_lst_all.append(deepcopy(right_lst))
+                        count = 0
+                        right_lst = []
+                
+                for idx, i in enumerate(eye_result.tracking):
+                    if i == 'Left':
+                        count += 1
+                        left_lst.append(idx)
+                    else:
+                        if count >= threshold:
+                            left_lst_all.append(deepcopy(left_lst))
+                        count = 0
+                        left_lst = []
+
+                lst_all_dict = {}
+                for i in right_lst_all:
+                    start = i[0]
+                    end = i[-1]
+                    lst_all_dict[start] = [end, '오른쪽']
+                for i in left_lst_all:
+                    start = i[0]
+                    end = i[-1]
+                    lst_all_dict[start] = [end, '왼쪽']
+                lst_all_dict = sorted(lst_all_dict.items())
+
+                if len(lst_all_dict) > 0:
+                    for seq, direction in lst_all_dict:
+                        start = seq
+                        end = direction[0]
+                        start_sec = eye_result.loc[start, 'seconds']
+                        end_sec = eye_result.loc[end, 'seconds']
+                        st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 시선이 {direction[1]}을 응시하고 있습니다.')
+                else:
+                    st.success('정면을 잘 응시하고 있습니다.')
+                
 
     else:
         st.subheader("면접 영상이 제대로 저장되지 않았습니다. 다시 면접 영상을 녹화해주세요.")
