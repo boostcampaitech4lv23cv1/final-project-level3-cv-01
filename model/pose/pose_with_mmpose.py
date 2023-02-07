@@ -25,8 +25,10 @@ def calculate_angle(a, b):
 
 
 def main(video_path="./model/pose/recording.webm", out_video_root="./db"):
-    pose_config = "model/pose/mmpose/configs/heyi/mobilenetv2_aihub_256x192.py"
-    pose_checkpoint = "https://download.openmmlab.com/mmpose/top_down/mobilenetv2/mobilenetv2_coco_256x192-d1e58e7b_20200727.pth"
+    # pose_config = "model/pose/mmpose/configs/heyi/mobilenetv2_aihub_256x192.py"
+    # pose_checkpoint = "https://download.openmmlab.com/mmpose/top_down/mobilenetv2/mobilenetv2_coco_256x192-d1e58e7b_20200727.pth"
+    pose_config = "./model/pose/mmpose/configs/heyi/aihub.py"
+    pose_checkpoint = "./model/pose/mmpose/checkpoint/resnet50.pth"
     show = False
     device = "cuda:0"
     kpt_thr = 0.3
