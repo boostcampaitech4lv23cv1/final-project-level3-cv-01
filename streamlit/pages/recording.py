@@ -3,10 +3,12 @@ import sys
 import cv2
 import time
 import shutil
+import shutil
 from pathlib import Path
 from pytz import timezone
 from datetime import datetime
 import streamlit as st
+import io
 import io
 
 sys.path.append(os.getcwd())
@@ -33,6 +35,7 @@ def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
 
 
 def convert_to_webm(in_file, video_dir):
+    def convert_to_webm(in_file, video_dir):
     start = time.process_time()
     cap = cv2.VideoCapture(in_file)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -42,6 +45,7 @@ def convert_to_webm(in_file, video_dir):
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
 
     out = cv2.VideoWriter(
+        video_dir,
         video_dir,
         fourcc,
         fps,
@@ -158,8 +162,17 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
         video_file = open(st.session_state.video_dir, "rb")
         video_bytes = video_file.read()
         with st.expander("이 영상을 분석 할 지 결정해주세요"):
+        with st.expander("이 영상을 분석 할 지 결정해주세요"):
             st.video(video_bytes)
             # 분석할 영상 결정
+
+        st.write("이 영상으로 분석을 진행할까요?")
+
+        confirm = st.button("Inference")
+        cancel = st.button("Re-Recording")
+
+        if confirm:
+            with st.spinner('선택한 영상을 분석하고 있습니다. 잠시 기다려주세요!'):
 
         st.write("이 영상으로 분석을 진행할까요?")
 
@@ -171,6 +184,7 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                 st.session_state.confirm_video = st.session_state.video_dir
 
                 # 녹화한 영상 cloud에 업로드할 경로
+                upload_path = "/".join(st.session_state.video_dir.split("/")[-3:])
                 upload_path = "/".join(st.session_state.video_dir.split("/")[-3:])
                 st.session_state.upload_dir = upload_path
                 upload_path = upload_path.replace("\\", "/")
@@ -199,6 +213,8 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                 from concurrent.futures import ThreadPoolExecutor, as_completed
                 
                 requests.post(BACKEND_FRAME, json=input_json)
+                
+                requests.post(BACKEND_FRAME, json=input_json)
 
                 r_ = []
                 r_pose_ = []
@@ -213,6 +229,8 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                     r_eye = executor.submit(requests.post, BACKEND_EYE, json=input_json)
                     r_eye_.append(r_eye)
 
+                result_dir = "/".join(SAVED_DIR.split("/")[:-1])
+                st.session_state.result_dir = result_dir 
                 result_dir = "/".join(SAVED_DIR.split("/")[:-1])
                 st.session_state.result_dir = result_dir 
 
@@ -241,12 +259,18 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                     upload_name = (task + "_" + st.session_state.upload_dir.split("/")[-1])
                     upload_folder = "/".join(st.session_state.upload_dir.split("/")[:-1])
                     upload_dir = "/".join([upload_folder, upload_name])
+                    upload_name = (task + "_" + st.session_state.upload_dir.split("/")[-1])
+                    upload_folder = "/".join(st.session_state.upload_dir.split("/")[:-1])
+                    upload_dir = "/".join([upload_folder, upload_name])
                     download_name = upload_name
+                    download_folder = "/".join(st.session_state.video_dir.split("/")[:-1])
+                    download_dir = "/".join([download_folder, download_name])
                     download_folder = "/".join(st.session_state.video_dir.split("/")[:-1])
                     download_dir = "/".join([download_folder, download_name])
 
                     # 4. 클라우드에 저장된 모델 예측 영상 Front에 다운 받기
                     download_video(
+                        storage_path=upload_dir,
                         storage_path=upload_dir,
                         download_path=download_dir,
                     )
@@ -259,7 +283,19 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
 if 'complete' in st.session_state.keys() and st.session_state.complete:
     st.success("분석이 완료 되었습니다!!! Result 페이지에서 결과를 확인하세요!!!", icon="🔥")
     st.session_state.complete = False
+            st.session_state.complete = True
 
+        elif cancel:
+            st.session_state.cancel = True
+            st.session_state.prefix = None
+
+if 'complete' in st.session_state.keys() and st.session_state.complete:
+    st.success("분석이 완료 되었습니다!!! Result 페이지에서 결과를 확인하세요!!!", icon="🔥")
+    st.session_state.complete = False
+
+if 'cancel' in st.session_state.keys() and st.session_state.cancel:
+    restart = st.button('다시 녹화하세요')
+    st.session_state.cancel = False
 if 'cancel' in st.session_state.keys() and st.session_state.cancel:
     restart = st.button('다시 녹화하세요')
     st.session_state.cancel = False

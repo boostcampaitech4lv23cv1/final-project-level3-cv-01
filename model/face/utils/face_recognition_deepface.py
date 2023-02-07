@@ -26,9 +26,7 @@ def video_to_frame(VIDEO_PATH, SAVED_DIR):
 
     cap = cv2.VideoCapture(VIDEO_PATH)
     count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-    fps = cap.get(cv2.CAP_PROP_FPS)/20
-    # fps = cap.get(cv2.CAP_PROP_FPS)
-    # fps = cap.get(cv2.CAP_PROP_FPS)/11
+    fps = cap.get(cv2.CAP_PROP_FPS)
 
     while True:  # 무한 루프
         ret, frame = cap.read()  # 두 개의 값을 반환하므로 두 변수 지정
