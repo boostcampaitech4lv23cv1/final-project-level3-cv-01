@@ -173,14 +173,6 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
 
         if confirm:
             with st.spinner('선택한 영상을 분석하고 있습니다. 잠시 기다려주세요!'):
-
-        st.write("이 영상으로 분석을 진행할까요?")
-
-        confirm = st.button("Inference")
-        cancel = st.button("Re-Recording")
-
-        if confirm:
-            with st.spinner('선택한 영상을 분석하고 있습니다. 잠시 기다려주세요!'):
                 st.session_state.confirm_video = st.session_state.video_dir
 
                 # 녹화한 영상 cloud에 업로드할 경로
@@ -283,11 +275,11 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
 if 'complete' in st.session_state.keys() and st.session_state.complete:
     st.success("분석이 완료 되었습니다!!! Result 페이지에서 결과를 확인하세요!!!", icon="🔥")
     st.session_state.complete = False
-            st.session_state.complete = True
+    st.session_state.complete = True
 
-        elif cancel:
-            st.session_state.cancel = True
-            st.session_state.prefix = None
+elif cancel:
+    st.session_state.cancel = True
+    st.session_state.prefix = None
 
 if 'complete' in st.session_state.keys() and st.session_state.complete:
     st.success("분석이 완료 되었습니다!!! Result 페이지에서 결과를 확인하세요!!!", icon="🔥")
