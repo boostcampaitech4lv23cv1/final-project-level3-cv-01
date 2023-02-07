@@ -105,7 +105,6 @@ def demo_with_mmpose(inp: InferenceFace):
 
     pose_dict = main(VIDEO_PATH, SAVED_DIR)
     pose_df = pd.DataFrame(pose_dict)
-    pose_df.to_csv('./최명헌_5126/230204_021257/pose_result.csv')
 
     saved_video = (
         "/".join(SAVED_DIR.split("/")[:-1]) + "/pose_" + os.path.basename(VIDEO_PATH)
@@ -128,7 +127,7 @@ def get_eye_df(inp: InferenceFace):
     frames = glob.glob(f"{SAVED_DIR}/*.jpg")
     frames.sort()
     df, anno_frames = gaze.analyze_eye(frames)
-    df.to_csv('./최명헌_5126/230204_021257/eye_result.csv')
+
 
     saved_video = gaze.frame_to_video(VIDEO_PATH, anno_frames)
 

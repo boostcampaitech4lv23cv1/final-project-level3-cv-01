@@ -9,7 +9,7 @@ class UserDB:
         mongodb_URI = "mongodb+srv://heyi:20230214@hey-i.o4iunhl.mongodb.net/test"
         self.client = MongoClient(mongodb_URI)
         
-        self.db = self.client['HEY-I']
+        self.db = self.client['heyi']
         self.info = {}
         self.info['name'] = name
         self.info['num'] = num
@@ -19,82 +19,95 @@ class UserDB:
     def save_data(self): 
         # save user information 
         self.db.user.insert_one(self.info)
+    
+    def load_data_inf(self):
+        pass
+    
+    def load_data_train(self):
+        pass
+       
+class FaceDB(UserDB):
+    
+    def save_data(self, data):
+        # user info에 저장된 사용자의 정보를 가져온다.
+        
+        data_json = json.loads(data)
             
+        dic = {
+            'info': {
+                'name': self.info['name'] ,
+                'video_dir': self.info['video_dir']
+            },
             
+        }
+        dic['data'] = data_json
+        
+        self.db.face.insert_one(dic)
+    
+    def load_data_inf(self):
+        data = self.db.face.find_one({'info.video_dir': self.info['video_dir']})
+        df_face = pd.DataFrame.from_dict(data['data'])
+        
+        return df_face
+    
+    def load_data_train(self):
+        pass
+    
+    
+              
 class PoseDB(UserDB):
       
-    def save_data(self, json_data):
+    def save_data(self, data):
         # user info에 저장된 사용자의 정보를 가져온다.
+        
+        
+        data_json = json.loads(data)
         
         dic = {
             'info': {
                 'name': self.info['name'] ,
                 'video_dir': self.info['video_dir']
             },
-            'data': _ 
+            'data': {}
         }
+        dic['data'] = data_json
         
-        dic['data'] = json.loads(json_data)
-        
-        self.db.pose.insert_many(dic)
+        self.db.pose.insert_one(dic)
         
 
     def load_data_inf(self, ):
         
         data = self.db.pose.find_one({'info.video_dir': self.info['video_dir']})
-        df_db = pd.DataFrame.from_dict(data['data'])
+        df_pose = pd.DataFrame.from_dict(data['data'])
         
-        return df_db
+        return df_pose
     
     def load_data_train(self):
         pass
         
-        
-class FaceDB(UserDB):
     
-    def save_data(self, json_data):
-        # user info에 저장된 사용자의 정보를 가져온다.
-        
-        dic = {
-            'info': {
-                'name': self.info['name'] ,
-                'video_dir': self.info['video_dir']
-            },
-            'data': _ 
-        }
-        
-        dic['data'] = json.loads(json_data)
-        
-        self.db.face.insert_one(dic)
-    
-    def load_data_inf(self):
-        data = self.db.pose.find_one({'info.video_dir': self.info['video_dir']})
-        df_db = pd.DataFrame.from_dict(data['data'])
-        
-        return df_db
-    
-    def load_data_train(self):
-        pass
-        
 class EyeDB(UserDB):
     
-    def save_data(self, json_data):
+    def save_data(self, data):
+        
+        data_json = json.loads(data)
+            
         # user info에 저장된 사용자의 정보를 가져온다.
         dic = {
             'info': {
                 'name': self.info['name'] ,
                 'video_dir': self.info['video_dir']
             },
-            'data': _ 
+            'data': {}
         }
         
-        dic['data'] = json.loads(json_data)
+        dic['data'] = data_json
         
-        self.db.face.insert_one(dic)
+        self.db.eye.insert_one(dic)
     
     def load_data_inf(self):
         
-        data = self.db.pose.find_one({'info.video_dir': self.info['video_dir']})
-        df_db = pd.DataFrame.from_dict(data['data'])
+        data = self.db.eye.find_one({'info.video_dir': self.info['video_dir']})
+        df_eye = pd.DataFrame.from_dict(data['data'])
         
-        return df_db
+        return df_eye

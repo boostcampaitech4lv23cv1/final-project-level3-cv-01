@@ -1,20 +1,21 @@
+import ast
 import os
 import sys
-import cv2
-import ast
 from copy import deepcopy
+
+import cv2
 
 sys.path.append(os.getcwd())
 
+from collections import defaultdict
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
-import matplotlib.pyplot as plt
-
-from collections import defaultdict
+from DBconnect.main import EyeDB, FaceDB, PoseDB, UserDB
+from FastAPI.utils import download_video, upload_video
 from google.cloud import storage
-from FastAPI.utils import upload_video, download_video
-from DBconnect.main import UserDB, PoseDB, EyeDB, FaceDB
 from scipy.interpolate import make_interp_spline
 
 for name in ['posedb', 'eyedb', 'facedb']:
@@ -148,8 +149,9 @@ if 'result_dir' in st.session_state.keys():
                 lst = []
                 threshold_sec = emotion_threshold_sec
                 threshold = 30 * threshold_sec
+                
                 for idx, i in enumerate(result.posneg):
-                    # print(i)
+                    
                     if i == 'negative':
                         count += 1
                         lst.append(idx)
@@ -160,6 +162,7 @@ if 'result_dir' in st.session_state.keys():
                         lst = []
                 
                 if len(lst_all) > 0:
+                    
                     for seq in lst_all:
                         start = seq[0]
                         end = seq[-1]
@@ -189,11 +192,11 @@ if 'result_dir' in st.session_state.keys():
             
             for i in range(len(a)):
                 info = a.loc[i, :]
-                print(info)
+                
                 xlst = []
                 ylst = []
                 for j in info:
-                    print(j)
+                    
                     # x, y = ast.literal_eval(j)
                     x, y = j[0], j[1]
                     if x < 0 or x > 640:
@@ -366,9 +369,9 @@ if 'result_dir' in st.session_state.keys():
                 ax.tick_params(axis='x', rotation=30)
                 
                 numeye = eye_result.tracking.replace(
-                    ['Right', 'Center', 'Left'], [-1, 0, 1]
+                    ['Right', 'Center', 'Left', 'None'], [-1, 0, 1, 0]
                 )
-
+                
                 model_eye = make_interp_spline([i for i in range(len(eye_result))], numeye)
 
                 interpol_eye = model_eye(x)

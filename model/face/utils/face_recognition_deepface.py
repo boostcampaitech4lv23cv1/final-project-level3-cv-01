@@ -27,6 +27,7 @@ def video_to_frame(VIDEO_PATH, SAVED_DIR):
     cap = cv2.VideoCapture(VIDEO_PATH)
     count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = cap.get(cv2.CAP_PROP_FPS)/20
+    # fps = cap.get(cv2.CAP_PROP_FPS)
     # fps = cap.get(cv2.CAP_PROP_FPS)/11
 
     while True:  # 무한 루프
@@ -40,11 +41,11 @@ def video_to_frame(VIDEO_PATH, SAVED_DIR):
             count += 1
 
         # 10ms 기다리고 다음 프레임으로 전환, Esc누르면 while 강제 종료
-        if cv2.waitKey(10) == 27:
-            break
+        # if cv2.waitKey(10) == 27:
+        #     break
 
     cap.release()  # 사용한 자원 해제
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
 
     frames = glob.glob(f"{SAVED_DIR}/*.jpg")
     frames.sort()
@@ -218,12 +219,12 @@ def frame_to_video(rec_image_list, video_path):
     # out = cv2.VideoWriter(vid_save_name, fourcc, fps/2, (width, height))
     for rec_frame in rec_image_list:
         out.write(rec_frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
+        # if cv2.waitKey(1) & 0xFF == ord("q"):
+        #     break
 
     cap.release()
     out.release()
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
 
     return vid_save_name
 
