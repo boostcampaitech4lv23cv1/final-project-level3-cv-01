@@ -50,10 +50,12 @@ class FaceDB(UserDB):
         
         return df_face
     
-    def load_data_train(self):
-        pass
+    def load_data_train(self, path):
+        data = self.db.face.find_one({'info.video_dir': path})
+        df_face = pd.DataFrame.from_dict(data['data'])
+        df_train = df_face.loc[:,['frame', 'emotion']]
     
-    
+        return df_train
               
 class PoseDB(UserDB):
       
