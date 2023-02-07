@@ -18,7 +18,7 @@ import pandas as pd
 import streamlit as st
 from google.cloud import storage
 from FastAPI.utils import upload_video, download_video
-
+from DBconnect.main import UserDB, PoseDB, EyeDB, FaceDB
 if not "name" in st.session_state.keys():
     st.warning("HEY-I 페이지에서 이름과 번호를 입력하세요")
     st.stop()
@@ -113,7 +113,20 @@ def in_recorder_factory():
     return MediaRecorder(
         flv_file, format="flv"
     )  # HLS does not work. See https://github.com/aiortc/aiortc/issues/331
+userdb = UserDB(st.session_state.name, st.session_state.num, start_time, "/".join(flv_file.split('/')[:-1]))
+posedb = PoseDB(st.session_state.name, st.session_state.num, start_time, "/".join(flv_file.split('/')[:-1]))
+eyedb = EyeDB(st.session_state.name, st.session_state.num, start_time, "/".join(flv_file.split('/')[:-1]))
+facedb = FaceDB(st.session_state.name, st.session_state.num, start_time, "/".join(flv_file.split('/')[:-1]))
 
+if "userdb" not in st.session_state:
+    st.session_state["userdb"] = userdb
+    userdb.save_data()
+if "posedb" not in st.session_state:
+    st.session_state["posedb"] = posedb
+if "eyedb" not in st.session_state:
+    st.session_state["eyedb"] = eyedb
+if "facedb" not in st.session_state:
+    st.session_state["facedb"] = facedb
 
 if not st.session_state.recording and not os.path.exists(webm_file):
     st.write("❗ 카메라 접근 권한을 승인해주세요")
@@ -206,13 +219,17 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                     r_pose_result = i.result().text
                 for i in as_completed(r_eye_):
                     r_eye_result = i.result().text
-
-                result = pd.read_json(r_result, orient="records")
-                result.to_csv("/".join([result_dir, "result.csv"]))
-                pose_result = pd.read_json(r_pose_result, orient="records")
-                pose_result.to_csv("/".join([result_dir, "pose_result.csv"]))
-                eye_result = pd.read_json(r_eye_result, orient="records")
-                eye_result.to_csv("/".join([result_dir, "eye_result.csv"]))
+                    
+                facedb.save_data(r_result)
+                posedb.save_data(r_pose_result)
+                eyedb.save_data(r_eye_result)
+                
+                # result = pd.read_json(r_result, orient="records")
+                # result.to_csv("/".join([result_dir, "result.csv"]))
+                # pose_result = pd.read_json(r_pose_result, orient="records")
+                # pose_result.to_csv("/".join([result_dir, "pose_result.csv"]))
+                # eye_result = pd.read_json(r_eye_result, orient="records")
+                # eye_result.to_csv("/".join([result_dir, "eye_result.csv"]))
 
                 # Back에서 저장한 모델 예측 영상 경로 만들기
                 # for task in ("face", "pose", "eye"):

@@ -1,16 +1,32 @@
+import ast
 import os
 import sys
-import cv2
-import ast
 from copy import deepcopy
+
+import cv2
 
 sys.path.append(os.getcwd())
 
 import numpy as np
+from collections import defaultdict
+
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import streamlit as st
-import matplotlib.pyplot as plt
+from DBconnect.main import EyeDB, FaceDB, PoseDB, UserDB
+from FastAPI.utils import download_video, upload_video
+from google.cloud import storage
 from scipy.interpolate import make_interp_spline
+
+for name in ['posedb', 'eyedb', 'facedb']:
+    if name not in st.session_state:
+        print("DB 요청 실패")
+        st.write("DB 요청 실패")
+        
+posedb = st.session_state["posedb"]
+eyedb = st.session_state["eyedb"]
+facedb = st.session_state["facedb"]
 
 # 시간 측정
 
@@ -48,9 +64,9 @@ if 'result_dir' in st.session_state.keys():
         st.subheader("면접 영상 분석 결과입니다.")
 
         VIDEO_PATH = st.session_state.confirm_video
-        result = pd.read_csv("/".join([st.session_state.result_dir, 'result.csv']), index_col=0)
-        pose_result = pd.read_csv("/".join([st.session_state.result_dir, 'pose_result.csv']), index_col=0)
-        eye_result = pd.read_csv("/".join([st.session_state.result_dir, 'eye_result.csv']), index_col=0)
+        result = facedb.load_data_inf()
+        pose_result = posedb.load_data_inf()
+        eye_result = eyedb.load_data_inf()
         tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])
 
         with tab1:
@@ -172,7 +188,7 @@ if 'result_dir' in st.session_state.keys():
                 xlst = []
                 ylst = []
                 for j in info:
-                    x, y = ast.literal_eval(j)
+                    x, y = j[0], j[1]
                     if x < 0 or x > 640:
                         xlst.append(-1)
                         ylst.append(-1)
