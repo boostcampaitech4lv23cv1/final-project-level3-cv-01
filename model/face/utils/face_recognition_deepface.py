@@ -1,12 +1,10 @@
 from deepface import DeepFace
 import cv2
-import matplotlib.pyplot as plt
 import glob
 import os
-import csv
+import mmcv
 import pandas as pd
 import argparse
-import streamlit as st
 
 
 def parse_args():
@@ -28,15 +26,16 @@ def video_to_frame(VIDEO_PATH, SAVED_DIR):
 
     cap = cv2.VideoCapture(VIDEO_PATH)
     count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-    fps = cap.get(cv2.CAP_PROP_FPS)
+    fps = cap.get(cv2.CAP_PROP_FPS)/20
+    # fps = cap.get(cv2.CAP_PROP_FPS)/11
 
     while True:  # 무한 루프
         ret, frame = cap.read()  # 두 개의 값을 반환하므로 두 변수 지정
 
         if not ret:  # 새로운 프레임을 못받아 왔을 때 braek
             break
-        if int(cap.get(1)) % int(fps / 3) == 0:
-            cv2.imwrite(SAVED_DIR + "/frame%d.jpg" % count, frame)
+        if int(cap.get(1)) % int(fps) == 0:
+            cv2.imwrite(SAVED_DIR + "/frame%04d.jpg" % count, frame)
             print("Saved frame number : ", str(int(cap.get(1))))
             count += 1
 
@@ -210,11 +209,13 @@ def frame_to_video(rec_image_list, video_path):
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = cap.get(cv2.CAP_PROP_FPS)
+    # fps = mmcv.VideoReader(video_path).fps
 
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
     
     vid_save_name = f"./{video_path.split('/')[1]}/{video_path.split('/')[2]}/face_{video_path.split('/')[-1]}"
-    out = cv2.VideoWriter(vid_save_name, fourcc, fps/3, (width, height))
+    out = cv2.VideoWriter(vid_save_name, fourcc, fps, (width, height))
+    # out = cv2.VideoWriter(vid_save_name, fourcc, fps/2, (width, height))
     for rec_frame in rec_image_list:
         out.write(rec_frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):

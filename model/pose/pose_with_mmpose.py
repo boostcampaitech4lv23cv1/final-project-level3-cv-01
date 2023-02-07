@@ -118,18 +118,15 @@ def main(video_path="./model/pose/recording.webm", out_video_root="./db"):
         result['right_ear'].append((keypoints[4][:2]) if keypoints[4][:2].any() else (-1, -1))
         result['left_shoulder'].append((keypoints[5][:2]) if keypoints[5][:2].any() else (-1, -1))
         result['right_shoulder'].append((keypoints[6][:2]) if keypoints[6][:2].any() else (-1, -1))
-        result['left_elbow'].append((keypoints[7][:2]) if keypoints[7][:2].any() else (-1, -1))
-        result['right_elbow'].append((keypoints[8][:2]) if keypoints[8][:2].any() else (-1, -1))
-        result['left_wrist'].append((keypoints[9][:2]) if keypoints[9][:2].any() else (-1, -1))
-        result['right_wrist'].append((keypoints[10][:2]) if keypoints[10][:2].any() else (-1, -1))
-        # shoulder_angle = round(calculate_angle(left_shoulder, right_shoulder))
-        # result["shoulder_angle"].append(shoulder_angle)
 
-        # left_wrist = keypoints[9][:2]
-        # right_wrist = keypoints[10][:2]
-
-        # hands_on = True if left_wrist.any() or right_wrist.any() else False
-        # result["hands_on"].append(hands_on)
+        for i, j in zip([7, 8, 9, 10], ['left_elbow', 'right_elbow', 'left_wrist', 'right_wrist']):
+            if keypoints[i][:2].any():
+                if keypoints[i][0] < 0 or keypoints[i][0] > 640 or keypoints[i][1] < 0 or keypoints[i][1] > 480:
+                    result[j].append((-1, -1))
+                else: 
+                    result[j].append((keypoints[i][:2]))
+            else:
+                result[j].append((-1, -1))
 
         # show the results
         vis_frame = vis_pose_result(
