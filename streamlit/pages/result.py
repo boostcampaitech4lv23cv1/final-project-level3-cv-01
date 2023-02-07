@@ -2,6 +2,7 @@ import os
 import sys
 import cv2
 import ast
+import math
 from copy import deepcopy
 
 sys.path.append(os.getcwd())
@@ -38,8 +39,8 @@ assert os.path.exists("./hey-i-375802-d3dcfd2b25d1.json"), "Key가 존재하지 
 
 # threshold 지정
 emotion_threshold_sec = 1
-pose_horizontal_threshold = 0.1
-pose_vertical_threshold = 11.4
+pose_horizontal_threshold = 5 * (math.pi/180)
+pose_vertical_threshold = 85 * (math.pi/180)
 pose_threshold_sec = 1
 eye_threshold_sec = 1
 
@@ -51,7 +52,7 @@ if 'result_dir' in st.session_state.keys():
         result = pd.read_csv("/".join([st.session_state.result_dir, 'result.csv']), index_col=0)
         pose_result = pd.read_csv("/".join([st.session_state.result_dir, 'pose_result.csv']), index_col=0)
         eye_result = pd.read_csv("/".join([st.session_state.result_dir, 'eye_result.csv']), index_col=0)
-        tab1, tab2, tab3 = st.tabs(["Emotion", "Pose", "Eye"])
+        tab1, tab2, tab3 = st.tabs(["😀 Emotion", "🧘‍♀️ Pose", "👀 Eye"])
 
         with tab1:
             st.header("Emotion")
@@ -83,7 +84,6 @@ if 'result_dir' in st.session_state.keys():
 
                 ax.set_xticks([i for idx, i in enumerate(x) if idx % 15 == 1])
                 ax.set_xticklabels([round(i/30, 1) for idx, i in enumerate(x) if idx % 15 == 1])
-                ax.set_ylim(-0.5, 6.5)
                 ax.tick_params(axis='x', rotation=30)
 
                 numemo = result.emotion.replace(
@@ -104,22 +104,27 @@ if 'result_dir' in st.session_state.keys():
                     ax.plot(x, interpol_emo, color = 'skyblue', label = 'emotion')
                     ax.set_yticks([0, 1, 2, 3, 4, 5, 6])
                     ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'hurt', 'neutral', 'happy'])
+                    ax.set_ylim(-0.5, 6.5)
                     st.pyplot(fig)
 
                 elif linechart == 'Positive or Negative':
                     ax.plot(x, interpol_posneg, color = 'salmon')
                     ax.set_yticks([1, 0])
                     ax.set_yticklabels(['Positive', 'Negative'])
+                    ax.set_ylim(-0.1, 1.1)
                     st.pyplot(fig)
                 
                 elif linechart == 'Both':
-                    ax.plot(x, interpol_emo, color = 'skyblue', label = 'emotion')
+                    ax.plot(x, interpol_emo, color = 'skyblue', label = 'Emotion (7 classes)')
                     ax.set_yticks([0, 1, 2, 3, 4, 5, 6])
                     ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'hurt', 'neutral', 'happy'])
+                    ax.set_ylim(-0.5, 6.5)
                     ax1 = ax.twinx()
-                    ax1.plot(x, interpol_posneg, color = 'salmon')
+                    ax1.plot(x, interpol_posneg, color = 'salmon', label='Positive or Negative')
                     ax1.set_yticks([1, 0])
                     ax1.set_yticklabels(['Positive', 'Negative'])
+                    ax1.set_ylim(-0.1, 1.1)
+                    fig.legend(loc='upper right')
                     st.pyplot(fig)
 
             with col2:
@@ -129,7 +134,6 @@ if 'result_dir' in st.session_state.keys():
                 threshold_sec = emotion_threshold_sec
                 threshold = 30 * threshold_sec
                 for idx, i in enumerate(result.posneg):
-                    # print(i)
                     if i == 'negative':
                         count += 1
                         lst.append(idx)
@@ -139,12 +143,14 @@ if 'result_dir' in st.session_state.keys():
                         count = 0
                         lst = []
                 
+                st.session_state.face_time = set()
                 if len(lst_all) > 0:
                     for seq in lst_all:
                         start = seq[0]
                         end = seq[-1]
                         start_sec = result.loc[start, 'seconds']
                         end_sec = result.loc[end, 'seconds']
+                        st.session_state.face_time.add(tuple([start_sec, end_sec, '_']))
                         st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 표정이 부정적입니다.')
                 else:
                     st.success('표정이 긍정적입니다.')
@@ -163,7 +169,7 @@ if 'result_dir' in st.session_state.keys():
             pose_video_bytes = pose_video_file.read()
             st.video(pose_video_bytes)
 
-            a = pose_result[['nose','left_eye','right_eye','left_ear','right_ear','left_shoulder','right_shoulder','left_elbow','right_elbow','left_wrist','right_wrist']]
+            a = pose_result[['nose','left_eye','right_eye','left_ear','right_ear','left_shoulder','right_shoulder', 'mid_shoulder','left_elbow','right_elbow','left_wrist','right_wrist']]
             ax = pd.DataFrame(columns = a.columns)
             ay = pd.DataFrame(columns = a.columns)
 
@@ -185,7 +191,7 @@ if 'result_dir' in st.session_state.keys():
                 ax.loc[i, :] = xlst
                 ay.loc[i, :] = ylst
 
-            info = pd.DataFrame(columns = ['eye-eye','ear-ear','shoulder-shoulder','nose-chest', 'eye-chest','right_hand-yes','left_hand-yes'])
+            info = pd.DataFrame(columns = ['eye-eye','ear-ear','shoulder-shoulder','nose-mid_shoulder', 'eye-mid_shoulder','right_hand-yes','left_hand-yes', 'hand'])
             for i in range(len(a)):
                 bx = ax.loc[i,:]
                 by = ay.loc[i,:]
@@ -193,19 +199,30 @@ if 'result_dir' in st.session_state.keys():
                 lst.append((by['right_eye'] - by['left_eye']) / (bx['right_eye'] - bx['left_eye']))
                 lst.append((by['right_ear'] - by['left_ear']) / (bx['right_ear'] - bx['left_ear']))
                 lst.append((by['right_shoulder'] - by['left_shoulder']) / (bx['right_shoulder'] - bx['left_shoulder']))
-                lst.append((by['nose'] - (by['right_shoulder'] + by['left_shoulder']) / 2) / max((bx['nose'] - (bx['right_shoulder'] + bx['left_shoulder']) / 2), 1e-6))
-                lst.append(((by['right_eye'] + by['left_eye']) / 2 - (by['right_shoulder'] + by['left_shoulder']) / 2) / max(((bx['right_eye'] + bx['left_eye']) / 2 - (bx['right_shoulder'] + bx['left_shoulder']) / 2), 1e-6))
-                lst.append(bx['right_wrist'] != -1 and bx['right_elbow'] != -1)
-                lst.append(bx['left_wrist'] != -1 and bx['left_elbow'] != -1)
+                lst.append((by['nose'] - by['mid_shoulder']) / max((bx['nose'] - bx['mid_shoulder']), 1e-6))
+                lst.append(((by['right_eye'] + by['left_eye']) / 2 - by['mid_shoulder']) / max(((bx['right_eye'] + bx['left_eye']) / 2 - bx['mid_shoulder']), 1e-6))
+                right_hand = (bx['right_wrist'] != -1) and (bx['right_elbow'] != -1)
+                left_hand = (bx['left_wrist'] != -1) and (bx['left_elbow'] != -1)
+                lst.append(right_hand)
+                lst.append(left_hand)
+                if right_hand and left_hand:
+                    lst.append('both')
+                elif right_hand and not left_hand:
+                    lst.append('right')
+                elif left_hand and not right_hand:
+                    lst.append('left')
+                else:
+                    lst.append('none')
                 info.loc[i, :] = lst
+            
             info['seconds'] = pose_sec
 
-            vertical_threshold = pose_vertical_threshold
-            horizontal_threshold = pose_horizontal_threshold
+            vertical_threshold = np.tan(pose_vertical_threshold)
+            horizontal_threshold = np.tan(pose_horizontal_threshold)
             info_ = pd.DataFrame(columns = ['face_align', 'body_align', 'vertical_align', 'hand', 'seconds'])
             for i in range(len(info)):
                 lst = []
-                eye_eye, ear_ear, shd_shd, nose_chest, eye_chest, rhand, lhand, secs = info.loc[i, :]
+                eye_eye, ear_ear, shd_shd, nose_chest, eye_chest, rhand, lhand, hand, secs = info.loc[i, :]
                 # 얼굴 align
                 if abs(eye_eye) < horizontal_threshold or abs(ear_ear) < horizontal_threshold: lst.append(True)
                 else: lst.append(False)
@@ -228,89 +245,243 @@ if 'result_dir' in st.session_state.keys():
                 st.dataframe(info)
                 st.subheader('Pose is Align?')
                 st.dataframe(info_)
-                    
-
-            count1, count2, count3, count4 = 0, 0, 0, 0
-            lst_all1, lst_all2, lst_all3, lst_all4 = [], [], [], []
-            lst1, lst2, lst3, lst4 = [], [], [], []
-            threshold_sec = pose_threshold_sec
-            threshold = 30 * threshold_sec
-            for i in range(len(info_)):
-                face, body, vert, hand, _ = info_.loc[i, :]
-                if not face:
-                    count1 += 1
-                    lst1.append(i)
-                else:
-                    if count1 >= threshold:
-                        lst_all1.append(deepcopy(lst1))
-                    count1 = 0
-                    lst1 = []
-                if not body:
-                    count2 += 1
-                    lst2.append(i)
-                else:
-                    if count2 >= threshold:
-                        lst_all2.append(deepcopy(lst2))
-                    count2 = 0
-                    lst2 = []
-                if not vert:
-                    count3 += 1
-                    lst3.append(i)
-                else:
-                    if count3 >= threshold:
-                        lst_all3.append(deepcopy(lst3))
-                    count3 = 0
-                    lst3 = []
-                if hand:
-                    count4 += 1
-                    lst4.append(i)
-                else:
-                    if count4 >= threshold:
-                        lst_all4.append(deepcopy(lst4))
-                    count4 = 0
-                    lst4 = []
             
-            tab1_, tab2_, tab3_, tab4_ = st.tabs(["Face Align", "Body Align", "Vertical Align", "Hand"])
-            with tab1_:
-                if len(lst_all1) > 0:
-                    for seq in lst_all1:
-                        start = seq[0]
-                        end = seq[-1]
-                        start_sec = info_.loc[start, 'seconds']
-                        end_sec = info_.loc[end, 'seconds']
-                        st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 고개가 기울어졌습니다.')
-                else:
-                    st.success('얼굴이 잘 정렬되어 있습니다.')
-            with tab2_:
-                if len(lst_all2) > 0:
-                    for seq in lst_all2:
-                        start = seq[0]
-                        end = seq[-1]
-                        start_sec = info_.loc[start, 'seconds']
-                        end_sec = info_.loc[end, 'seconds']
-                        st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 어깨선이 기울어졌습니다.')
-                else:
-                    st.success('어깨선이 잘 정렬되어 있습니다.')
-            with tab3_:
-                if len(lst_all3) > 0:
-                    for seq in lst_all3:
-                        start = seq[0]
-                        end = seq[-1]
-                        start_sec = info_.loc[start, 'seconds']
-                        end_sec = info_.loc[end, 'seconds']
-                        st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 몸이 기울어졌습니다.')
-                else:
-                    st.success('몸과 얼굴이 잘 정렬되어 있습니다.')
-            with tab4_:
-                if len(lst_all4) > 0:
-                    for seq in lst_all4:
-                        start = seq[0]
-                        end = seq[-1]
-                        start_sec = info_.loc[start, 'seconds']
-                        end_sec = info_.loc[end, 'seconds']
-                        st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초에 손이 나왔습니다.')
-                else:
-                    st.success('손이 나오지 않았습니다.')
+            col1, col2 = st.columns(2)
+            with col1:
+                mode = st.selectbox(
+                    'What kind of line chart do you want?',
+                    ('Eye-Eye', 'Ear-Ear', 'Shoulder-Shoulder', 'Nose-Mid Shoulder', 'Eye-Mid Shoulder', 'Horizontal', 'Vertical', 'Hand')
+                    )
+                
+                x = np.linspace(0, len(result), 200)
+
+                if mode == 'Eye-Eye':
+                    fig, ax = plt.subplots()
+                    ax.set_xlabel('Time(sec)')
+                    ax.set_ylabel('Angle')
+
+                    ax.set_xticks([i for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.set_xticklabels([round(i/30, 1) for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.tick_params(axis='x', rotation=30)
+
+                    angle_y = [i * (180 / math.pi) for i in np.arctan(info['eye-eye'].astype(np.float64))]
+                    ax.axhline(y = pose_horizontal_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = - pose_horizontal_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = 0, color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.plot(angle_y, color='skyblue')
+                    st.pyplot(fig)
+                
+                elif mode == 'Ear-Ear':
+                    fig, ax = plt.subplots()
+                    ax.set_xlabel('Time(sec)')
+                    ax.set_ylabel('Angle')
+
+                    ax.set_xticks([i for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.set_xticklabels([round(i/30, 1) for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.tick_params(axis='x', rotation=30)
+                    
+                    angle_y = [i * (180 / math.pi) for i in np.arctan(info['ear-ear'].astype(np.float64))]
+                    ax.axhline(y = pose_horizontal_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = - pose_horizontal_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = 0, color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.plot(angle_y, color='skyblue')
+                    st.pyplot(fig)
+
+                elif mode == 'Shoulder-Shoulder':
+                    fig, ax = plt.subplots()
+                    ax.set_xlabel('Time(sec)')
+                    ax.set_ylabel('Angle')
+
+                    ax.set_xticks([i for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.set_xticklabels([round(i/30, 1) for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.tick_params(axis='x', rotation=30)
+                    
+                    angle_y = [i * (180 / math.pi) for i in np.arctan(info['shoulder-shoulder'].astype(np.float64))]
+                    ax.axhline(y = pose_horizontal_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = - pose_horizontal_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = 0, color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.plot(angle_y, color='skyblue')
+                    st.pyplot(fig)
+                
+                elif mode == 'Nose-Mid Shoulder':
+                    fig, ax = plt.subplots()
+                    ax.set_xlabel('Time(sec)')
+                    ax.set_ylabel('Angle')
+
+                    ax.set_xticks([i for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.set_xticklabels([round(i/30, 1) for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.tick_params(axis='x', rotation=30)
+                    
+                    angle_y = [i * (180 / math.pi) for i in np.arctan(info['nose-mid_shoulder'].astype(np.float64))]
+                    ax.axhline(y = pose_vertical_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = 180 - pose_vertical_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = 90, color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.plot([i if i > 0 else i + 180 for i in angle_y], color='skyblue')
+                    ax.set_ylim(70, 110)
+                    st.pyplot(fig)
+
+                elif mode == 'Eye-Mid Shoulder':
+                    fig, ax = plt.subplots()
+                    ax.set_xlabel('Time(sec)')
+                    ax.set_ylabel('Angle')
+
+                    ax.set_xticks([i for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.set_xticklabels([round(i/30, 1) for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.tick_params(axis='x', rotation=30)
+                    
+                    angle_y = [i * (180 / math.pi) for i in np.arctan(info['eye-mid_shoulder'].astype(np.float64))]
+                    ax.axhline(y = pose_vertical_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = 180 - pose_vertical_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = 90, color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.plot([i if i > 0 else i + 180 for i in angle_y], color='skyblue')
+                    ax.set_ylim(70, 110)
+                    st.pyplot(fig)
+
+                elif mode == 'Horizontal':
+                    fig, ax = plt.subplots()
+                    ax.set_xlabel('Time(sec)')
+                    ax.set_ylabel('Angle')
+
+                    ax.set_xticks([i for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.set_xticklabels([round(i/30, 1) for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.tick_params(axis='x', rotation=30)
+                    
+                    angle_y1 = [i * (180 / math.pi) for i in np.arctan(info['eye-eye'].astype(np.float64))]
+                    angle_y2 = [i * (180 / math.pi) for i in np.arctan(info['ear-ear'].astype(np.float64))]
+                    angle_y3 = [i * (180 / math.pi) for i in np.arctan(info['shoulder-shoulder'].astype(np.float64))]
+                    ax.axhline(y = pose_horizontal_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = - pose_horizontal_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = 0, color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.plot(angle_y1, color='skyblue', label='Eye-Eye')
+                    ax.plot(angle_y2, color='yellowgreen', label='Ear-Ear')
+                    ax.plot(angle_y3, color='khaki', label='Shoulder-Shoulder')
+                    ax.legend(loc='best')
+                    st.pyplot(fig)
+
+                elif mode == 'Vertical':
+                    fig, ax = plt.subplots()
+                    ax.set_xlabel('Time(sec)')
+                    ax.set_ylabel('Angle')
+
+                    ax.set_xticks([i for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.set_xticklabels([round(i/30, 1) for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.tick_params(axis='x', rotation=30)
+
+                    angle_y1 = [i * (180 / math.pi) for i in np.arctan(info['nose-mid_shoulder'].astype(np.float64))]
+                    angle_y2 = [i * (180 / math.pi) for i in np.arctan(info['eye-mid_shoulder'].astype(np.float64))]
+                    ax.axhline(y = pose_vertical_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = 180 - pose_vertical_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.axhline(y = 90, color='lightcoral', linestyle='--', alpha=0.5)
+                    ax.plot([i if i > 0 else i + 180 for i in angle_y1], color='skyblue', label='Nose-Mid Shoulder')
+                    ax.plot([i if i > 0 else i + 180 for i in angle_y2], color='yellowgreen', label='Eye-Mid Shoulder')
+                    ax.set_ylim(70, 110)
+                    ax.legend(loc='best')
+                    st.pyplot(fig)
+                    
+                elif mode == 'Hand':
+                    numhand = info.hand.replace(
+                        ['none', 'left', 'right', 'both'], [0, 1, 2, 3]
+                    )
+
+                    fig, ax = plt.subplots()
+                    ax.set_xlabel('Time(sec)')
+                    ax.set_ylabel('Hand or No')
+
+                    ax.set_xticks([i for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.set_xticklabels([round(i/30, 1) for idx, i in enumerate(x) if idx % 15 == 1])
+                    ax.set_yticks([0, 1, 2, 3])
+                    ax.set_yticklabels(['No Hand', 'Left Hand', 'Right Hand', 'Both Hand'])
+                    ax.tick_params(axis='x', rotation=30)
+                    ax.plot(numhand, color='skyblue', label='Nose-Mid Shoulder')
+                    st.pyplot(fig)
+
+            with col2:
+                count1, count2, count3, count4 = 0, 0, 0, 0
+                lst_all1, lst_all2, lst_all3, lst_all4 = [], [], [], []
+                lst1, lst2, lst3, lst4 = [], [], [], []
+                threshold_sec = pose_threshold_sec
+                threshold = 30 * threshold_sec
+                for i in range(len(info_)):
+                    face, body, vert, hand, _ = info_.loc[i, :]
+                    if not face:
+                        count1 += 1
+                        lst1.append(i)
+                    else:
+                        if count1 >= threshold:
+                            lst_all1.append(deepcopy(lst1))
+                        count1 = 0
+                        lst1 = []
+                    if not body:
+                        count2 += 1
+                        lst2.append(i)
+                    else:
+                        if count2 >= threshold:
+                            lst_all2.append(deepcopy(lst2))
+                        count2 = 0
+                        lst2 = []
+                    if not vert:
+                        count3 += 1
+                        lst3.append(i)
+                    else:
+                        if count3 >= threshold:
+                            lst_all3.append(deepcopy(lst3))
+                        count3 = 0
+                        lst3 = []
+                    if hand:
+                        count4 += 1
+                        lst4.append(i)
+                    else:
+                        if count4 >= threshold:
+                            lst_all4.append(deepcopy(lst4))
+                        count4 = 0
+                        lst4 = []
+                
+                tab1_, tab2_, tab3_, tab4_ = st.tabs(["Face Align", "Body Align", "Vertical Align", "Hand"])
+                st.session_state.pose_time = set()
+                with tab1_:
+                    if len(lst_all1) > 0:
+                        for seq in lst_all1:
+                            start = seq[0]
+                            end = seq[-1]
+                            start_sec = info_.loc[start, 'seconds']
+                            end_sec = info_.loc[end, 'seconds']
+                            st.session_state.pose_time.add(tuple([start_sec, end_sec, 'face']))
+                            st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 고개가 기울어졌습니다.')
+                    else:
+                        st.success('얼굴이 잘 정렬되어 있습니다.')
+                with tab2_:
+                    if len(lst_all2) > 0:
+                        for seq in lst_all2:
+                            start = seq[0]
+                            end = seq[-1]
+                            start_sec = info_.loc[start, 'seconds']
+                            end_sec = info_.loc[end, 'seconds']
+                            st.session_state.pose_time.add(tuple([start_sec, end_sec, 'shoulder']))
+                            st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 어깨선이 기울어졌습니다.')
+                    else:
+                        st.success('어깨선이 잘 정렬되어 있습니다.')
+                with tab3_:
+                    if len(lst_all3) > 0:
+                        for seq in lst_all3:
+                            start = seq[0]
+                            end = seq[-1]
+                            start_sec = info_.loc[start, 'seconds']
+                            end_sec = info_.loc[end, 'seconds']
+                            st.session_state.pose_time.add(tuple([start_sec, end_sec, 'body']))
+                            st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 몸이 기울어졌습니다.')
+                    else:
+                        st.success('몸과 얼굴이 잘 정렬되어 있습니다.')
+                with tab4_:
+                    if len(lst_all4) > 0:
+                        for seq in lst_all4:
+                            start = seq[0]
+                            end = seq[-1]
+                            start_sec = info_.loc[start, 'seconds']
+                            end_sec = info_.loc[end, 'seconds']
+                            st.session_state.pose_time.add(tuple([start_sec, end_sec, 'hand']))
+                            st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초에 손이 나왔습니다.')
+                    else:
+                        st.success('손이 나오지 않았습니다.')
 
 
         with tab3:
@@ -354,6 +525,7 @@ if 'result_dir' in st.session_state.keys():
                 ax.set_ylim(-1.3, 1.3)
                 ax.set_yticks([-1, 0, 1])
                 ax.set_yticklabels(['Right', 'Center', 'Left'])
+                ax.axhline(y = 0, color='lightcoral', linestyle='--', alpha=0.5)
                 st.pyplot(fig)
 
             with col2:
@@ -395,12 +567,15 @@ if 'result_dir' in st.session_state.keys():
                     lst_all_dict[start] = [end, '왼쪽']
                 lst_all_dict = sorted(lst_all_dict.items())
 
+                st.session_state.eye_time = set()
+
                 if len(lst_all_dict) > 0:
                     for seq, direction in lst_all_dict:
                         start = seq
                         end = direction[0]
                         start_sec = eye_result.loc[start, 'seconds']
                         end_sec = eye_result.loc[end, 'seconds']
+                        st.session_state.eye_time.add(tuple([start_sec, end_sec, direction[1]]))
                         st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 시선이 {direction[1]}을 응시하고 있습니다.')
                 else:
                     st.success('정면을 잘 응시하고 있습니다.')
