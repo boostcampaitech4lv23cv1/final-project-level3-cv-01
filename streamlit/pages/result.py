@@ -190,10 +190,15 @@ if 'result_dir' in st.session_state.keys():
                 bx = ax.loc[i,:]
                 by = ay.loc[i,:]
                 lst = []
-                lst.append((by['right_eye'] - by['left_eye']) / (bx['right_eye'] - bx['left_eye']))
-                lst.append((by['right_ear'] - by['left_ear']) / (bx['right_ear'] - bx['left_ear']))
-                lst.append((by['right_shoulder'] - by['left_shoulder']) / (bx['right_shoulder'] - bx['left_shoulder']))
-                lst.append((by['nose'] - (by['right_shoulder'] + by['left_shoulder']) / 2) / max((bx['nose'] - (bx['right_shoulder'] + bx['left_shoulder']) / 2), 1e-6))
+                # lst.append((by['right_eye'] - by['left_eye']) / (bx['right_eye'] - bx['left_eye']))
+                # lst.append((by['right_ear'] - by['left_ear']) / (bx['right_ear'] - bx['left_ear']))
+                # lst.append((by['right_shoulder'] - by['left_shoulder']) / (bx['right_shoulder'] - bx['left_shoulder']))
+                # lst.append((by['nose'] - (by['right_shoulder'] + by['left_shoulder']) / 2) / max((bx['nose'] - (bx['right_shoulder'] + bx['left_shoulder']) / 2), 1e-6))
+                lst.append((by['right_eye'] - by['left_eye']) / (bx['right_eye'] - bx['left_eye']) if bx['right_eye'] != bx['left_eye'] else 999.)
+                lst.append((by['right_ear'] - by['left_ear']) / (bx['right_ear'] - bx['left_ear']) if bx['right_ear'] != bx['left_ear'] else 999.)
+                lst.append((by['right_shoulder'] - by['left_shoulder']) / (bx['right_shoulder'] - bx['left_shoulder']) if bx['right_shoulder'] != bx['left_shoulder'] else 999.)
+                lst.append((by['nose'] - (by['right_shoulder'] + by['left_shoulder']) / 2) / (bx['nose'] - (bx['right_shoulder'] + bx['left_shoulder']) / 2) if bx['nose'] != (bx['right_shoulder'] + bx['left_shoulder']) / 2 else 999.)
+                
                 lst.append(((by['right_eye'] + by['left_eye']) / 2 - (by['right_shoulder'] + by['left_shoulder']) / 2) / max(((bx['right_eye'] + bx['left_eye']) / 2 - (bx['right_shoulder'] + bx['left_shoulder']) / 2), 1e-6))
                 lst.append(bx['right_wrist'] != -1 and bx['right_elbow'] != -1)
                 lst.append(bx['left_wrist'] != -1 and bx['left_elbow'] != -1)
