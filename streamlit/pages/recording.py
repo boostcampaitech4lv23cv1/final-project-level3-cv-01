@@ -161,7 +161,7 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
     if os.path.exists(st.session_state.video_dir):
         video_file = open(st.session_state.video_dir, "rb")
         video_bytes = video_file.read()
-        with st.expander("이 영상을 분석 할 지 결정해주세요"):
+        
         with st.expander("이 영상을 분석 할 지 결정해주세요"):
             st.video(video_bytes)
             # 분석할 영상 결정
