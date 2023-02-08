@@ -189,3 +189,9 @@ cython_debug/
 # aihub data
 aihub/
 
+# vis_results
+vis_results/
+
+# wandb
+wandb/
+
