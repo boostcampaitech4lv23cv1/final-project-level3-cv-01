@@ -11,10 +11,10 @@ def upload_video(file_path, upload_path, bucket_name="heyi-storage"):
         bucket_name (str, optional): 업로드할 bucket 이름. Defaults to "heyi-storage".
 
     """
-    if '\\' in file_path:
-        file_path = file_path.replace('\\', '/')
-    if '\\' in upload_path:
-        upload_path = upload_path.replace('\\', '/')
+    if "\\" in file_path:
+        file_path = file_path.replace("\\", "/")
+    if "\\" in upload_path:
+        upload_path = upload_path.replace("\\", "/")
 
     assert os.path.exists(file_path), f"{file_path}에 영상이 존재하지 않습니다."
     storage_client = storage.Client.from_service_account_json(
@@ -36,10 +36,10 @@ def download_video(storage_path, download_path, bucket_name="heyi-storage"):
         download_path (_type_): 다운로드할 파일의 현재 서버에서의 저장 경로
         bucket_name (str, optional): 다운로드할 bucket 이름. Defaults to "heyi-storage".
     """
-    if '\\' in storage_path:
-        storage_path = storage_path.replace('\\', '/')
-    if '\\' in download_path:
-        download_path = download_path.replace('\\', '/')
+    if "\\" in storage_path:
+        storage_path = storage_path.replace("\\", "/")
+    if "\\" in download_path:
+        download_path = download_path.replace("\\", "/")
 
     storage_client = storage.Client.from_service_account_json(
         "./hey-i-375802-d3dcfd2b25d1.json"

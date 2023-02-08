@@ -20,19 +20,27 @@ def calculate_angle(a, b):
 
     return angle
 
-VIDEO_PATH = 'configs/heyi/mobilenetv2_aihub_256x192.py'
-SAVED_DIR = 'https://download.openmmlab.com/mmpose/top_down/mobilenetv2/mobilenetv2_coco_256x192-d1e58e7b_20200727.pth'
 
-def main(VIDEO_PATH,SAVED_DIR):
+VIDEO_PATH = "configs/heyi/mobilenetv2_aihub_256x192.py"
+SAVED_DIR = "https://download.openmmlab.com/mmpose/top_down/mobilenetv2/mobilenetv2_coco_256x192-d1e58e7b_20200727.pth"
+
+
+def main(VIDEO_PATH, SAVED_DIR):
     """Visualize the demo images.
 
     Using mmdet to detect the human.
     """
     parser = ArgumentParser()
-    parser.add_argument("pose_config", default= 'configs/heyi/mobilenetv2_aihub_256x192.py',
-help="Config file for pose")
-    parser.add_argument("pose_checkpoint", default='https://download.openmmlab.com/mmpose/top_down/mobilenetv2/mobilenetv2_coco_256x192-d1e58e7b_20200727.pth',
-help="Checkpoint file for pose")
+    parser.add_argument(
+        "pose_config",
+        default="configs/heyi/mobilenetv2_aihub_256x192.py",
+        help="Config file for pose",
+    )
+    parser.add_argument(
+        "pose_checkpoint",
+        default="https://download.openmmlab.com/mmpose/top_down/mobilenetv2/mobilenetv2_coco_256x192-d1e58e7b_20200727.pth",
+        help="Checkpoint file for pose",
+    )
     parser.add_argument("--video-path", default=VIDEO_PATH, type=str, help="Video path")
     parser.add_argument(
         "--show",
@@ -176,5 +184,5 @@ help="Checkpoint file for pose")
 
 
 if __name__ == "__main__":
-    times = main(VIDEO_PATH,SAVED_DIR)
+    times = main(VIDEO_PATH, SAVED_DIR)
     print(times)

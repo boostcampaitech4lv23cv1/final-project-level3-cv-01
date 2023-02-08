@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.append(os.getcwd())
 
 import torch
@@ -72,23 +73,26 @@ def inference(batch_size, model_ckpt_name, test_data_dir):
 
     df = pd.DataFrame(
         {
-            "frame":bbox_dict.keys(),
-            "emotion":[r[1] for r in bbox_dict.values()],
-            "posneg":[r[2] for r in bbox_dict.values()],
-            "x":[r[3] for r in bbox_dict.values()],
-            "y":[r[4] for r in bbox_dict.values()],
-            "w":[r[5]-r[3] for r in bbox_dict.values()],
-            "h":[r[6]-r[4] for r in bbox_dict.values()],
+            "frame": bbox_dict.keys(),
+            "emotion": [r[1] for r in bbox_dict.values()],
+            "posneg": [r[2] for r in bbox_dict.values()],
+            "x": [r[3] for r in bbox_dict.values()],
+            "y": [r[4] for r in bbox_dict.values()],
+            "w": [r[5] - r[3] for r in bbox_dict.values()],
+            "h": [r[6] - r[4] for r in bbox_dict.values()],
         }
     )
 
     return bbox_dict, df
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     result = inference(
-        batch_size=4, 
-        model_ckpt_name="/opt/ml/input/final-project-level3-cv-01/model/face/models/best_val_posneg_acc.ckpt", 
-        test_data_dir="/opt/ml/input/final-project-level3-cv-01/db/vis_mhchoi_images"
+        batch_size=4,
+        model_ckpt_name="/opt/ml/input/final-project-level3-cv-01/model/face/models/best_val_posneg_acc.ckpt",
+        test_data_dir="/opt/ml/input/final-project-level3-cv-01/db/vis_mhchoi_images",
     )
-    df = pd.DataFrame({"frame":result.keys(),"values":[r[1] for r in result.values()]})
+    df = pd.DataFrame(
+        {"frame": result.keys(), "values": [r[1] for r in result.values()]}
+    )
     print(df)

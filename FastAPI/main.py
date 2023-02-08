@@ -1,5 +1,4 @@
 import os
-import cv2
 import sys
 import glob
 import json
@@ -7,14 +6,12 @@ import pandas as pd
 
 sys.path.append(os.getcwd())
 
-from copy import deepcopy
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 
 import model.face.utils.face_recognition_deepface as fr
 from model.face.inference_pl import inference
-from model.pose import pose_with_mediapipe as pwm
 import model.eye.gaze_tracking.gaze_tracking as gt
 from model.pose.pose_with_mmpose import main
 from FastAPI.utils import upload_video, download_video

@@ -1,9 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os
-import pandas as pd
 import warnings
 from datetime import datetime
-from argparse import ArgumentParser
 
 from collections import defaultdict
 
@@ -65,13 +63,17 @@ def main(video_path="./model/pose/recording.webm", out_video_root="./db"):
         save_out_video = True
 
     print("!!!!!save_out_video", out_video_root)
-    save_dir = "/".join(out_video_root.split("/")[:-1]) +"/pose_"+os.path.basename(video_path)
-    print("!!!!!videowriter path",save_dir)
+    save_dir = (
+        "/".join(out_video_root.split("/")[:-1])
+        + "/pose_"
+        + os.path.basename(video_path)
+    )
+    print("!!!!!videowriter path", save_dir)
 
     if save_out_video:
-        #fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        # fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         fourcc = cv2.VideoWriter_fourcc(*"vp80")
-        print("out_video_root",out_video_root)
+        print("out_video_root", out_video_root)
         videoWriter = cv2.VideoWriter(
             save_dir,
             fourcc,
@@ -113,20 +115,43 @@ def main(video_path="./model/pose/recording.webm", out_video_root="./db"):
         # -> 나중에 fps frame 번호에 해당하는 동영상 초 계산해서 추가할 예정
         frame_cnt += 1
         result["frame_id"].append(frame_cnt)
-        result['nose'].append(tuple(keypoints[0][:2]) if keypoints[0][:2].any() else (-1, -1))
-        result['left_eye'].append(tuple(keypoints[9][:2]) if keypoints[1][:2].any() else (-1, -1))
-        result['right_eye'].append((keypoints[8][:2]) if keypoints[2][:2].any() else (-1, -1))
-        result['left_ear'].append((keypoints[11][:2]) if keypoints[3][:2].any() else (-1, -1))
-        result['right_ear'].append((keypoints[10][:2]) if keypoints[4][:2].any() else (-1, -1))
-        result['left_shoulder'].append((keypoints[5][:2]) if keypoints[5][:2].any() else (-1, -1))
-        result['right_shoulder'].append((keypoints[2][:2]) if keypoints[6][:2].any() else (-1, -1))
-        result['mid_shoulder'].append((keypoints[1][:2]) if keypoints[6][:2].any() else (-1, -1))
+        result["nose"].append(
+            tuple(keypoints[0][:2]) if keypoints[0][:2].any() else (-1, -1)
+        )
+        result["left_eye"].append(
+            tuple(keypoints[9][:2]) if keypoints[1][:2].any() else (-1, -1)
+        )
+        result["right_eye"].append(
+            (keypoints[8][:2]) if keypoints[2][:2].any() else (-1, -1)
+        )
+        result["left_ear"].append(
+            (keypoints[11][:2]) if keypoints[3][:2].any() else (-1, -1)
+        )
+        result["right_ear"].append(
+            (keypoints[10][:2]) if keypoints[4][:2].any() else (-1, -1)
+        )
+        result["left_shoulder"].append(
+            (keypoints[5][:2]) if keypoints[5][:2].any() else (-1, -1)
+        )
+        result["right_shoulder"].append(
+            (keypoints[2][:2]) if keypoints[6][:2].any() else (-1, -1)
+        )
+        result["mid_shoulder"].append(
+            (keypoints[1][:2]) if keypoints[6][:2].any() else (-1, -1)
+        )
 
-        for i, j in zip([6, 3, 7, 4], ['left_elbow', 'right_elbow', 'left_wrist', 'right_wrist']):
+        for i, j in zip(
+            [6, 3, 7, 4], ["left_elbow", "right_elbow", "left_wrist", "right_wrist"]
+        ):
             if keypoints[i][:2].any():
-                if keypoints[i][0] < 0 or keypoints[i][0] > 640 or keypoints[i][1] < 0 or keypoints[i][1] > 480:
+                if (
+                    keypoints[i][0] < 0
+                    or keypoints[i][0] > 640
+                    or keypoints[i][1] < 0
+                    or keypoints[i][1] > 480
+                ):
                     result[j].append((-1, -1))
-                else: 
+                else:
                     result[j].append((keypoints[i][:2]))
             else:
                 result[j].append((-1, -1))
@@ -155,9 +180,9 @@ def main(video_path="./model/pose/recording.webm", out_video_root="./db"):
     if show:
         cv2.destroyAllWindows()
 
-    #df = pd.DataFrame({k: v for k, v in result.items()})
+    # df = pd.DataFrame({k: v for k, v in result.items()})
 
-    #return df
+    # return df
     return dict(result)
 
 

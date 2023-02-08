@@ -2,10 +2,10 @@ from __future__ import division
 import os
 import cv2
 import dlib
-import mmcv
 from .eye import Eye
 from .calibration import Calibration
 import pandas as pd
+
 
 class GazeTracking(object):
     """
@@ -167,7 +167,7 @@ class GazeTracking(object):
 
             # self.annotated_frame()
             if self.is_right():
-                text = 'Right'
+                text = "Right"
             elif self.is_left():
                 text = "Left"
             elif self.is_center():
@@ -190,10 +190,18 @@ class GazeTracking(object):
 
             anno_frame = self.get_annotated_frame(frame, text, left_pupil, right_pupil)
 
-        df = pd.DataFrame({"tracking": ret, "left": left, "right": right, "verical" : vertical, "horizontal" : horizontal})
+        df = pd.DataFrame(
+            {
+                "tracking": ret,
+                "left": left,
+                "right": right,
+                "verical": vertical,
+                "horizontal": horizontal,
+            }
+        )
         print(df)
-        df = df.replace('None', method='bfill')
-        df = df.replace('None', method='ffill')
+        df = df.replace("None", method="bfill")
+        df = df.replace("None", method="ffill")
 
         for i, frame in enumerate(frames):
             text, left_pupil, right_pupil, _, _ = df.loc[i, :]

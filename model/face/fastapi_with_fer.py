@@ -7,10 +7,12 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 import pandas as pd
-#from fer_pl import LightningModel
+
+# from fer_pl import LightningModel
 from model.face.fer_pl import LightningModel
 from model.face.dataset_pl import testDataset
-#from dataset_pl import testDataset
+
+# from dataset_pl import testDataset
 
 idx_to_class = {
     0: "angry",
@@ -21,6 +23,7 @@ idx_to_class = {
     5: "sad",
     6: "surprise",
 }
+
 
 def video_to_frame(VIDEO_PATH, SAVED_DIR):
 
@@ -54,7 +57,9 @@ def video_to_frame(VIDEO_PATH, SAVED_DIR):
     return frames
 
 
-def analyze_emotion(frames_dir, model_ckpt_name="./models/best_val_posneg_acc.ckpt", batch_size=8):
+def analyze_emotion(
+    frames_dir, model_ckpt_name="./models/best_val_posneg_acc.ckpt", batch_size=8
+):
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     model = LightningModel.load_from_checkpoint(model_ckpt_name)
@@ -94,8 +99,14 @@ def analyze_emotion(frames_dir, model_ckpt_name="./models/best_val_posneg_acc.ck
 
 
 def make_emotion_df(emotions_mtcnn):
-    df = pd.DataFrame({"frame":emotions_mtcnn.keys(),"values":[r[1] for r in emotions_mtcnn.values()]})
+    df = pd.DataFrame(
+        {
+            "frame": emotions_mtcnn.keys(),
+            "values": [r[1] for r in emotions_mtcnn.values()],
+        }
+    )
     return df
+
 
 def add_emotion_on_frame(emotions_mtcnn, saved_dir):
     regions = [value[2:] for value in emotions_mtcnn.values()]
@@ -109,8 +120,18 @@ def add_emotion_on_frame(emotions_mtcnn, saved_dir):
     for idx, (region, img, emotion) in enumerate(zip(regions, images, emotions)):
         img = cv2.imread(img)
         xmin, ymin, xmax, ymax = region
-        rec_image = cv2.rectangle(img, (xmin, ymin), (xmax, ymax), (0, 255, 0), thickness=3)
-        cv2.putText(rec_image, emotion, (xmin, ymin-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (36,255,12), 2)
+        rec_image = cv2.rectangle(
+            img, (xmin, ymin), (xmax, ymax), (0, 255, 0), thickness=3
+        )
+        cv2.putText(
+            rec_image,
+            emotion,
+            (xmin, ymin - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (36, 255, 12),
+            2,
+        )
         rec_image_list.append(rec_image.copy())
     return rec_image_list
 
@@ -123,14 +144,14 @@ def frame_to_video(rec_image_list, video_path):
     fps = cap.get(cv2.CAP_PROP_FPS)
 
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
-    
-    vid_save_name = f"./{video_path.split('/')[1]}/{video_path.split('/')[2]}/face_{video_path.split('/')[-1]}"
-    #vid_path, vid_name = os.path.join(*video_path.split("/")[:-1]), video_path.split("/")[-1]
-    #vid_name = "face_"+vid_name
-    #vid_path = "/"+vid_path
-    #vid_save_name = os.path.join(vid_path,vid_name)
 
-    print("vid_save_name:",vid_save_name)
+    vid_save_name = f"./{video_path.split('/')[1]}/{video_path.split('/')[2]}/face_{video_path.split('/')[-1]}"
+    # vid_path, vid_name = os.path.join(*video_path.split("/")[:-1]), video_path.split("/")[-1]
+    # vid_name = "face_"+vid_name
+    # vid_path = "/"+vid_path
+    # vid_save_name = os.path.join(vid_path,vid_name)
+
+    print("vid_save_name:", vid_save_name)
     out = cv2.VideoWriter(vid_save_name, fourcc, 2, (width, height))
     for rec_frame in rec_image_list:
         print(rec_frame.shape)
@@ -142,8 +163,11 @@ def frame_to_video(rec_image_list, video_path):
     out.release()
     cv2.destroyAllWindows()
 
+
 def make_binary_df(emotions_mtcnn):
     pos_emo = ("happy", "neutral")
-    #neg_emp = ("angry", "disgust", "fear", "sad", "surprise")
-    binary_emotion = ["positive" if v in pos_emo else "negative" for v in emotions_mtcnn.values()]
+    # neg_emp = ("angry", "disgust", "fear", "sad", "surprise")
+    binary_emotion = [
+        "positive" if v in pos_emo else "negative" for v in emotions_mtcnn.values()
+    ]
     return binary_emotion

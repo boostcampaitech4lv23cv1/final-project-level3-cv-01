@@ -1,4 +1,3 @@
-import os
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -41,7 +40,9 @@ class LightningModel(pl.LightningModule):
 
     def __build_model(self):
         # backbone = torch.load(self.model_backbone_path)
-        backbone = torch.load("/opt/ml/final-project-level3-cv-01/model/face/models/affectnet_emotions/enet_b0_8_va_mtl.pt")
+        backbone = torch.load(
+            "/opt/ml/final-project-level3-cv-01/model/face/models/affectnet_emotions/enet_b0_8_va_mtl.pt"
+        )
         _layers = list(backbone.children())
 
         self.feature_extractor = nn.Sequential(*_layers[:-1])
@@ -193,10 +194,12 @@ class LightningModel(pl.LightningModule):
             ]
         )
         self.train_dataset = ImageFolder(
-            '/opt/ml/final-project-level3-cv-01/airflow/face_dataset_train_valid/train', transform
+            "/opt/ml/final-project-level3-cv-01/airflow/face_dataset_train_valid/train",
+            transform,
         )
         self.valid_dataset = ImageFolder(
-            '/opt/ml/final-project-level3-cv-01/airflow/face_dataset_train_valid/val', transform
+            "/opt/ml/final-project-level3-cv-01/airflow/face_dataset_train_valid/val",
+            transform,
         )
 
         class_to_idx = self.train_dataset.class_to_idx

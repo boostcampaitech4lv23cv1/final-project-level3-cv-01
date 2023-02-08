@@ -1,13 +1,9 @@
 from deepface import DeepFace
 import cv2
-import matplotlib.pyplot as plt
 import glob
 import os
-import csv
 import pandas as pd
 import argparse
-import streamlit as st
-
 
 
 def parse_args():
@@ -184,7 +180,7 @@ def frame_to_video(rec_image_list, video_path):
     fps = cap.get(cv2.CAP_PROP_FPS)
 
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
-    
+
     vid_save_name = f"./{video_path.split('/')[1]}/{video_path.split('/')[2]}/face_{video_path.split('/')[-1]}"
     out = cv2.VideoWriter(vid_save_name, fourcc, 2, (width, height))
     for rec_frame in rec_image_list:

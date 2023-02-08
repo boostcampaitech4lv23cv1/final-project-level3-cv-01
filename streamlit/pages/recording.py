@@ -2,8 +2,6 @@ import os
 import sys
 import cv2
 import time
-import shutil
-from pathlib import Path
 from pytz import timezone
 from datetime import datetime
 import streamlit as st
@@ -16,9 +14,9 @@ from streamlit_webrtc import WebRtcMode, webrtc_streamer
 import requests
 import pandas as pd
 import streamlit as st
-from google.cloud import storage
 from FastAPI.utils import upload_video, download_video
 from DBconnect.main import UserDB, PoseDB, EyeDB, FaceDB
+
 if not "name" in st.session_state.keys():
     st.warning("HEY-I 페이지에서 이름과 번호를 입력하세요")
     st.stop()
@@ -55,7 +53,7 @@ def convert_to_webm(in_file, video_dir):
     cap.release()
     out.release()
     end = time.process_time()
-    
+
     print(f"Convert Complete: {video_dir} on {end-start}")
 
 
@@ -90,27 +88,34 @@ st.session_state.recording = False
 st.title("HEY-I")
 st.subheader("면접 영상을 녹화하세요")
 
-        
+
 start_time = datetime.now(timezone("Asia/Seoul")).strftime("%y%m%d_%H%M%S")
 if "prefix" not in st.session_state.keys() or st.session_state.prefix is None:
     st.session_state["prefix"] = start_time
 
-if not os.path.exists(f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}"):
-    os.makedirs(f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}")
+if not os.path.exists(
+    f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}"
+):
+    os.makedirs(
+        f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}"
+    )
 
 flv_file = f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording.flv"
 webm_file = f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording.webm"
 
-uploaded_video = st.sidebar.file_uploader("영상 업로드", type=['mp4', 'flv'])
+uploaded_video = st.sidebar.file_uploader("영상 업로드", type=["mp4", "flv"])
 if uploaded_video:
     st.session_state.recording = True
     g = io.BytesIO(uploaded_video.read())
-    ext = uploaded_video.type.split('/')[-1]
-    uploaded_file = f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording."+ext
-    with open(uploaded_file, 'wb') as out:
+    ext = uploaded_video.type.split("/")[-1]
+    uploaded_file = (
+        f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording."
+        + ext
+    )
+    with open(uploaded_file, "wb") as out:
         out.write(g.read())
 
-    convert = st.button('영상이 업로드 되었습니다. 이 버튼을 눌러 변환하세요.')
+    convert = st.button("영상이 업로드 되었습니다. 이 버튼을 눌러 변환하세요.")
     if convert:
         with st.spinner("✔ 변환 중입니다..."):
             convert_to_webm(uploaded_file, webm_file)
@@ -122,10 +127,31 @@ def in_recorder_factory():
         flv_file, format="flv"
     )  # HLS does not work. See https://github.com/aiortc/aiortc/issues/331
 
-userdb = UserDB(st.session_state.name, st.session_state.num, st.session_state.prefix, "/".join(flv_file.split('/')[:-1]))
-posedb = PoseDB(st.session_state.name, st.session_state.num, st.session_state.prefix, "/".join(flv_file.split('/')[:-1]))
-eyedb = EyeDB(st.session_state.name, st.session_state.num, st.session_state.prefix, "/".join(flv_file.split('/')[:-1]))
-facedb = FaceDB(st.session_state.name, st.session_state.num, st.session_state.prefix, "/".join(flv_file.split('/')[:-1]))
+
+userdb = UserDB(
+    st.session_state.name,
+    st.session_state.num,
+    st.session_state.prefix,
+    "/".join(flv_file.split("/")[:-1]),
+)
+posedb = PoseDB(
+    st.session_state.name,
+    st.session_state.num,
+    st.session_state.prefix,
+    "/".join(flv_file.split("/")[:-1]),
+)
+eyedb = EyeDB(
+    st.session_state.name,
+    st.session_state.num,
+    st.session_state.prefix,
+    "/".join(flv_file.split("/")[:-1]),
+)
+facedb = FaceDB(
+    st.session_state.name,
+    st.session_state.num,
+    st.session_state.prefix,
+    "/".join(flv_file.split("/")[:-1]),
+)
 
 if "userdb" not in st.session_state:
     st.session_state["userdb"] = userdb
@@ -151,8 +177,8 @@ if not st.session_state.recording and not os.path.exists(webm_file):
         in_recorder_factory=in_recorder_factory,
     )
     ###########################################################
-    
-    convert = st.button('영상을 다 녹화한 후 이 버튼을 눌러 저장하세요.')
+
+    convert = st.button("영상을 다 녹화한 후 이 버튼을 눌러 저장하세요.")
     if convert:
         with st.spinner("✔ 확인됐습니다. 변환 중입니다..."):
             convert_to_webm(flv_file, webm_file)
@@ -172,7 +198,7 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
         cancel = st.button("Re-Recording")
 
         if confirm:
-            with st.spinner('선택한 영상을 분석하고 있습니다. 잠시 기다려주세요!'):
+            with st.spinner("선택한 영상을 분석하고 있습니다. 잠시 기다려주세요!"):
                 st.session_state.confirm_video = st.session_state.video_dir
 
                 # 녹화한 영상 cloud에 업로드할 경로
@@ -194,6 +220,7 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                 }
                 # 2. 클라우드에 저장된 영상 Back에 다운
                 from concurrent.futures import ThreadPoolExecutor, as_completed
+
                 # with ThreadPoolExecutor() as executor:
                 #     executor.submit(requests.post, SAVE_REQUEST_DIR1, json=save_input_json)
                 #     executor.submit(requests.post, SAVE_REQUEST_DIR2, json=save_input_json)
@@ -229,7 +256,7 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                 # r_eye_result= requests.post(BACKEND_EYE, json=input_json)
 
                 result_dir = "/".join(SAVED_DIR.split("/")[:-1])
-                st.session_state.result_dir = result_dir 
+                st.session_state.result_dir = result_dir
 
                 for i in as_completed(r_):
                     r_result = i.result().text
@@ -237,22 +264,28 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                     r_pose_result = i.result().text
                 for i in as_completed(r_eye_):
                     r_eye_result = i.result().text
-                
+
             with st.spinner("DB에 분석 결과를 저장 중입니다..."):
                 userdb.save_data()
                 facedb.save_data(r_result)
                 posedb.save_data(r_pose_result)
                 eyedb.save_data(r_eye_result)
-                print('save data in mongodb')
+                print("save data in mongodb")
 
                 # Back에서 저장한 모델 예측 영상 경로 만들기
                 # for task in ("face", "pose", "eye"):
                 for task in ["face", "pose", "eye"]:
-                    upload_name = (task + "_" + st.session_state.upload_dir.split("/")[-1])
-                    upload_folder = "/".join(st.session_state.upload_dir.split("/")[:-1])
+                    upload_name = (
+                        task + "_" + st.session_state.upload_dir.split("/")[-1]
+                    )
+                    upload_folder = "/".join(
+                        st.session_state.upload_dir.split("/")[:-1]
+                    )
                     upload_dir = "/".join([upload_folder, upload_name])
                     download_name = upload_name
-                    download_folder = "/".join(st.session_state.video_dir.split("/")[:-1])
+                    download_folder = "/".join(
+                        st.session_state.video_dir.split("/")[:-1]
+                    )
                     download_dir = "/".join([download_folder, download_name])
 
                     # 4. 클라우드에 저장된 모델 예측 영상 Front에 다운 받기
@@ -266,10 +299,10 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
             st.session_state.cancel = True
             st.session_state.prefix = None
 
-if 'complete' in st.session_state.keys() and st.session_state.complete:
+if "complete" in st.session_state.keys() and st.session_state.complete:
     st.success("분석이 완료 되었습니다!!! Result 페이지에서 결과를 확인하세요!!!", icon="🔥")
     st.session_state.complete = False
 
-if 'cancel' in st.session_state.keys() and st.session_state.cancel:
-    restart = st.button('다시 녹화하세요')
+if "cancel" in st.session_state.keys() and st.session_state.cancel:
+    restart = st.button("다시 녹화하세요")
     st.session_state.cancel = False
