@@ -203,8 +203,7 @@ if 'result_dir' in st.session_state.keys():
                         ylst.append(y)
                 ax.loc[i, :] = xlst
                 ay.loc[i, :] = ylst
-            st.dataframe(ax)
-            st.dataframe(ay)
+
             info = pd.DataFrame(columns = ['eye-eye','ear-ear','shoulder-shoulder','nose-mid_shoulder', 'eye-mid_shoulder','right_hand-yes','left_hand-yes', 'hand'])
             for i in range(len(a)):
                 bx = ax.loc[i,:]
