@@ -88,8 +88,12 @@ if 'face_time' in st.session_state.keys():
                     slice_video(st.session_state.result_dir, sorted(st.session_state.eye_time), "eye")
 
         else:
-            st.write(st.session_state.is_okay)
+            # st.write(st.session_state.is_okay)
             VIDEO_PATH = st.session_state.confirm_video
+            video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/face_recording.webm")
+            video_len = video.get(cv2.CAP_PROP_FRAME_COUNT) / video.get(cv2.CAP_PROP_FPS)
+            w = video.get(cv2.CAP_PROP_FRAME_WIDTH)
+            h = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
             result = facedb.load_data_inf()
             pose_result = posedb.load_data_inf()
             eye_result = eyedb.load_data_inf()
@@ -217,7 +221,7 @@ if 'face_time' in st.session_state.keys():
                             st.pyplot(fig)
 
                         with col2:
-                            st.session_state.is_okay["face_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?")
+                            st.session_state.is_okay["face_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=100000)
                             if st.session_state.is_okay["face_all"]:
                                 st.success('감사합니다.', icon="🔥")
 
@@ -239,10 +243,10 @@ if 'face_time' in st.session_state.keys():
                     ylst = []
                     for j in info:
                         x, y = j
-                        if x < 0 or x > 640:
+                        if x < 0 or x > w:
                             xlst.append(-1)
                             ylst.append(-1)
-                        elif y < 0 or y > 640:
+                        elif y < 0 or y > h:
                             xlst.append(-1)
                             ylst.append(-1)        
                         else:
@@ -421,7 +425,7 @@ if 'face_time' in st.session_state.keys():
                                 st.pyplot(fig)
 
                             with col2:
-                                st.session_state.is_okay["pose_face_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+400)
+                                st.session_state.is_okay["pose_face_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=200000)
                                 if st.session_state.is_okay["pose_face_all"]:
                                     st.success("감사합니다.", icon="🔥")
 
@@ -515,7 +519,7 @@ if 'face_time' in st.session_state.keys():
                                 st.pyplot(fig)
 
                             with col2:
-                                st.session_state.is_okay["pose_shoulder_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+700)
+                                st.session_state.is_okay["pose_shoulder_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=300000)
                                 if st.session_state.is_okay["pose_shoulder_all"]:
                                     st.success("감사합니다.", icon="🔥")
 
@@ -621,7 +625,7 @@ if 'face_time' in st.session_state.keys():
                                 st.pyplot(fig)
                         
                             with col2:
-                                st.session_state.is_okay["pose_body_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+1000)
+                                st.session_state.is_okay["pose_body_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=400000)
                                 if st.session_state.is_okay["pose_body_all"]:
                                     st.success("감사합니다", icon="🔥")
                 
@@ -677,7 +681,7 @@ if 'face_time' in st.session_state.keys():
                                 st.pyplot(fig)
 
                             with col2:
-                                st.session_state.is_okay["pose_hand_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+1200)
+                                st.session_state.is_okay["pose_hand_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=500000)
                                 if st.session_state.is_okay["pose_hand_all"]:
                                     st.success("감사합니다", icon="🔥")
 
@@ -757,10 +761,18 @@ if 'face_time' in st.session_state.keys():
                             st.pyplot(fig)
 
                         with col2:
-                            st.session_state.is_okay["eye_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+1400)
+                            st.session_state.is_okay["eye_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=600000)
                             if st.session_state.is_okay["eye_all"]:
                                 st.success("감사합니다.", icon="🔥")
 
+            send_feedback = st.button("🧡 Send Feedback to Developer 💚")
+            if send_feedback:
+                st.write("모든 분석 결과에 대해 피드백을 하셨는지 다시 확인해주세요!")
+                st.write(st.session_state.is_okay)
+                send = st.button("Send")
+                if send:
+                    # 넣어줘~
+                    pass
     else:
         st.subheader("면접 영상이 제대로 저장되지 않았습니다. 다시 면접 영상을 녹화해주세요.")
 else:

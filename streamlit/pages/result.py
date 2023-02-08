@@ -63,12 +63,15 @@ if 'result_dir' in st.session_state.keys():
         result = facedb.load_data_inf()
         pose_result = posedb.load_data_inf()
         eye_result = eyedb.load_data_inf()
+        
         tab1, tab2, tab3 = st.tabs(["😀 Emotion", "🧘‍♀️ Pose", "👀 Eye"])
 
         with tab1:
             st.header("Emotion")
             video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/face_recording.webm")
             video_len = video.get(cv2.CAP_PROP_FRAME_COUNT) / video.get(cv2.CAP_PROP_FPS)
+            w = video.get(cv2.CAP_PROP_FRAME_WIDTH)
+            h = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
             sec = [video_len / len(result) * (i + 1) for i in range(len(result))]
             result['seconds'] = sec
             video_file = open(
@@ -189,10 +192,10 @@ if 'result_dir' in st.session_state.keys():
                 ylst = []
                 for j in info:
                     x, y = j[0], j[1]
-                    if x < 0 or x > 640:
+                    if x < 0 or x > w:
                         xlst.append(-1)
                         ylst.append(-1)
-                    elif y < 0 or y > 640:
+                    elif y < 0 or y > h:
                         xlst.append(-1)
                         ylst.append(-1)        
                     else:
@@ -200,7 +203,8 @@ if 'result_dir' in st.session_state.keys():
                         ylst.append(y)
                 ax.loc[i, :] = xlst
                 ay.loc[i, :] = ylst
-
+            st.dataframe(ax)
+            st.dataframe(ay)
             info = pd.DataFrame(columns = ['eye-eye','ear-ear','shoulder-shoulder','nose-mid_shoulder', 'eye-mid_shoulder','right_hand-yes','left_hand-yes', 'hand'])
             for i in range(len(a)):
                 bx = ax.loc[i,:]
@@ -273,7 +277,6 @@ if 'result_dir' in st.session_state.keys():
                     ax.set_xticks([i for idx, i in enumerate(x) if idx % 15 == 1])
                     ax.set_xticklabels([round(i/30, 1) for idx, i in enumerate(x) if idx % 15 == 1])
                     ax.tick_params(axis='x', rotation=30)
-
                     angle_y = [i * (180 / math.pi) for i in np.arctan(info['eye-eye'].astype(np.float64))]
                     ax.axhline(y = pose_horizontal_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
                     ax.axhline(y = - pose_horizontal_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
