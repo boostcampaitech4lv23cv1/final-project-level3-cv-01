@@ -2,6 +2,7 @@ import pendulum
 from datetime import time, timedelta, datetime
 from pytz import timezone
 from glob import glob
+import splitfolders
 from airflow import DAG
 from airflow.utils.dates import days_ago
 from airflow.operators.bash import BashOperator
@@ -35,7 +36,7 @@ def select_recent_videos(**context):
     every_dir_bydate = glob('/opt/ml/final-project-level3-cv-01/airflow/heyi-storage/*/*')
     recent_dir = []
     for ed in every_dir_bydate:
-        if int(now_date) - int(ed.split('/')[-1][0:6]) < 1:
+        if int(now_date) - int(ed.split('/')[-1][0:6]) < 1 :
             recent_dir.append(ed)
     recent_videos = []
     for rd in recent_dir:
@@ -55,7 +56,7 @@ def video_to_frame(**context):
 
         cap = cv2.VideoCapture(rv)
         count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-        fps = cap.get(cv2.CAP_PROP_FPS)
+        fps = cap.get(cv2.CAP_PROP_FPS) / 20
 
         while True:  # 무한 루프
             ret, frame = cap.read()  # 두 개의 값을 반환하므로 두 변수 지정
@@ -63,7 +64,7 @@ def video_to_frame(**context):
             if not ret:  # 새로운 프레임을 못받아 왔을 때 braek
                 break
             if int(cap.get(1)) % int(fps) == 0:
-                cv2.imwrite(sd + "/frame%04d.jpg" % count, frame)
+                cv2.imwrite(sd + "/frame%06d.jpg" % count, frame)
                 print("Saved frame number : ", str(int(cap.get(1))))
                 count += 1
 
@@ -77,22 +78,27 @@ def video_to_frame(**context):
 def send_frame_to_dir(**context):
     recent_dir = context['ti'].xcom_pull(key='xcom_push_recent_dir')
     for sd in recent_dir:
-        facedb = FaceDB(path=sd)
+        facedb = FaceDB(path=f"./{sd.split('/')[-2]}/{sd.split('/')[-1]}")
         df = facedb.load_data_train()
         for i in range(len(df)):
             source = f"/opt/ml/final-project-level3-cv-01/airflow/heyi-storage/{df.iloc[i]['frame'].lstrip('./')}"
-            destination = f"face_dataset/{df.iloc[i]['emotion']}"
+            destination = f"face_dataset/train/{df.iloc[i]['emotion']}"
             print(f"{source} to {destination}")
             shutil.copy(source, destination)
-            
+            os.rename(f"{destination}/{df.iloc[i]['frame'].lstrip('./').split('/')[-1]}",f"{destination}/{sd.split('/')[-2]}_{sd.split('/')[-1]}_{df.iloc[i]['frame'].lstrip('./').split('/')[-1]}")
+
+def split_valid():
+    splitfolders.ratio('/opt/ml/final-project-level3-cv-01/airflow/face_dataset/train', 
+                       output= '/opt/ml/final-project-level3-cv-01/airflow/face_dataset_train_valid' ,seed=42,ratio = (0.8,0.2))
+
 def train_face():
     model = LightningModel.load_from_checkpoint('/opt/ml/final-project-level3-cv-01/model/face/models/custom_fer_model.ckpt')
     trainer = Trainer(
-        max_epochs=10,
-        # val_check_interval = 1,
+        max_epochs=10,        # val_check_interval = 1,
         accelerator="gpu",
         logger=CSVLogger(save_dir="./logs/"),
         callbacks=[
+
             ModelCheckpoint(
                 dirpath = '/opt/ml/final-project-level3-cv-01/model/face/models/',
                 filename="best_val_acc",
@@ -118,13 +124,6 @@ with DAG(
     start_date = days_ago(2),
     tags= ["heyi"],
 ) as dag:
-    # make_dir = BashOperator(
-    #     task_id = "make_dir",
-    #     bash_command= "cd /opt/ml/final-project-level3-cv-01/airflow && mkdir angry anxiety happy hurt neutral sad surprise",
-    #     owner= "jun",
-    #     retries = 3,
-    #     retry_delay = timedelta(minutes=3)
-    # )
     t1 = BashOperator(
         task_id = "download_data",
         bash_command= "gcloud storage cp -r gs://heyi-storage/* /opt/ml/final-project-level3-cv-01/airflow/heyi-storage",
@@ -155,5 +154,11 @@ with DAG(
         retries = 3,
         retry_delay = timedelta(minutes=3)
     )
-
-t1 >> t2 >> t3 >> t4
+    t5 = PythonOperator(
+        task_id= "train_face",
+        python_callable =train_face,
+        owner='jun',
+        retries = 3,
+        retry_delay = timedelta(minutes=3)
+    )
+t1 >> t2 >> t3 >> t4 >> t5
