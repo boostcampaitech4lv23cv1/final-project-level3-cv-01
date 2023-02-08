@@ -193,6 +193,7 @@ class GazeTracking(object):
         df = pd.DataFrame({"tracking": ret, "left": left, "right": right, "verical" : vertical, "horizontal" : horizontal})
         print(df)
         df = df.replace('None', method='bfill')
+        df = df.replace('None', method='ffill')
 
         for i, frame in enumerate(frames):
             text, left_pupil, right_pupil, _, _ = df.loc[i, :]
