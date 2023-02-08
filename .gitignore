@@ -178,7 +178,7 @@ cython_debug/
 *.octet-stream
 *.jpg
 *.csv
-
+*.mp4
 *.flv
 # pytorch lightning
 #mlflow
