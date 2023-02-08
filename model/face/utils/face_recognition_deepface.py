@@ -1,13 +1,10 @@
 from deepface import DeepFace
 import cv2
-import matplotlib.pyplot as plt
 import glob
 import os
-import csv
+import mmcv
 import pandas as pd
 import argparse
-import streamlit as st
-
 
 
 def parse_args():
@@ -29,7 +26,8 @@ def video_to_frame(VIDEO_PATH, SAVED_DIR):
 
     cap = cv2.VideoCapture(VIDEO_PATH)
     count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-    fps = cap.get(cv2.CAP_PROP_FPS)
+
+    fps = cap.get(cv2.CAP_PROP_FPS) / 20
 
     while True:  # 무한 루프
         ret, frame = cap.read()  # 두 개의 값을 반환하므로 두 변수 지정
@@ -37,16 +35,11 @@ def video_to_frame(VIDEO_PATH, SAVED_DIR):
         if not ret:  # 새로운 프레임을 못받아 왔을 때 braek
             break
         if int(cap.get(1)) % int(fps) == 0:
-            cv2.imwrite(SAVED_DIR + "/frame%d.jpg" % count, frame)
+            cv2.imwrite(SAVED_DIR + "/frame%06d.jpg" % count, frame)
             print("Saved frame number : ", str(int(cap.get(1))))
             count += 1
 
-        # 10ms 기다리고 다음 프레임으로 전환, Esc누르면 while 강제 종료
-        if cv2.waitKey(10) == 27:
-            break
-
     cap.release()  # 사용한 자원 해제
-    cv2.destroyAllWindows()
 
     frames = glob.glob(f"{SAVED_DIR}/*.jpg")
     frames.sort()
@@ -176,41 +169,50 @@ def add_emotion_on_frame(emotions_mtcnn, df_mtcnn, saved_dir):
     return rec_image_list
 
 
+def add_emotion_on_frame_new(df):
+
+    len_of_df = len(df)
+    rec_image_list = []
+
+    for i in range(len_of_df):
+        info = df.loc[i, :]
+        string = info['emotion']
+        pth = cv2.imread(info['frame'])
+        rec = (info['x'], info['y'], info['w'], info['h'])
+        x = rec[0]
+        y = rec[1]
+        pos = (x, y-10)
+        rec_image = cv2.rectangle(pth, rec, (0, 255, 0), thickness=4)
+        rec_image = cv2.putText(
+            rec_image,
+            string,
+            pos,
+            cv2.FONT_HERSHEY_SIMPLEX,
+            2,
+            (36, 255, 12),
+            3,
+        )
+
+        rec_image_list.append(rec_image)
+
+    return rec_image_list
+
+
 def frame_to_video(rec_image_list, video_path):
     cap = cv2.VideoCapture(video_path)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = cap.get(cv2.CAP_PROP_FPS)
 
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
     
     vid_save_name = f"./{video_path.split('/')[1]}/{video_path.split('/')[2]}/face_{video_path.split('/')[-1]}"
-    out = cv2.VideoWriter(vid_save_name, fourcc, 2, (width, height))
+    out = cv2.VideoWriter(vid_save_name, fourcc, fps, (width, height))
+
     for rec_frame in rec_image_list:
         out.write(rec_frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
 
     cap.release()
     out.release()
-    cv2.destroyAllWindows()
 
-
-# def main():
-#     # args = parse_args()
-
-#     frames = video_to_frame()
-
-#     emotions_mtcnn = analyze_emotion(frames)
-
-#     df = make_emotion_df(emotions_mtcnn)
-
-#     df.to_csv(f"{NEW_VIDEO_NAME}")
-#     rec_image_list = add_emotion_on_frame(emotions_mtcnn, df)
-
-#     frame_to_video(rec_image_list)
-
-
-# if __name__ == "__main__":
-#     main()
+    return vid_save_name

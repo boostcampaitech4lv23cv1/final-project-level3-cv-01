@@ -171,13 +171,20 @@ cython_debug/
 # db
 **/db/**
 
-# KEY
-hey-i-375802-e6e402d22694.json
-*.webm
-*.jpg
 
+# KEY
+**/hey-i-375802-d3dcfd2b25d1.json
+*.webm
+*.octet-stream
+*.jpg
+*.csv
+*.mp4
+*.flv
 # pytorch lightning
 #mlflow
 **/logs/
 **/mlruns/
+
+# aihub data
+aihub/
 
