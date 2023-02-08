@@ -1,4 +1,3 @@
-import ast
 import os
 import sys
 import cv2
@@ -10,15 +9,10 @@ import cv2
 sys.path.append(os.getcwd())
 
 import numpy as np
-from collections import defaultdict
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
-from DBconnect.main import EyeDB, FaceDB, PoseDB, UserDB
-from FastAPI.utils import download_video, upload_video
-from google.cloud import storage
 from scipy.interpolate import make_interp_spline
 
 

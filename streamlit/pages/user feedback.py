@@ -238,7 +238,7 @@ if 'face_time' in st.session_state.keys():
                     xlst = []
                     ylst = []
                     for j in info:
-                        x, y = ast.literal_eval(j)
+                        x, y = j
                         if x < 0 or x > 640:
                             xlst.append(-1)
                             ylst.append(-1)
@@ -366,8 +366,8 @@ if 'face_time' in st.session_state.keys():
                                         ax.plot(angle_y3, color='khaki', label='Shoulder-Shoulder')
                                         ax.legend(loc='best')
 
-                                    ax.axvline(x= start, linestyle='--', color='black', alpha=0.5)
-                                    ax.axvline(x= end, linestyle='--', color='black', alpha=0.5)
+                                    ax.axvline(x= start*30, linestyle='--', color='black', alpha=0.5)
+                                    ax.axvline(x= end*30, linestyle='--', color='black', alpha=0.5)
                                     
                                     st.pyplot(fig)
 

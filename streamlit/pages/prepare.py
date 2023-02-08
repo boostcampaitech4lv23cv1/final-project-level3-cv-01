@@ -44,36 +44,14 @@ with col1:
         w = round(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = round(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = cap.get(cv2.CAP_PROP_FPS)
-        # print(w, h)
 
         person = np.array(cv2.resize(cv2.imread('streamlit/person.png'), (w, h))) / 255
         person = np.array(person, dtype = 'u1')
 
-
-    # fourcc = cv2.VideoWriter_fourcc(*'X264') # *'DIVX' == 'D', 'I', 'V', 'X'
-    # delay = round(1000 / fps)
-
-    # out = cv2.VideoWriter('output.mp4', fourcc, fps, (w, h))
-
-                # if not out.isOpened():
-                #     print('File open failed!')
-                #     cap.release()
-                #     sys.exit()
     while True:
         ret, frame = cap.read()
 
         if not ret:
             break
 
-        # inversed = ~frame
-
-        # cv2.imshow('frame', frame)
         stframe.image(frame * person, channels = 'BGR')
-        # cv2.imshow('inversed', inversed)
-
-        # if cv2.waitKey(delay) == 27:
-        #     break
-
-# cap.release()
-# out.release()
-# cv2.destroyAllWindows()

@@ -38,12 +38,7 @@ def video_to_frame(VIDEO_PATH, SAVED_DIR):
             print("Saved frame number : ", str(int(cap.get(1))))
             count += 1
 
-        # 10ms 기다리고 다음 프레임으로 전환, Esc누르면 while 강제 종료
-        # if cv2.waitKey(10) == 27:
-        #     break
-
     cap.release()  # 사용한 자원 해제
-    # cv2.destroyAllWindows()
 
     frames = glob.glob(f"{SAVED_DIR}/*.jpg")
     frames.sort()
@@ -206,41 +201,17 @@ def frame_to_video(rec_image_list, video_path):
     cap = cv2.VideoCapture(video_path)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = cap.get(cv2.CAP_PROP_FPS)
-    # fps = mmcv.VideoReader(video_path).fps
 
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
     
     vid_save_name = f"./{video_path.split('/')[1]}/{video_path.split('/')[2]}/face_{video_path.split('/')[-1]}"
     out = cv2.VideoWriter(vid_save_name, fourcc, fps, (width, height))
-    # out = cv2.VideoWriter(vid_save_name, fourcc, fps/2, (width, height))
+
     for rec_frame in rec_image_list:
         out.write(rec_frame)
-        # if cv2.waitKey(1) & 0xFF == ord("q"):
-        #     break
 
     cap.release()
     out.release()
-    # cv2.destroyAllWindows()
 
     return vid_save_name
-
-
-# def main():
-#     # args = parse_args()
-
-#     frames = video_to_frame()
-
-#     emotions_mtcnn = analyze_emotion(frames)
-
-#     df = make_emotion_df(emotions_mtcnn)
-
-#     df.to_csv(f"{NEW_VIDEO_NAME}")
-#     rec_image_list = add_emotion_on_frame(emotions_mtcnn, df)
-
-#     frame_to_video(rec_image_list)
-
-
-# if __name__ == "__main__":
-#     main()

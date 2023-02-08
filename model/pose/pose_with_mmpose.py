@@ -150,9 +150,6 @@ def main(video_path="./model/pose/recording.webm", out_video_root="./db"):
         if save_out_video:
             videoWriter.write(vis_frame)
 
-        if show and cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-
     if save_out_video:
         videoWriter.release()
     if show:
