@@ -191,7 +191,7 @@ class GazeTracking(object):
             anno_frame = self.get_annotated_frame(frame, text, left_pupil, right_pupil)
 
         df = pd.DataFrame({"tracking": ret, "left": left, "right": right, "verical" : vertical, "horizontal" : horizontal})
-        print(df)
+        
         df = df.replace('None', method='bfill')
 
         for i, frame in enumerate(frames):

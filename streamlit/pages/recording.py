@@ -223,13 +223,6 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                 facedb.save_data(r_result)
                 posedb.save_data(r_pose_result)
                 eyedb.save_data(r_eye_result)
-                
-                # result = pd.read_json(r_result, orient="records")
-                # result.to_csv("/".join([result_dir, "result.csv"]))
-                # pose_result = pd.read_json(r_pose_result, orient="records")
-                # pose_result.to_csv("/".join([result_dir, "pose_result.csv"]))
-                # eye_result = pd.read_json(r_eye_result, orient="records")
-                # eye_result.to_csv("/".join([result_dir, "eye_result.csv"]))
 
                 # Back에서 저장한 모델 예측 영상 경로 만들기
                 # for task in ("face", "pose", "eye"):

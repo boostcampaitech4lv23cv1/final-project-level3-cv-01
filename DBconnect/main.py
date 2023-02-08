@@ -27,6 +27,12 @@ class UserDB:
         pass
        
 class FaceDB(UserDB):
+    def __init__(self, path):
+        
+        mongodb_URI = "mongodb+srv://heyi:20230214@hey-i.o4iunhl.mongodb.net/test"
+        self.client = MongoClient(mongodb_URI)
+        self.db = self.client['heyi']
+        self.path = path
     
     def save_data(self, data):
         # user info에 저장된 사용자의 정보를 가져온다.
@@ -50,8 +56,8 @@ class FaceDB(UserDB):
         
         return df_face
     
-    def load_data_train(self, path):
-        data = self.db.face.find_one({'info.video_dir': path})
+    def load_data_train(self):
+        data = self.db.face.find_one({'info.video_dir': self.path})
         df_face = pd.DataFrame.from_dict(data['data'])
         df_train = df_face.loc[:,['frame', 'emotion']]
     
