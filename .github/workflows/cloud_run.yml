@@ -58,7 +58,7 @@ jobs:
 
     - name: Build and Push Container
       run: |-
-        docker build frontend --file frontend/Dockerfile --tag gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}
+        docker build . --file Dockerfile --tag gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}
         docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}
 
     - name: Deploy to Cloud Run
