@@ -15,7 +15,7 @@
 on:
   push:
     branches:
-    - main
+    - a
 
 name: Cloud Run
 env:
@@ -83,7 +83,7 @@ jobs:
     # - name: Deploy to Cloud Run
     #   id: deploy
     #   uses: go
-    ogle-github-actions/deploy-cloudrun@v0
+    # ogle-github-actions/deploy-cloudrun@v0
     #   with:
     #     service: ${{ env.SERVICE }}
     #     region: ${{ env.REGION }}
