@@ -30,7 +30,7 @@ with DAG(
     default_args=default_args,
     dag_id = "heyi_check_storage",
     description = "check user data",
-    schedule_interval =  " */5 * * * *", 
+    schedule_interval =  " 0 0 * * *", 
     start_date=days_ago(2),
     tags= ["heyi"],
 ) as dag:

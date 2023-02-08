@@ -65,6 +65,7 @@ def video_to_frame(**context):
                 break
             if int(cap.get(1)) % int(fps) == 0:
                 cv2.imwrite(sd + "/frame%06d.jpg" % count, frame)
+                cv2.imwrite(sd + "/frame%04d.jpg" % count, frame)
                 print("Saved frame number : ", str(int(cap.get(1))))
                 count += 1
 
@@ -80,18 +81,21 @@ def send_frame_to_dir(**context):
     for sd in recent_dir:
         facedb = FaceDB(path=f"./{sd.split('/')[-2]}/{sd.split('/')[-1]}")
         df = facedb.load_data_train()
+        if df.empty ==  True:
+            continue
         for i in range(len(df)):
+            if df.iloc[i]['emotion'] == 'blank':
+                continue
             source = f"/opt/ml/final-project-level3-cv-01/airflow/heyi-storage/{df.iloc[i]['frame'].lstrip('./')}"
             destination = f"face_dataset/train/{df.iloc[i]['emotion']}"
             print(f"{source} to {destination}")
             shutil.copy(source, destination)
             os.rename(f"{destination}/{df.iloc[i]['frame'].lstrip('./').split('/')[-1]}",f"{destination}/{sd.split('/')[-2]}_{sd.split('/')[-1]}_{df.iloc[i]['frame'].lstrip('./').split('/')[-1]}")
 
-def split_valid():
-    splitfolders.ratio('/opt/ml/final-project-level3-cv-01/airflow/face_dataset/train', 
-                       output= '/opt/ml/final-project-level3-cv-01/airflow/face_dataset_train_valid' ,seed=42,ratio = (0.8,0.2))
 
 def train_face():
+    splitfolders.ratio('/opt/ml/final-project-level3-cv-01/airflow/face_dataset/train', 
+                       output= '/opt/ml/final-project-level3-cv-01/airflow/face_dataset_train_valid' ,seed=42,ratio = (0.8,0.2))
     model = LightningModel.load_from_checkpoint('/opt/ml/final-project-level3-cv-01/model/face/models/custom_fer_model.ckpt')
     trainer = Trainer(
         max_epochs=10,        # val_check_interval = 1,

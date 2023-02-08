@@ -59,11 +59,13 @@ class FaceDB(UserDB):
         return df_face
     
     def load_data_train(self):
-        data = self.db.face.find_one({'info.video_dir': self.path})
-        df_face = pd.DataFrame.from_dict(data['data'])
-        df_train = df_face.loc[:,['frame', 'emotion']]
-    
-        return df_train 
+        data = self.db.face.find_one({'info.video_dir': self.path})  
+        try:
+            df_face = pd.DataFrame.from_dict(data['data'])
+            df_train = df_face.loc[:,['frame', 'emotion']]
+            return df_train 
+        except:
+            return pd.DataFrame()
 # class FaceDB(UserDB):
 #     def __init__(self):
 #         super().__init__()
