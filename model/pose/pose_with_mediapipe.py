@@ -1,16 +1,16 @@
 import mediapipe as mp  # Import mediapipe
 import cv2  # Import opencv
-import os
-import json
 
 import numpy as np
 import pandas as pd
 from datetime import datetime
 import streamlit as st
+
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 mp_holistic = mp.solutions.holistic
 mp_drawing_styles = mp.solutions.drawing_styles
+
 
 def calculate_angle(a, b):
     a = np.array(a)
@@ -20,8 +20,6 @@ def calculate_angle(a, b):
     angle = np.abs(radians * 180.0 / np.pi)
 
     return angle
-
-
 
 
 def run(video_path):
