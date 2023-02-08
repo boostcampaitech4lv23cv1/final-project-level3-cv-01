@@ -25,8 +25,10 @@ def calculate_angle(a, b):
 
 
 def main(video_path="./model/pose/recording.webm", out_video_root="./db"):
-    pose_config = "model/pose/mmpose/configs/heyi/mobilenetv2_aihub_256x192.py"
-    pose_checkpoint = "https://download.openmmlab.com/mmpose/top_down/mobilenetv2/mobilenetv2_coco_256x192-d1e58e7b_20200727.pth"
+    # pose_config = "model/pose/mmpose/configs/heyi/mobilenetv2_aihub_256x192.py"
+    # pose_checkpoint = "https://download.openmmlab.com/mmpose/top_down/mobilenetv2/mobilenetv2_coco_256x192-d1e58e7b_20200727.pth"
+    pose_config = "./model/pose/mmpose/configs/heyi/res50_aihub_256x192_fp16_dynamic.py"
+    pose_checkpoint = "./model/pose/mmpose/checkpoint/resnet50.pth"
     show = False
     device = "cuda:0"
     kpt_thr = 0.3
@@ -112,14 +114,15 @@ def main(video_path="./model/pose/recording.webm", out_video_root="./db"):
         frame_cnt += 1
         result["frame_id"].append(frame_cnt)
         result['nose'].append(tuple(keypoints[0][:2]) if keypoints[0][:2].any() else (-1, -1))
-        result['left_eye'].append(tuple(keypoints[1][:2]) if keypoints[1][:2].any() else (-1, -1))
-        result['right_eye'].append((keypoints[2][:2]) if keypoints[2][:2].any() else (-1, -1))
-        result['left_ear'].append((keypoints[3][:2]) if keypoints[3][:2].any() else (-1, -1))
-        result['right_ear'].append((keypoints[4][:2]) if keypoints[4][:2].any() else (-1, -1))
+        result['left_eye'].append(tuple(keypoints[9][:2]) if keypoints[1][:2].any() else (-1, -1))
+        result['right_eye'].append((keypoints[8][:2]) if keypoints[2][:2].any() else (-1, -1))
+        result['left_ear'].append((keypoints[11][:2]) if keypoints[3][:2].any() else (-1, -1))
+        result['right_ear'].append((keypoints[10][:2]) if keypoints[4][:2].any() else (-1, -1))
         result['left_shoulder'].append((keypoints[5][:2]) if keypoints[5][:2].any() else (-1, -1))
-        result['right_shoulder'].append((keypoints[6][:2]) if keypoints[6][:2].any() else (-1, -1))
+        result['right_shoulder'].append((keypoints[2][:2]) if keypoints[6][:2].any() else (-1, -1))
+        result['mid_shoulder'].append((keypoints[1][:2]) if keypoints[6][:2].any() else (-1, -1))
 
-        for i, j in zip([7, 8, 9, 10], ['left_elbow', 'right_elbow', 'left_wrist', 'right_wrist']):
+        for i, j in zip([6, 3, 7, 4], ['left_elbow', 'right_elbow', 'left_wrist', 'right_wrist']):
             if keypoints[i][:2].any():
                 if keypoints[i][0] < 0 or keypoints[i][0] > 640 or keypoints[i][1] < 0 or keypoints[i][1] > 480:
                     result[j].append((-1, -1))
@@ -146,9 +149,6 @@ def main(video_path="./model/pose/recording.webm", out_video_root="./db"):
 
         if save_out_video:
             videoWriter.write(vis_frame)
-
-        if show and cv2.waitKey(1) & 0xFF == ord("q"):
-            break
 
     if save_out_video:
         videoWriter.release()

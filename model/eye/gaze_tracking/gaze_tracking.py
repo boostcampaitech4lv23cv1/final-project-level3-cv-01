@@ -193,6 +193,7 @@ class GazeTracking(object):
         df = pd.DataFrame({"tracking": ret, "left": left, "right": right, "verical" : vertical, "horizontal" : horizontal})
         print(df)
         df = df.replace('None', method='bfill')
+        df = df.replace('None', method='ffill')
 
         for i, frame in enumerate(frames):
             text, left_pupil, right_pupil, _, _ = df.loc[i, :]
@@ -259,20 +260,15 @@ class GazeTracking(object):
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = cap.get(cv2.CAP_PROP_FPS)
-        # fps = mmcv.VideoReader(VIDEO_PATH).fps
 
         fourcc = cv2.VideoWriter_fourcc(*"vp80")
         vid_save_name = f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/eye_{VIDEO_PATH.split('/')[-1]}"
         out = cv2.VideoWriter(vid_save_name, fourcc, fps, (width, height))
-        # out = cv2.VideoWriter(vid_save_name, fourcc, fps/2, (width, height))
 
         for rec_frame in rec_image_list:
             out.write(rec_frame)
-            # if cv2.waitKey(1) & 0xFF == ord("q"):
-            #     break
 
         cap.release()
         out.release()
-        # cv2.destroyAllWindows()
 
         return vid_save_name
