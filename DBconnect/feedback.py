@@ -21,7 +21,9 @@ class FeedbackDB:
     def save_data(self,):
         
         data = self.analyze_feedback()
+        print(f'업로드 할 데이터 정보:{data}')
         self.db.feedback.insert_one(data)
+        print('피드백 업로드 완료.')
         
     def analyze_feedback(self, ):
         
@@ -48,7 +50,7 @@ class FeedbackDB:
             data_list.append(dic)
         
         result['data'] = data_list
-        
+        print('피드백 분석 완료.')
         return result
                 
     def check_timeline(self,):
@@ -83,6 +85,8 @@ class FeedbackDB:
                         eye_lst[i] = v
                 else:
                     print('입력 데이터 형식이 이상합니다..!')
-                    
+        
+        print(face_lst, pose_lst, eye_lst)
+        print("타임라인 추출 완료.")           
         return face_lst, pose_lst, eye_lst
         
