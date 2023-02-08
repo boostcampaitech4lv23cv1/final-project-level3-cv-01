@@ -37,7 +37,6 @@ def convert_to_webm(in_file, video_dir):
     cap = cv2.VideoCapture(in_file)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = cap.get(cv2.CAP_PROP_FPS)
     fourcc = cv2.VideoWriter_fourcc(*"vp80")
 
@@ -52,11 +51,9 @@ def convert_to_webm(in_file, video_dir):
         if not ret:  # 새로운 프레임을 못받아 왔을 때 braek
             break
         out.write(frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
+
     cap.release()
     out.release()
-    cv2.destroyAllWindows()
     end = time.process_time()
     
     print(f"Convert Complete: {video_dir} on {end-start}")
@@ -113,14 +110,14 @@ def in_recorder_factory():
     return MediaRecorder(
         flv_file, format="flv"
     )  # HLS does not work. See https://github.com/aiortc/aiortc/issues/331
-userdb = UserDB(st.session_state.name, st.session_state.num, start_time, "/".join(flv_file.split('/')[:-1]))
-posedb = PoseDB(st.session_state.name, st.session_state.num, start_time, "/".join(flv_file.split('/')[:-1]))
-eyedb = EyeDB(st.session_state.name, st.session_state.num, start_time, "/".join(flv_file.split('/')[:-1]))
-facedb = FaceDB(st.session_state.name, st.session_state.num, start_time, "/".join(flv_file.split('/')[:-1]))
+
+userdb = UserDB(st.session_state.name, st.session_state.num, st.session_state.prefix, "/".join(flv_file.split('/')[:-1]))
+posedb = PoseDB(st.session_state.name, st.session_state.num, st.session_state.prefix, "/".join(flv_file.split('/')[:-1]))
+eyedb = EyeDB(st.session_state.name, st.session_state.num, st.session_state.prefix, "/".join(flv_file.split('/')[:-1]))
+facedb = FaceDB(st.session_state.name, st.session_state.num, st.session_state.prefix, "/".join(flv_file.split('/')[:-1]))
 
 if "userdb" not in st.session_state:
     st.session_state["userdb"] = userdb
-    userdb.save_data()
 if "posedb" not in st.session_state:
     st.session_state["posedb"] = posedb
 if "eyedb" not in st.session_state:
@@ -219,10 +216,13 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                     r_pose_result = i.result().text
                 for i in as_completed(r_eye_):
                     r_eye_result = i.result().text
-                    
+                
+            with st.spinner("DB에 분석 결과를 저장 중입니다..."):
+                userdb.save_data()
                 facedb.save_data(r_result)
                 posedb.save_data(r_pose_result)
                 eyedb.save_data(r_eye_result)
+                print('save data in mongodb')
 
                 # Back에서 저장한 모델 예측 영상 경로 만들기
                 # for task in ("face", "pose", "eye"):

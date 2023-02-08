@@ -63,7 +63,7 @@ def upload_predict_video(inp: InferenceFace):
 
 @app.post("/frames")
 def make_frame(inp: InferenceFace):
-    VIDEO_PATH = download_path = inp.VIDEO_PATH
+    VIDEO_PATH = inp.VIDEO_PATH
     SAVED_DIR = inp.SAVED_DIR
 
     frames_dir = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)
@@ -135,68 +135,3 @@ def get_eye_df(inp: InferenceFace):
     df_json = df.to_json(orient="records")
     df_response = JSONResponse(json.loads(df_json))
     return df_response
-
-
-
-def face_analyze(df, threshold_sec = 0.4):
-    count = 0
-    lst_all = []
-    lst = []
-    threshold = 20 * threshold_sec
-    for idx, i in enumerate(df.posneg):
-        # print(i)
-        if i == 'negative':
-            count += 1
-            lst.append(idx)
-        else:
-            if count >= threshold:
-                lst_all.append(deepcopy(lst))
-            count = 0
-            lst = []
-    
-    frame_idx = []
-    
-    if len(lst_all) > 0:
-        for seq in lst_all:
-            start = seq[0]
-            end = seq[-1]
-            frame_idx.append([start, end])
-    else:
-        pass
-
-    return frame_idx
-
-def make_video_slice(df, frame_idx, video_path, type):
-    cap = cv2.VideoCapture(video_path)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = cap.get(cv2.CAP_PROP_FPS)
-
-    if not os.path.exists("./{video_path.split('/')[1]}/{video_path.split('/')[2]}/slice"):
-        os.makedirs("./{video_path.split('/')[1]}/{video_path.split('/')[2]}/slice")
-
-    slice_video_list = []
-
-    for idx, frame in enumerate(frame_idx):
-
-        start, end = frame
-        fourcc = cv2.VideoWriter_fourcc(*"vp80")
-        vid_save_name = f"./{video_path.split('/')[1]}/{video_path.split('/')[2]}/slice/{type}_slice_{idx}.webm"
-        out = cv2.VideoWriter(vid_save_name, fourcc, fps, (width, height))
-
-        for rec_frame in df['frame'][start, end+1]:
-            out.write(rec_frame)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
-        slice_video_list.append(vid_save_name)
-        out.release()
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-    return slice_video_list
-
-
-
-# if __name__ == '__main__':
-#    uvicorn.run('FastAPI.main:app', host='0.0.0.0', port=8000, reload=True)
