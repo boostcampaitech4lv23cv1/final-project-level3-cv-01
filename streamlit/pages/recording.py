@@ -64,12 +64,23 @@ def convert_to_webm(in_file, video_dir):
 # BACKEND_EYE = "http://49.50.175.182:30001/eye_tracking"
 # SAVE_REQUEST_DIR = "http://49.50.175.182:30001/save_origin_video"
 # UPLOAD_REQUEST_DIR = "http://49.50.175.182:30001/upload_predict_video"
-BACKEND_FRAME = "http://127.0.0.1:8000/frames"
+BACKEND_FRAME1 = "http://127.0.0.1:8000/frames"
+BACKEND_FRAME2 = "http://127.0.0.1:8000/frames"
+BACKEND_FRAME3 = "http://127.0.0.1:8000/frames"
 BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
 BACKEND_POSE_MMPOSE = "http://127.0.0.1:8000/pose_with_mmpose"
 BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
 SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
 UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
+# BACKEND_FRAME1 = "http://101.101.219.62:30001/frames"
+# BACKEND_FRAME2 = "http://101.101.208.156:30001/frames"
+# BACKEND_FRAME3 = "http://127.0.0.1:8000/frames"
+# BACKEND_FACE = "http://101.101.219.62:30001/face_emotion"
+# BACKEND_POSE_MMPOSE = "http://127.0.0.1:8000/pose_with_mmpose"
+# BACKEND_EYE = "http://101.101.208.156:30001/eye_tracking"
+# SAVE_REQUEST_DIR1 = "http://101.101.219.62:30001/save_origin_video"
+# SAVE_REQUEST_DIR2 = "http://101.101.208.156:30001/save_origin_video"
+# SAVE_REQUEST_DIR3 = "http://127.0.0.1:8000/save_origin_video"
 
 st.session_state.complete = False
 st.session_state.cancel = False
@@ -182,6 +193,11 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                     "SAVED_DIR": st.session_state.video_dir,
                 }
                 # 2. 클라우드에 저장된 영상 Back에 다운
+                from concurrent.futures import ThreadPoolExecutor, as_completed
+                # with ThreadPoolExecutor() as executor:
+                #     executor.submit(requests.post, SAVE_REQUEST_DIR1, json=save_input_json)
+                #     executor.submit(requests.post, SAVE_REQUEST_DIR2, json=save_input_json)
+                #     executor.submit(requests.post, SAVE_REQUEST_DIR3, json=save_input_json)
                 temp = requests.post(SAVE_REQUEST_DIR, json=save_input_json)
 
                 VIDEO_PATH = st.session_state.confirm_video
@@ -190,10 +206,11 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                 )
                 print(VIDEO_PATH, SAVED_DIR)
                 input_json = {"VIDEO_PATH": VIDEO_PATH, "SAVED_DIR": SAVED_DIR}
-                from concurrent.futures import ThreadPoolExecutor, as_completed
-                
-                requests.post(BACKEND_FRAME, json=input_json)
-
+                # with ThreadPoolExecutor() as executor:
+                #     executor.submit(requests.post, BACKEND_FRAME1, json=input_json)
+                #     executor.submit(requests.post, BACKEND_FRAME2, json=input_json)
+                #     executor.submit(requests.post, BACKEND_FRAME3, json=input_json)
+                requests.post(BACKEND_FRAME1, json=input_json)
                 r_ = []
                 r_pose_ = []
                 r_eye_ = []
@@ -206,6 +223,10 @@ if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm
                     r_pose_.append(r_pose)
                     r_eye = executor.submit(requests.post, BACKEND_EYE, json=input_json)
                     r_eye_.append(r_eye)
+
+                # r_result = requests.post(BACKEND_FACE, json=input_json)
+                # r_pose_result=requests.post(BACKEND_POSE_MMPOSE, json=input_json)
+                # r_eye_result= requests.post(BACKEND_EYE, json=input_json)
 
                 result_dir = "/".join(SAVED_DIR.split("/")[:-1])
                 st.session_state.result_dir = result_dir 

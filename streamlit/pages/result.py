@@ -63,12 +63,15 @@ if 'result_dir' in st.session_state.keys():
         result = facedb.load_data_inf()
         pose_result = posedb.load_data_inf()
         eye_result = eyedb.load_data_inf()
+        
         tab1, tab2, tab3 = st.tabs(["😀 Emotion", "🧘‍♀️ Pose", "👀 Eye"])
 
         with tab1:
             st.header("Emotion")
             video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/face_recording.webm")
             video_len = video.get(cv2.CAP_PROP_FRAME_COUNT) / video.get(cv2.CAP_PROP_FPS)
+            w = video.get(cv2.CAP_PROP_FRAME_WIDTH)
+            h = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
             sec = [video_len / len(result) * (i + 1) for i in range(len(result))]
             result['seconds'] = sec
             video_file = open(
@@ -160,7 +163,7 @@ if 'result_dir' in st.session_state.keys():
                         end = seq[-1]
                         start_sec = result.loc[start, 'seconds']
                         end_sec = result.loc[end, 'seconds']
-                        st.session_state.face_time.add(tuple([start_sec, end_sec, '_']))
+                        st.session_state.face_time.add(tuple([start_sec, end_sec, start, end, '_']))
                         st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 표정이 부정적입니다.')
                 else:
                     st.success('표정이 긍정적입니다.')
@@ -189,10 +192,10 @@ if 'result_dir' in st.session_state.keys():
                 ylst = []
                 for j in info:
                     x, y = j[0], j[1]
-                    if x < 0 or x > 640:
+                    if x < 0 or x > w:
                         xlst.append(-1)
                         ylst.append(-1)
-                    elif y < 0 or y > 640:
+                    elif y < 0 or y > h:
                         xlst.append(-1)
                         ylst.append(-1)        
                     else:
@@ -273,7 +276,6 @@ if 'result_dir' in st.session_state.keys():
                     ax.set_xticks([i for idx, i in enumerate(x) if idx % 15 == 1])
                     ax.set_xticklabels([round(i/30, 1) for idx, i in enumerate(x) if idx % 15 == 1])
                     ax.tick_params(axis='x', rotation=30)
-
                     angle_y = [i * (180 / math.pi) for i in np.arctan(info['eye-eye'].astype(np.float64))]
                     ax.axhline(y = pose_horizontal_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
                     ax.axhline(y = - pose_horizontal_threshold * (180 / math.pi), color='lightcoral', linestyle='--', alpha=0.5)
@@ -454,7 +456,7 @@ if 'result_dir' in st.session_state.keys():
                             end = seq[-1]
                             start_sec = info_.loc[start, 'seconds']
                             end_sec = info_.loc[end, 'seconds']
-                            st.session_state.pose_time.add(tuple([start_sec, end_sec, 'face']))
+                            st.session_state.pose_time.add(tuple([start_sec, end_sec, start, end, 'face']))
                             st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 고개가 기울어졌습니다.')
                     else:
                         st.success('얼굴이 잘 정렬되어 있습니다.')
@@ -465,7 +467,7 @@ if 'result_dir' in st.session_state.keys():
                             end = seq[-1]
                             start_sec = info_.loc[start, 'seconds']
                             end_sec = info_.loc[end, 'seconds']
-                            st.session_state.pose_time.add(tuple([start_sec, end_sec, 'shoulder']))
+                            st.session_state.pose_time.add(tuple([start_sec, end_sec, start, end, 'shoulder']))
                             st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 어깨선이 기울어졌습니다.')
                     else:
                         st.success('어깨선이 잘 정렬되어 있습니다.')
@@ -476,7 +478,7 @@ if 'result_dir' in st.session_state.keys():
                             end = seq[-1]
                             start_sec = info_.loc[start, 'seconds']
                             end_sec = info_.loc[end, 'seconds']
-                            st.session_state.pose_time.add(tuple([start_sec, end_sec, 'body']))
+                            st.session_state.pose_time.add(tuple([start_sec, end_sec, start, end, 'body']))
                             st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 몸이 기울어졌습니다.')
                     else:
                         st.success('몸과 얼굴이 잘 정렬되어 있습니다.')
@@ -487,7 +489,7 @@ if 'result_dir' in st.session_state.keys():
                             end = seq[-1]
                             start_sec = info_.loc[start, 'seconds']
                             end_sec = info_.loc[end, 'seconds']
-                            st.session_state.pose_time.add(tuple([start_sec, end_sec, 'hand']))
+                            st.session_state.pose_time.add(tuple([start_sec, end_sec, start, end, 'hand']))
                             st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초에 손이 나왔습니다.')
                     else:
                         st.success('손이 나오지 않았습니다.')
@@ -590,7 +592,7 @@ if 'result_dir' in st.session_state.keys():
                         end = direction[0]
                         start_sec = eye_result.loc[start, 'seconds']
                         end_sec = eye_result.loc[end, 'seconds']
-                        st.session_state.eye_time.add(tuple([start_sec, end_sec, direction[1]]))
+                        st.session_state.eye_time.add(tuple([start_sec, end_sec, start, end, direction[1]]))
                         st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 시선이 {direction[1]}을 응시하고 있습니다.')
                 else:
                     st.success('정면을 잘 응시하고 있습니다.')

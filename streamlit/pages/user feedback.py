@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline
 from moviepy.editor import VideoFileClip
 
-from DBconnect.main import EyeDB, FaceDB, PoseDB, UserDB
+from DBconnect.feedback import FeedbackDB
 
 # 시간 측정
 
@@ -23,11 +23,11 @@ def slice_video(root_dir, frame_sec_list, type):
     if not os.path.exists("/".join([root_dir, 'slice'])):
         os.makedirs("/".join([root_dir, 'slice']))
     vid = VideoFileClip("/".join([root_dir, f"{type}_recording.webm"]))
-    for i, (start, end, _) in enumerate(frame_sec_list):
+    for i, (start_sec, end_sec, start, end, _) in enumerate(frame_sec_list):
         print(start, end)
         st.session_state.is_okay[f"{type}_{i}_{start}_{end}"] = False
         if not os.path.exists("/".join([root_dir, "slice", f"{type}_slice_{i}.webm"])):
-            vid.subclip(start, end).write_videofile("/".join([root_dir, "slice", f"{type}_slice_{i}.webm"]))
+            vid.subclip(start_sec, end_sec).write_videofile("/".join([root_dir, "slice", f"{type}_slice_{i}.webm"]))
     vid.close()
 
 def st_show_video(video_path):
@@ -90,6 +90,10 @@ if 'face_time' in st.session_state.keys():
         else:
             # st.write(st.session_state.is_okay)
             VIDEO_PATH = st.session_state.confirm_video
+            video = cv2.VideoCapture(f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/face_recording.webm")
+            video_len = video.get(cv2.CAP_PROP_FRAME_COUNT) / video.get(cv2.CAP_PROP_FPS)
+            w = video.get(cv2.CAP_PROP_FRAME_WIDTH)
+            h = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
             result = facedb.load_data_inf()
             pose_result = posedb.load_data_inf()
             eye_result = eyedb.load_data_inf()
@@ -123,8 +127,8 @@ if 'face_time' in st.session_state.keys():
 
                 st.subheader("구간 별 동영상을 확인해보세요")
                 if len(st.session_state.face_time) > 0:
-                    for idx, (start, end, _) in enumerate(sorted(st.session_state.face_time)):
-                        with st.expander(f"🔴 {round(start, 2)}초 ~ {round(end, 2)}초의 표정이 부정적입니다."):
+                    for idx, (start_sec, end_sec, start, end, _) in enumerate(sorted(st.session_state.face_time)):
+                        with st.expander(f"🔴 {round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 표정이 부정적입니다."):
                             col1, col2 = st.columns(2)
                             with col1:
                                 linechart = st.selectbox(
@@ -164,8 +168,8 @@ if 'face_time' in st.session_state.keys():
                                     ax1.set_ylim(-0.1, 1.1)
                                     fig.legend(loc='upper right')
 
-                                ax.axvline(x= start*30, linestyle='--', color='black', alpha=0.5)
-                                ax.axvline(x= end*30, linestyle='--', color='black', alpha=0.5)
+                                ax.axvline(x= start_sec*30, linestyle='--', color='black', alpha=0.5)
+                                ax.axvline(x= end_sec*30, linestyle='--', color='black', alpha=0.5)
                                 st.pyplot(fig)
 
                             with col2:
@@ -217,7 +221,7 @@ if 'face_time' in st.session_state.keys():
                             st.pyplot(fig)
 
                         with col2:
-                            st.session_state.is_okay["face_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?")
+                            st.session_state.is_okay["face_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=100000)
                             if st.session_state.is_okay["face_all"]:
                                 st.success('감사합니다.', icon="🔥")
 
@@ -239,10 +243,10 @@ if 'face_time' in st.session_state.keys():
                     ylst = []
                     for j in info:
                         x, y = j
-                        if x < 0 or x > 640:
+                        if x < 0 or x > w:
                             xlst.append(-1)
                             ylst.append(-1)
-                        elif y < 0 or y > 640:
+                        elif y < 0 or y > h:
                             xlst.append(-1)
                             ylst.append(-1)        
                         else:
@@ -311,22 +315,22 @@ if 'face_time' in st.session_state.keys():
                 tab1_, tab2_, tab3_, tab4_ = st.tabs(["Face Align", "Body Align", "Vertical Align", "Hand"])
                 pose1, pose2, pose3, pose4 = [], [], [], []
                 if len(st.session_state.pose_time) > 0:
-                    for idx, (start, end, type) in enumerate(st.session_state.pose_time):
+                    for idx, (start_sec, end_sec, start, end, type) in enumerate(st.session_state.pose_time):
                         if type == 'face':
-                            pose1.append([idx, start, end])
+                            pose1.append([idx, start_sec, end_sec, start, end])
                         elif type == 'shoulder':
-                            pose2.append([idx, start, end])
+                            pose2.append([idx, start_sec, end_sec, start, end])
                         elif type == 'body':
-                            pose3.append([idx, start, end])
+                            pose3.append([idx, start_sec, end_sec, start, end])
                         elif type == 'hand':
-                            pose4.append([idx, start, end])
+                            pose4.append([idx, start_sec, end_sec, start, end])
                 else:
                     pass
 
                 with tab1_:
                     if len(pose1) > 0:
-                        for idx, start, end in pose1:
-                            with st.expander(f'🔴 {round(start, 2)}초 ~ {round(end, 2)}초의 고개가 기울어졌습니다.'):
+                        for idx, start_sec, end_sec, start, end in pose1:
+                            with st.expander(f'🔴 {round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 고개가 기울어졌습니다.'):
                                 col1, col2 = st.columns(2)
                                 with col1:
                                     mode = st.selectbox(
@@ -366,8 +370,8 @@ if 'face_time' in st.session_state.keys():
                                         ax.plot(angle_y3, color='khaki', label='Shoulder-Shoulder')
                                         ax.legend(loc='best')
 
-                                    ax.axvline(x= start*30, linestyle='--', color='black', alpha=0.5)
-                                    ax.axvline(x= end*30, linestyle='--', color='black', alpha=0.5)
+                                    ax.axvline(x= start_sec*30, linestyle='--', color='black', alpha=0.5)
+                                    ax.axvline(x= end_sec*30, linestyle='--', color='black', alpha=0.5)
                                     
                                     st.pyplot(fig)
 
@@ -421,7 +425,7 @@ if 'face_time' in st.session_state.keys():
                                 st.pyplot(fig)
 
                             with col2:
-                                st.session_state.is_okay["pose_face_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+400)
+                                st.session_state.is_okay["pose_face_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=200000)
                                 if st.session_state.is_okay["pose_face_all"]:
                                     st.success("감사합니다.", icon="🔥")
 
@@ -429,8 +433,8 @@ if 'face_time' in st.session_state.keys():
                 
                 with tab2_:
                     if len(pose2) > 0:
-                        for idx, start, end in pose2:
-                            with st.expander(f'🔴 {round(start, 2)}초 ~ {round(end, 2)}초의 어깨선이 기울어졌습니다.'):
+                        for idx, start_sec, end_sec, start, end in pose2:
+                            with st.expander(f'🔴 {round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 어깨선이 기울어졌습니다.'):
                                 col1, col2 = st.columns(2)
                                 with col1:
                                     fig, ax = plt.subplots()
@@ -465,8 +469,8 @@ if 'face_time' in st.session_state.keys():
                                         ax.plot(angle_y3, color='khaki', label='Shoulder-Shoulder')
                                         ax.legend(loc='best')
                                     
-                                    ax.axvline(x= start*30, linestyle='--', color='black', alpha=0.5)
-                                    ax.axvline(x= end*30, linestyle='--', color='black', alpha=0.5)
+                                    ax.axvline(x= start_sec*30, linestyle='--', color='black', alpha=0.5)
+                                    ax.axvline(x= end_sec*30, linestyle='--', color='black', alpha=0.5)
 
                                     st.pyplot(fig)
 
@@ -515,14 +519,14 @@ if 'face_time' in st.session_state.keys():
                                 st.pyplot(fig)
 
                             with col2:
-                                st.session_state.is_okay["pose_shoulder_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+700)
+                                st.session_state.is_okay["pose_shoulder_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=300000)
                                 if st.session_state.is_okay["pose_shoulder_all"]:
                                     st.success("감사합니다.", icon="🔥")
 
                 with tab3_:
                     if len(pose3) > 0:
-                        for idx, start, end in pose3:
-                            with st.expander(f'🔴 {round(start, 2)}초 ~ {round(end, 2)}초의 몸이 기울어졌습니다.'):
+                        for idx, start_sec, end_sec, start, end in pose3:
+                            with st.expander(f'🔴 {round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 몸이 기울어졌습니다.'):
                                 col1, col2 = st.columns(2)
                                 with col1:
                                     fig, ax = plt.subplots()
@@ -565,8 +569,8 @@ if 'face_time' in st.session_state.keys():
                                         ax.set_ylim(70, 110)
                                         ax.legend(loc='best')
                                     
-                                    ax.axvline(x= start*30, linestyle='--', color='black', alpha=0.5)
-                                    ax.axvline(x= end*30, linestyle='--', color='black', alpha=0.5)
+                                    ax.axvline(x= start_sec*30, linestyle='--', color='black', alpha=0.5)
+                                    ax.axvline(x= end_sec*30, linestyle='--', color='black', alpha=0.5)
 
                                     st.pyplot(fig)
                                 with col2:
@@ -621,14 +625,14 @@ if 'face_time' in st.session_state.keys():
                                 st.pyplot(fig)
                         
                             with col2:
-                                st.session_state.is_okay["pose_body_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+100)
+                                st.session_state.is_okay["pose_body_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=400000)
                                 if st.session_state.is_okay["pose_body_all"]:
                                     st.success("감사합니다", icon="🔥")
                 
                 with tab4_:
                     if len(pose4) > 0:
-                        for idx, start, end in pose4:
-                            with st.expander(f'🔴 {round(start, 2)}초 ~ {round(end, 2)}초에 손이 나왔습니다.'):
+                        for idx, start_sec, end_sec, start, end in pose4:
+                            with st.expander(f'🔴 {round(start_sec, 2)}초 ~ {round(end_sec, 2)}초에 손이 나왔습니다.'):
                                 col1, col2 = st.columns(2)
                                 with col1:
                                     numhand = info.hand.replace(
@@ -646,14 +650,14 @@ if 'face_time' in st.session_state.keys():
                                     ax.tick_params(axis='x', rotation=30)
                                     ax.plot(numhand, color='skyblue', label='Nose-Mid Shoulder')
 
-                                    ax.axvline(x= start*30, linestyle='--', color='black', alpha=0.5)
-                                    ax.axvline(x= end*30, linestyle='--', color='black', alpha=0.5)
+                                    ax.axvline(x= start_sec*30, linestyle='--', color='black', alpha=0.5)
+                                    ax.axvline(x= end_sec*30, linestyle='--', color='black', alpha=0.5)
 
                                     st.pyplot(fig)
 
                                 with col2:
                                     st_show_video("/".join([st.session_state.result_dir, "slice", f"pose_slice_{idx}.webm"]))
-                                    st.session_state.is_okay[f"pose_{idx}_{start}_{end}"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+1000)
+                                    st.session_state.is_okay[f"pose_{idx}_{start}_{end}"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+1100)
                                     if st.session_state.is_okay[f"pose_{idx}_{start}_{end}"]:
                                         st.success("감사합니다.", icon="🔥")
                     else:
@@ -677,7 +681,7 @@ if 'face_time' in st.session_state.keys():
                                 st.pyplot(fig)
 
                             with col2:
-                                st.session_state.is_okay["pose_hand_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+1100)
+                                st.session_state.is_okay["pose_hand_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=500000)
                                 if st.session_state.is_okay["pose_hand_all"]:
                                     st.success("감사합니다", icon="🔥")
 
@@ -695,8 +699,8 @@ if 'face_time' in st.session_state.keys():
 
                 st.subheader("구간 별 동영상을 확인해보세요")
                 if len(st.session_state.eye_time) > 0:
-                    for idx, (start, end, direction) in enumerate(sorted(st.session_state.eye_time)):
-                        with st.expander(f'🔴 {round(start, 2)}초 ~ {round(end, 2)}초의 시선이 {direction}을 응시하고 있습니다.'):
+                    for idx, (start_sec, end_sec, start, end, direction) in enumerate(sorted(st.session_state.eye_time)):
+                        with st.expander(f'🔴 {round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 시선이 {direction}을 응시하고 있습니다.'):
                             col1, col2 = st.columns(2)
                             with col1:
                                 fig, ax = plt.subplots()
@@ -719,14 +723,14 @@ if 'face_time' in st.session_state.keys():
                                 ax.set_ylim(-1.3, 1.3)
                                 ax.set_yticks([-1, 0, 1])
                                 ax.set_yticklabels(['Right', 'Center', 'Left'])
-                                ax.axvline(x = start*30, color='black', linestyle='--', alpha=0.5)
-                                ax.axvline(x = end*30, color='black', linestyle='--', alpha=0.5)
+                                ax.axvline(x = start_sec*30, color='black', linestyle='--', alpha=0.5)
+                                ax.axvline(x = end_sec*30, color='black', linestyle='--', alpha=0.5)
                                 ax.axhline(y = 0, color='lightcoral', linestyle='--', alpha=0.5)
                                 st.pyplot(fig)
 
                             with col2:
                                 st_show_video("/".join([st.session_state.result_dir, "slice", f"eye_slice_{idx}.webm"]))
-                                st.session_state.is_okay[f"eye_{idx}_{start}_{end}"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+1200)
+                                st.session_state.is_okay[f"eye_{idx}_{start}_{end}"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+1300)
                                 if st.session_state.is_okay[f"eye_{idx}_{start}_{end}"]:
                                     st.success("감사합니다.", icon="🔥")
                 else:
@@ -757,10 +761,19 @@ if 'face_time' in st.session_state.keys():
                             st.pyplot(fig)
 
                         with col2:
-                            st.session_state.is_okay["eye_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=idx+1300)
+                            st.session_state.is_okay["eye_all"] = st.checkbox("👌 이 분석 결과에 만족하지 않으신가요?", key=600000)
                             if st.session_state.is_okay["eye_all"]:
                                 st.success("감사합니다.", icon="🔥")
 
+            send_feedback = st.button("🧡 Send Feedback to Developer 💚")
+            if send_feedback:
+                st.write("모든 분석 결과에 대해 피드백을 하셨는지 다시 확인해주세요!")
+                st.write(st.session_state.is_okay)
+                send = st.button("Send")
+                if send:
+                    feedbackDB = FeedbackDB(path = st.session_state.result_dir, data = st.session_state.is_okay)
+                    feedbackDB.save_data()
+                    
     else:
         st.subheader("면접 영상이 제대로 저장되지 않았습니다. 다시 면접 영상을 녹화해주세요.")
 else:
