@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline
 from moviepy.editor import VideoFileClip
 
-from DBconnect.main import EyeDB, FaceDB, PoseDB, UserDB
+from DBconnect.feedback import FeedbackDB
 
 # 시간 측정
 
@@ -771,8 +771,9 @@ if 'face_time' in st.session_state.keys():
                 st.write(st.session_state.is_okay)
                 send = st.button("Send")
                 if send:
-                    # 넣어줘~
-                    pass
+                    feedbackDB = FeedbackDB(path = st.session_state.result_dir, data = st.session_state.is_okay)
+                    feedbackDB.save_data()
+                    
     else:
         st.subheader("면접 영상이 제대로 저장되지 않았습니다. 다시 면접 영상을 녹화해주세요.")
 else:
