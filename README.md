@@ -5,9 +5,12 @@
 ***
 
 ## Architecture Flow Map
+<img src="images/pipeline.png" width="80%" height="60%"/>
 
 ***
+
 ## Demo
+<img src="images/result1.gif" width="50%" height="50%"/><img src="images/result2.gif" width="50%" height="50%"/><img src="images/result3.gif" width="50%" height="50%"/><img src="images/user_feedback2.gif" width="50%" height="50%"/><img src="images/user_feedback3.gif" width="50%" height="50%"/><img src="images/user_feedback4.gif" width="50%" height="50%"/>
 ***
 ## Folder Structure 📂
 ```
