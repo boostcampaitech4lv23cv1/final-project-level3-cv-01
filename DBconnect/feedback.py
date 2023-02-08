@@ -55,13 +55,13 @@ class FeedbackDB:
                 
     def check_timeline(self,):
         
-        face_lst= []
-        pose_lst= []
-        eye_lst= []
+        face_lst= [None for i in range(999999)]
+        pose_lst= [None for i in range(999999)]
+        eye_lst= [None for i in range(999999)]
         
         key_lst = self.data.keys()
         val_lst = self.data.values()
-        
+        print("타임라인 추출 시작")
         for k, v in zip(key_lst, val_lst):
             
             # filtering for xxx_all
