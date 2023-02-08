@@ -17,14 +17,6 @@ from moviepy.editor import VideoFileClip
 from DBconnect.main import EyeDB, FaceDB, PoseDB, UserDB
 
 # 시간 측정
-for name in ['posedb', 'eyedb', 'facedb']:
-    if name not in st.session_state:
-        print("DB 요청 실패")
-        st.write("DB 요청 실패")
-
-posedb = st.session_state["posedb"]
-eyedb = st.session_state["eyedb"]
-facedb = st.session_state["facedb"]
 
 
 def slice_video(root_dir, frame_sec_list, type):
@@ -77,6 +69,15 @@ if 'face_time' in st.session_state.keys():
     if os.path.exists(st.session_state.confirm_video):
         st.subheader("면접 영상 분석에 대해 확인하고 피드백해주세요.")
         
+        for name in ['posedb', 'eyedb', 'facedb']:
+            if name not in st.session_state:
+                print("DB 요청 실패")
+                st.write("DB 요청 실패")
+
+        posedb = st.session_state["posedb"]
+        eyedb = st.session_state["eyedb"]
+        facedb = st.session_state["facedb"]
+
         if not os.path.exists("/".join([st.session_state.result_dir, "slice"])):
             cut_video = st.button("More Information")
             if cut_video:

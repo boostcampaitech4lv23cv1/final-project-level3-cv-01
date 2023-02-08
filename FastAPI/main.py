@@ -63,7 +63,7 @@ def upload_predict_video(inp: InferenceFace):
 
 @app.post("/frames")
 def make_frame(inp: InferenceFace):
-    VIDEO_PATH = download_path = inp.VIDEO_PATH
+    VIDEO_PATH = inp.VIDEO_PATH
     SAVED_DIR = inp.SAVED_DIR
 
     frames_dir = fr.video_to_frame(VIDEO_PATH, SAVED_DIR)

@@ -21,14 +21,6 @@ from FastAPI.utils import download_video, upload_video
 from google.cloud import storage
 from scipy.interpolate import make_interp_spline
 
-for name in ['posedb', 'eyedb', 'facedb']:
-    if name not in st.session_state:
-        print("DB 요청 실패")
-        st.write("DB 요청 실패")
-        
-posedb = st.session_state["posedb"]
-eyedb = st.session_state["eyedb"]
-facedb = st.session_state["facedb"]
 
 # 시간 측정
 
@@ -64,6 +56,14 @@ eye_threshold_sec = 1
 if 'result_dir' in st.session_state.keys():
     if os.path.exists(st.session_state.confirm_video):
         st.subheader("면접 영상 분석 결과입니다.")
+        for name in ['posedb', 'eyedb', 'facedb']:
+            if name not in st.session_state:    
+                print("DB 요청 실패")
+                st.write("DB 요청 실패")
+                
+        posedb = st.session_state["posedb"]
+        eyedb = st.session_state["eyedb"]
+        facedb = st.session_state["facedb"]
 
         VIDEO_PATH = st.session_state.confirm_video
         result = facedb.load_data_inf()

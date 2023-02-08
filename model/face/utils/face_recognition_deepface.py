@@ -34,7 +34,7 @@ def video_to_frame(VIDEO_PATH, SAVED_DIR):
         if not ret:  # 새로운 프레임을 못받아 왔을 때 braek
             break
         if int(cap.get(1)) % int(fps) == 0:
-            cv2.imwrite(SAVED_DIR + "/frame%04d.jpg" % count, frame)
+            cv2.imwrite(SAVED_DIR + "/frame%06d.jpg" % count, frame)
             print("Saved frame number : ", str(int(cap.get(1))))
             count += 1
 
