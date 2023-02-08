@@ -15,7 +15,7 @@
 on:
   push:
     branches:
-    - a
+    - main
 
 name: Cloud Run
 env:
