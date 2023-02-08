@@ -44,7 +44,7 @@ jobs:
       uses: 'google-github-actions/auth@v1'
       with:
         workload_identity_provider: 'projects/1055514527189/locations/global/workloadIdentityPools/heyi-pool/providers/my-provider'     # 'heyi-front/629298042516/asia-northeast3-a/global/workloadIdentityPools/my-pool/providers/my-provider' 'projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider' 
-        service_account: 'yj-479@level-dragon-376304.iam.gserviceaccount.com' #'my-service-account@my-project.iam.gserviceaccount.com'
+        service_account: 'heyi-github-action@hey-i-375802.iam.gserviceaccount.com' #'my-service-account@my-project.iam.gserviceaccount.com'
         token_format: 'access_token'
 
     # # Alternative option - authentication via credentials json
