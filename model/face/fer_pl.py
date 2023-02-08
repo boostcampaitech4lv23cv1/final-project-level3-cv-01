@@ -18,7 +18,7 @@ class LightningModel(pl.LightningModule):
         lr: float = 1e-3,
         epochs: int = 50,
         input_size: int = 224,
-        data_dir: str = "/opt/ml/data/detectface",
+        data_dir: str = "/opt/ml/final-project-level3-cv-01/airflow/face_dataset",
     ) -> None:
 
         super(LightningModel, self).__init__()

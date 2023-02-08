@@ -14,7 +14,12 @@ sys.path.append('/opt/ml/final-project-level3-cv-01')
 #sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from DBconnect.main import *
 import shutil
-
+from pytorch_lightning import Trainer, seed_everything
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
+from pytorch_lightning.callbacks.progress import TQDMProgressBar
+from pytorch_lightning.loggers import CSVLogger
+import torch
+from model.face.fer_pl import *
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
@@ -30,7 +35,7 @@ def select_recent_videos(**context):
     every_dir_bydate = glob('/opt/ml/final-project-level3-cv-01/airflow/heyi-storage/*/*')
     recent_dir = []
     for ed in every_dir_bydate:
-        if int(now_date) - int(ed.split('/')[-1][0:6]) < 2:
+        if int(now_date) - int(ed.split('/')[-1][0:6]) < 1:
             recent_dir.append(ed)
     recent_videos = []
     for rd in recent_dir:
@@ -58,7 +63,7 @@ def video_to_frame(**context):
             if not ret:  # 새로운 프레임을 못받아 왔을 때 braek
                 break
             if int(cap.get(1)) % int(fps) == 0:
-                cv2.imwrite(sd + "/frame0%d.jpg" % count, frame)
+                cv2.imwrite(sd + "/frame%04d.jpg" % count, frame)
                 print("Saved frame number : ", str(int(cap.get(1))))
                 count += 1
 
@@ -71,14 +76,39 @@ def video_to_frame(**context):
 
 def send_frame_to_dir(**context):
     recent_dir = context['ti'].xcom_pull(key='xcom_push_recent_dir')
-
     for sd in recent_dir:
         facedb = FaceDB(path=sd)
         df = facedb.load_data_train()
         for i in range(len(df)):
-            source = df.iloc[i]['frame'].lstrip('./')
-            destination = f"{df.iloc[i]['emotion']}"
+            source = f"/opt/ml/final-project-level3-cv-01/airflow/heyi-storage/{df.iloc[i]['frame'].lstrip('./')}"
+            destination = f"face_dataset/{df.iloc[i]['emotion']}"
+            print(f"{source} to {destination}")
             shutil.copy(source, destination)
+            
+def train_face():
+    model = LightningModel.load_from_checkpoint('/opt/ml/final-project-level3-cv-01/model/face/models/custom_fer_model.ckpt')
+    trainer = Trainer(
+        max_epochs=10,
+        # val_check_interval = 1,
+        accelerator="gpu",
+        logger=CSVLogger(save_dir="./logs/"),
+        callbacks=[
+            ModelCheckpoint(
+                dirpath = '/opt/ml/final-project-level3-cv-01/model/face/models/',
+                filename="best_val_acc",
+                verbose=True,
+                save_last=True,
+                save_top_k=1,
+                monitor="val_acc",
+                mode="max",
+            ),
+            LearningRateMonitor(logging_interval="step"),
+            TQDMProgressBar(refresh_rate=10),
+        ],
+    )
+
+    trainer.fit(model)
+
 
 with DAG(
     default_args=default_args,
@@ -88,16 +118,16 @@ with DAG(
     start_date = days_ago(2),
     tags= ["heyi"],
 ) as dag:
-    make_dir = BashOperator(
-        task_id = "make_dir",
-        bash_command= "mkdir angry anxiety happy hurt neutral sad surprise",
-        owner= "jun",
-        retries = 3,
-        retry_delay = timedelta(minutes=3)
-    )
+    # make_dir = BashOperator(
+    #     task_id = "make_dir",
+    #     bash_command= "cd /opt/ml/final-project-level3-cv-01/airflow && mkdir angry anxiety happy hurt neutral sad surprise",
+    #     owner= "jun",
+    #     retries = 3,
+    #     retry_delay = timedelta(minutes=3)
+    # )
     t1 = BashOperator(
         task_id = "download_data",
-        bash_command= "gcloud storage cp -r gs://heyi-storage/* ..",
+        bash_command= "gcloud storage cp -r gs://heyi-storage/* /opt/ml/final-project-level3-cv-01/airflow/heyi-storage",
         owner= "jun",
         retries = 3,
         retry_delay = timedelta(minutes=3)
@@ -117,5 +147,13 @@ with DAG(
         retries = 3,
         retry_delay = timedelta(minutes=3)
     )
-make_dir
-t1 >> t2 >> t3
+    
+    t4= PythonOperator(
+        task_id= "send_frame_to_dir",
+        python_callable =send_frame_to_dir,
+        owner='jun',
+        retries = 3,
+        retry_delay = timedelta(minutes=3)
+    )
+
+t1 >> t2 >> t3 >> t4
