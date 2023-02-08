@@ -14,7 +14,18 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline
 from moviepy.editor import VideoFileClip
 
+from DBconnect.main import EyeDB, FaceDB, PoseDB, UserDB
+
 # 시간 측정
+for name in ['posedb', 'eyedb', 'facedb']:
+    if name not in st.session_state:
+        print("DB 요청 실패")
+        st.write("DB 요청 실패")
+
+posedb = st.session_state["posedb"]
+eyedb = st.session_state["eyedb"]
+facedb = st.session_state["facedb"]
+
 
 def slice_video(root_dir, frame_sec_list, type):
     if not os.path.exists("/".join([root_dir, 'slice'])):
@@ -37,7 +48,7 @@ cls_to_idx = {
     "angry":0,
     "anxiety":1,
     "happy":2,
-    "hurt":3,
+    "blank":3,
     "neutral":4,
     "sad":5,
     "surprise":6,
@@ -78,9 +89,9 @@ if 'face_time' in st.session_state.keys():
         else:
             # st.write(st.session_state.is_okay)
             VIDEO_PATH = st.session_state.confirm_video
-            result = pd.read_csv("/".join([st.session_state.result_dir, 'result.csv']), index_col=0)
-            pose_result = pd.read_csv("/".join([st.session_state.result_dir, 'pose_result.csv']), index_col=0)
-            eye_result = pd.read_csv("/".join([st.session_state.result_dir, 'eye_result.csv']), index_col=0)
+            result = facedb.load_data_inf()
+            pose_result = posedb.load_data_inf()
+            eye_result = eyedb.load_data_inf()
             tab1, tab2, tab3 = st.tabs(["😀 Emotion", "🧘‍♀️ Pose", "👀 Eye"])
 
             with tab1:
@@ -96,7 +107,7 @@ if 'face_time' in st.session_state.keys():
                 x = np.linspace(0, len(result), 200)
 
                 numemo = result.emotion.replace(
-                    ['angry', 'anxiety', 'sad', 'surprise', 'hurt', 'neutral', 'happy'],
+                    ['angry', 'anxiety', 'sad', 'surprise', 'blank', 'neutral', 'happy'],
                     [0, 1, 2, 3, 4, 5, 6]
                 )
                 numposneg = result.posneg.replace(
@@ -131,7 +142,7 @@ if 'face_time' in st.session_state.keys():
                                 if linechart == 'Emotion (7 classes)':
                                     ax.plot(x, interpol_emo, color = 'skyblue', label = 'emotion')
                                     ax.set_yticks([0, 1, 2, 3, 4, 5, 6])
-                                    ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'hurt', 'neutral', 'happy'])
+                                    ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'blank', 'neutral', 'happy'])
                                     ax.set_ylim(-0.5, 6.5)
 
                                 elif linechart == 'Positive or Negative':
@@ -143,7 +154,7 @@ if 'face_time' in st.session_state.keys():
                                 elif linechart == 'Both':
                                     ax.plot(x, interpol_emo, color = 'skyblue', label = 'Emotion (7 classes)')
                                     ax.set_yticks([0, 1, 2, 3, 4, 5, 6])
-                                    ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'hurt', 'neutral', 'happy'])
+                                    ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'blank', 'neutral', 'happy'])
                                     ax.set_ylim(-0.5, 6.5)
                                     ax1 = ax.twinx()
                                     ax1.plot(x, interpol_posneg, color = 'salmon', label='Positive or Negative')
@@ -181,7 +192,7 @@ if 'face_time' in st.session_state.keys():
                             if linechart == 'Emotion (7 classes)':
                                 ax.plot(x, interpol_emo, color = 'skyblue', label = 'emotion')
                                 ax.set_yticks([0, 1, 2, 3, 4, 5, 6])
-                                ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'hurt', 'neutral', 'happy'])
+                                ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'blank', 'neutral', 'happy'])
                                 ax.set_ylim(-0.5, 6.5)
 
                             elif linechart == 'Positive or Negative':
@@ -193,7 +204,7 @@ if 'face_time' in st.session_state.keys():
                             elif linechart == 'Both':
                                 ax.plot(x, interpol_emo, color = 'skyblue', label = 'Emotion (7 classes)')
                                 ax.set_yticks([0, 1, 2, 3, 4, 5, 6])
-                                ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'hurt', 'neutral', 'happy'])
+                                ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'blank', 'neutral', 'happy'])
                                 ax.set_ylim(-0.5, 6.5)
                                 ax1 = ax.twinx()
                                 ax1.plot(x, interpol_posneg, color = 'salmon', label='Positive or Negative')

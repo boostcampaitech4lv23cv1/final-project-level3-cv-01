@@ -19,7 +19,7 @@ cls_to_idx = {
     "angry":0,
     "anxiety":1,
     "happy":2,
-    "hurt":3,
+    "blank":3,
     "neutral":4,
     "sad":5,
     "surprise":6,
@@ -87,7 +87,7 @@ if 'result_dir' in st.session_state.keys():
                 ax.tick_params(axis='x', rotation=30)
 
                 numemo = result.emotion.replace(
-                    ['angry', 'anxiety', 'sad', 'surprise', 'hurt', 'neutral', 'happy'],
+                    ['angry', 'anxiety', 'sad', 'surprise', 'blank', 'neutral', 'happy'],
                     [0, 1, 2, 3, 4, 5, 6]
                 )
                 numposneg = result.posneg.replace(
@@ -103,7 +103,7 @@ if 'result_dir' in st.session_state.keys():
                 if linechart == 'Emotion (7 classes)':
                     ax.plot(x, interpol_emo, color = 'skyblue', label = 'emotion')
                     ax.set_yticks([0, 1, 2, 3, 4, 5, 6])
-                    ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'hurt', 'neutral', 'happy'])
+                    ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'blank', 'neutral', 'happy'])
                     ax.set_ylim(-0.5, 6.5)
                     st.pyplot(fig)
 
@@ -117,7 +117,7 @@ if 'result_dir' in st.session_state.keys():
                 elif linechart == 'Both':
                     ax.plot(x, interpol_emo, color = 'skyblue', label = 'Emotion (7 classes)')
                     ax.set_yticks([0, 1, 2, 3, 4, 5, 6])
-                    ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'hurt', 'neutral', 'happy'])
+                    ax.set_yticklabels(['angry', 'anxiety', 'sad', 'surprise', 'blank', 'neutral', 'happy'])
                     ax.set_ylim(-0.5, 6.5)
                     ax1 = ax.twinx()
                     ax1.plot(x, interpol_posneg, color = 'salmon', label='Positive or Negative')
