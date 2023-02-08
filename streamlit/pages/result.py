@@ -139,20 +139,19 @@ if 'result_dir' in st.session_state.keys():
                     st.pyplot(fig)
 
             with col2:
-                count = 0
                 lst_all = []
                 lst = []
                 threshold_sec = emotion_threshold_sec
                 threshold = 30 * threshold_sec
                 for idx, i in enumerate(result.posneg):
                     if i == 'negative':
-                        count += 1
                         lst.append(idx)
                     else:
-                        if count >= threshold:
+                        if len(lst) >= threshold:
                             lst_all.append(deepcopy(lst))
-                        count = 0
                         lst = []
+                if len(lst) >= threshold:
+                    lst_all.append(deepcopy(lst))
                 
                 st.session_state.face_time = set()
                 if len(lst_all) > 0:
@@ -407,7 +406,6 @@ if 'result_dir' in st.session_state.keys():
                     st.pyplot(fig)
 
             with col2:
-                count1, count2, count3, count4 = 0, 0, 0, 0
                 lst_all1, lst_all2, lst_all3, lst_all4 = [], [], [], []
                 lst1, lst2, lst3, lst4 = [], [], [], []
                 threshold_sec = pose_threshold_sec
@@ -415,37 +413,37 @@ if 'result_dir' in st.session_state.keys():
                 for i in range(len(info_)):
                     face, body, vert, hand, _ = info_.loc[i, :]
                     if not face:
-                        count1 += 1
                         lst1.append(i)
                     else:
-                        if count1 >= threshold:
+                        if len(lst1) >= threshold:
                             lst_all1.append(deepcopy(lst1))
-                        count1 = 0
                         lst1 = []
                     if not body:
-                        count2 += 1
                         lst2.append(i)
                     else:
-                        if count2 >= threshold:
+                        if len(lst2) >= threshold:
                             lst_all2.append(deepcopy(lst2))
-                        count2 = 0
                         lst2 = []
                     if not vert:
-                        count3 += 1
                         lst3.append(i)
                     else:
-                        if count3 >= threshold:
+                        if len(lst3) >= threshold:
                             lst_all3.append(deepcopy(lst3))
-                        count3 = 0
                         lst3 = []
                     if hand:
-                        count4 += 1
                         lst4.append(i)
                     else:
-                        if count4 >= threshold:
+                        if len(lst4) >= threshold:
                             lst_all4.append(deepcopy(lst4))
-                        count4 = 0
                         lst4 = []
+                if len(lst1) >= threshold:
+                    lst_all1.append(deepcopy(lst1))
+                if len(lst2) >= threshold:
+                    lst_all2.append(deepcopy(lst2))
+                if len(lst3) >= threshold:
+                    lst_all3.append(deepcopy(lst3))
+                if len(lst4) >= threshold:
+                    lst_all4.append(deepcopy(lst4))
                 
                 tab1_, tab2_, tab3_, tab4_ = st.tabs(["Face Align", "Body Align", "Vertical Align", "Hand"])
                 st.session_state.pose_time = set()
@@ -541,7 +539,6 @@ if 'result_dir' in st.session_state.keys():
                 st.pyplot(fig)
 
             with col2:
-                count = 0
                 right_lst_all = []
                 left_lst_all = []
                 right_lst = []
@@ -550,33 +547,39 @@ if 'result_dir' in st.session_state.keys():
                 threshold = 30 * threshold_sec
                 for idx, i in enumerate(eye_result.tracking):
                     if i == 'Right':
-                        count += 1
                         right_lst.append(idx)
                     else:
-                        if count >= threshold:
+                        if len(right_lst) >= threshold:
                             right_lst_all.append(deepcopy(right_lst))
-                        count = 0
                         right_lst = []
-                
+
+                if len(right_lst) >= threshold:
+                    right_lst_all.append(deepcopy(right_lst))
+
                 for idx, i in enumerate(eye_result.tracking):
                     if i == 'Left':
-                        count += 1
                         left_lst.append(idx)
                     else:
-                        if count >= threshold:
+                        if len(left_lst) >= threshold:
                             left_lst_all.append(deepcopy(left_lst))
-                        count = 0
                         left_lst = []
+                
+                if len(left_lst) >= threshold:
+                    left_lst_all.append(deepcopy(left_lst))
 
                 lst_all_dict = {}
-                for i in right_lst_all:
-                    start = i[0]
-                    end = i[-1]
-                    lst_all_dict[start] = [end, '오른쪽']
-                for i in left_lst_all:
-                    start = i[0]
-                    end = i[-1]
-                    lst_all_dict[start] = [end, '왼쪽']
+
+                if len(right_lst_all) > 0:
+                    for i in right_lst_all:
+                        start = i[0]
+                        end = i[-1]
+                        lst_all_dict[start] = [end, '오른쪽']
+
+                if len(left_lst_all) > 0:
+                    for i in left_lst_all:
+                        start = i[0]
+                        end = i[-1]
+                        lst_all_dict[start] = [end, '왼쪽']
                 lst_all_dict = sorted(lst_all_dict.items())
 
                 st.session_state.eye_time = set()
