@@ -268,11 +268,11 @@ class GazeTracking(object):
 
         for rec_frame in rec_image_list:
             out.write(rec_frame)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
+            # if cv2.waitKey(1) & 0xFF == ord("q"):
+            #     break
 
         cap.release()
         out.release()
-        cv2.destroyAllWindows()
+        # cv2.destroyAllWindows()
 
         return vid_save_name
