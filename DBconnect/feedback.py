@@ -21,7 +21,7 @@ class FeedbackDB:
     def save_data(self,):
         
         data = self.analyze_feedback()
-        self.db.face.insert_one(data)
+        self.db.feedback.insert_one(data)
         
     def analyze_feedback(self, ):
         
