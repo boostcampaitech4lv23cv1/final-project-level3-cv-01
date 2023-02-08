@@ -5,12 +5,18 @@
 ***
 
 ## Architecture Flow Map
-<img src="images/pipeline.png" width="80%" height="60%"/>
+<img src="images/pipeline.png" width="100%" height="80%"/>
 
 ***
 
 ## Demo
-<img src="images/result1.gif" width="50%" height="50%"/><img src="images/result2.gif" width="50%" height="50%"/><img src="images/result3.gif" width="50%" height="50%"/><img src="images/user_feedback2.gif" width="50%" height="50%"/><img src="images/user_feedback3.gif" width="50%" height="50%"/><img src="images/user_feedback4.gif" width="50%" height="50%"/>
+**전체 분석 결과**
+
+<img src="images/result1.gif" width="50%" height="50%"/><img src="images/result2.gif" width="50%" height="50%"/><img src="images/result3.gif" width="50%" height="50%"/>
+
+**세부 분석 결과**
+
+<img src="images/user_feedback2.gif" width="50%" height="50%"/><img src="images/user_feedback3.gif" width="50%" height="50%"/><img src="images/user_feedback4.gif" width="50%" height="50%"/>
 ***
 ## Folder Structure 📂
 ```
