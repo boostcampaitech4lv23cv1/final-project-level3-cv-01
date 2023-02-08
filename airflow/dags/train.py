@@ -8,6 +8,13 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator, task
 import os
 import cv2
+import sys
+sys.path.append('/opt/ml/final-project-level3-cv-01')
+
+#sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+from DBconnect.main import *
+import shutil
+
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
@@ -29,7 +36,8 @@ def select_recent_videos(**context):
     for rd in recent_dir:
         recent_videos.append(f"{rd}/recording.webm")
     context['task_instance'].xcom_push(key='xcom_push_recent_videos', value=recent_videos)
-    return recent_videos
+    context['task_instance'].xcom_push(key='xcom_push_recent_dir', value=recent_dir)
+    return recent_videos,recent_dir
 
 def video_to_frame(**context):
     recent_videos = context['ti'].xcom_pull(key='xcom_push_recent_videos')
@@ -49,8 +57,8 @@ def video_to_frame(**context):
 
             if not ret:  # 새로운 프레임을 못받아 왔을 때 braek
                 break
-            if int(cap.get(1)) % int(fps / 3) == 0:
-                cv2.imwrite(sd + "/frame%d.jpg" % count, frame)
+            if int(cap.get(1)) % int(fps) == 0:
+                cv2.imwrite(sd + "/frame0%d.jpg" % count, frame)
                 print("Saved frame number : ", str(int(cap.get(1))))
                 count += 1
 
@@ -61,6 +69,17 @@ def video_to_frame(**context):
         cap.release()  # 사용한 자원 해제
         cv2.destroyAllWindows()
 
+def send_frame_to_dir(**context):
+    recent_dir = context['ti'].xcom_pull(key='xcom_push_recent_dir')
+
+    for sd in recent_dir:
+        facedb = FaceDB(path=sd)
+        df = facedb.load_data_train()
+        for i in range(len(df)):
+            source = df.iloc[i]['frame'].lstrip('./')
+            destination = f"{df.iloc[i]['emotion']}"
+            shutil.copy(source, destination)
+
 with DAG(
     default_args=default_args,
     dag_id = "heyi_train",
@@ -69,6 +88,13 @@ with DAG(
     start_date = days_ago(2),
     tags= ["heyi"],
 ) as dag:
+    make_dir = BashOperator(
+        task_id = "make_dir",
+        bash_command= "mkdir angry anxiety happy hurt neutral sad surprise",
+        owner= "jun",
+        retries = 3,
+        retry_delay = timedelta(minutes=3)
+    )
     t1 = BashOperator(
         task_id = "download_data",
         bash_command= "gcloud storage cp -r gs://heyi-storage/* ..",
@@ -91,5 +117,5 @@ with DAG(
         retries = 3,
         retry_delay = timedelta(minutes=3)
     )
-    
+make_dir
 t1 >> t2 >> t3

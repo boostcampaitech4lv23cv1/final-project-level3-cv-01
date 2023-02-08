@@ -28,4 +28,10 @@ bucket = storage_client.bucket("heyi-storage")
 # blob.download_to_filename("download")
 import os
 #os.system('gcloud storage cp gs://heyi-storage/* .')
-os.system('gsutil cp -r gs://heyi-storage/CHO_1234 .')
+#os.system('gsutil cp -r gs://heyi-storage/CHO_1234 .')
+import sys
+sys.path.append(os.getcwd())
+from DBconnect.main import *
+facedb = FaceDB(path="./homin_1000/230207_214925")
+df = facedb.load_data_train()
+print(df,type(df))
