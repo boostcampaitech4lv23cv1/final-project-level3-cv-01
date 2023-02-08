@@ -26,6 +26,7 @@ def video_to_frame(VIDEO_PATH, SAVED_DIR):
 
     cap = cv2.VideoCapture(VIDEO_PATH)
     count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
     fps = cap.get(cv2.CAP_PROP_FPS) / 20
 
     while True:  # 무한 루프
