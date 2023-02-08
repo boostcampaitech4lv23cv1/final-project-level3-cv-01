@@ -160,7 +160,7 @@ if 'result_dir' in st.session_state.keys():
                         end = seq[-1]
                         start_sec = result.loc[start, 'seconds']
                         end_sec = result.loc[end, 'seconds']
-                        st.session_state.face_time.add(tuple([start_sec, end_sec, '_']))
+                        st.session_state.face_time.add(tuple([start_sec, end_sec, start, end, '_']))
                         st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 표정이 부정적입니다.')
                 else:
                     st.success('표정이 긍정적입니다.')
@@ -454,7 +454,7 @@ if 'result_dir' in st.session_state.keys():
                             end = seq[-1]
                             start_sec = info_.loc[start, 'seconds']
                             end_sec = info_.loc[end, 'seconds']
-                            st.session_state.pose_time.add(tuple([start_sec, end_sec, 'face']))
+                            st.session_state.pose_time.add(tuple([start_sec, end_sec, start, end, 'face']))
                             st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 고개가 기울어졌습니다.')
                     else:
                         st.success('얼굴이 잘 정렬되어 있습니다.')
@@ -465,7 +465,7 @@ if 'result_dir' in st.session_state.keys():
                             end = seq[-1]
                             start_sec = info_.loc[start, 'seconds']
                             end_sec = info_.loc[end, 'seconds']
-                            st.session_state.pose_time.add(tuple([start_sec, end_sec, 'shoulder']))
+                            st.session_state.pose_time.add(tuple([start_sec, end_sec, start, end, 'shoulder']))
                             st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 어깨선이 기울어졌습니다.')
                     else:
                         st.success('어깨선이 잘 정렬되어 있습니다.')
@@ -476,7 +476,7 @@ if 'result_dir' in st.session_state.keys():
                             end = seq[-1]
                             start_sec = info_.loc[start, 'seconds']
                             end_sec = info_.loc[end, 'seconds']
-                            st.session_state.pose_time.add(tuple([start_sec, end_sec, 'body']))
+                            st.session_state.pose_time.add(tuple([start_sec, end_sec, start, end, 'body']))
                             st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 몸이 기울어졌습니다.')
                     else:
                         st.success('몸과 얼굴이 잘 정렬되어 있습니다.')
@@ -487,7 +487,7 @@ if 'result_dir' in st.session_state.keys():
                             end = seq[-1]
                             start_sec = info_.loc[start, 'seconds']
                             end_sec = info_.loc[end, 'seconds']
-                            st.session_state.pose_time.add(tuple([start_sec, end_sec, 'hand']))
+                            st.session_state.pose_time.add(tuple([start_sec, end_sec, start, end, 'hand']))
                             st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초에 손이 나왔습니다.')
                     else:
                         st.success('손이 나오지 않았습니다.')
@@ -590,7 +590,7 @@ if 'result_dir' in st.session_state.keys():
                         end = direction[0]
                         start_sec = eye_result.loc[start, 'seconds']
                         end_sec = eye_result.loc[end, 'seconds']
-                        st.session_state.eye_time.add(tuple([start_sec, end_sec, direction[1]]))
+                        st.session_state.eye_time.add(tuple([start_sec, end_sec, start, end, direction[1]]))
                         st.warning(f'{round(start_sec, 2)}초 ~ {round(end_sec, 2)}초의 시선이 {direction[1]}을 응시하고 있습니다.')
                 else:
                     st.success('정면을 잘 응시하고 있습니다.')
