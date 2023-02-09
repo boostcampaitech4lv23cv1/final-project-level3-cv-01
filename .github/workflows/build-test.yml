@@ -1,3 +1,4 @@
+# https://github.com/google-github-actions/setup-gcloud/blob/main/example-workflows/cloud-run/cloud-run.yml
 # Copyright 2019 Google, LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,13 +12,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# push까지 성공
+
+name: Build test
+
 on:
   push:
     branches:
+    - main
+    - dev
     - feat-ci/cd
+  pull_request:
+    branches:
+    - main
+    - dev
 
-name: Cloud Run
 env:
   INSTANCE: instance-1
   SERVICE_ACCOUT: heyi-github-action@hey-i-375802.iam.gserviceaccount.com
@@ -58,8 +66,8 @@ jobs:
 
     - name: Build and Push Container
       run: |-
-        docker build . --file Dockerfile --tag gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}
-        docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}
+        docker build . --file Dockerfile --tag gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{  github.sha }}
+        docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{  github.sha }}
 
     - name: Deploy to Cloud Run
       run: |-
@@ -68,7 +76,3 @@ jobs:
           --image gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }} \
           --platform "managed" \
           --quiet
-
-    # If required, use the Cloud Run url output in later steps
-    - name: Show Output
-      run: echo ${{ steps.deploy.outputs.url }}

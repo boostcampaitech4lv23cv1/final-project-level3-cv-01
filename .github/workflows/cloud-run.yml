@@ -1,0 +1,72 @@
+# https://github.com/google-github-actions/setup-gcloud/blob/main/example-workflows/cloud-run/cloud-run.yml
+# Copyright 2019 Google, LLC.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Build and Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+    - main
+
+env:
+  INSTANCE: instance-1
+  SERVICE_ACCOUT: heyi-github-action@hey-i-375802.iam.gserviceaccount.com
+  PROJECT_ID: hey-i-375802
+  SERVICE: heyi-front
+  REGION: asia-northeast1
+  WORKLOAD_IDENTITY_PROVIDER: projects/1055514527189/locations/global/workloadIdentityPools/heyi-pool/providers/my-provider
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    # Add "id-token" with the intended permissions.
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+ 
+    # Configure Workload Identity Federation and generate an access token.
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        workload_identity_provider: 'projects/1055514527189/locations/global/workloadIdentityPools/heyi-pool/providers/my-provider'     
+        service_account: 'heyi-github-action@hey-i-375802.iam.gserviceaccount.com' 
+        token_format: 'access_token'
+
+
+    # Setup gcloud CLI
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+
+    - name: Authorize Docker push
+      run: gcloud auth configure-docker
+
+    - name: Build and Push Container
+      run: |-
+        docker build . --file Dockerfile --tag gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{  github.sha }}
+        docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{  github.sha }}
+
+    - name: Deploy to Cloud Run
+      run: |-
+        gcloud run deploy ${{ env.SERVICE }} \
+          --region ${{ env.REGION }} \
+          --image gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }} \
+          --platform "managed" \
+          --quiet

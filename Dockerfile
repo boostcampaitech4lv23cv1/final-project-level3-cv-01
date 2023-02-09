@@ -11,7 +11,11 @@ ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8080
 
-RUN pip install --upgrade pip && \
+RUN apt-get update && apt-get install -y \
+    sudo apt-get install build-essential cmake \
+    sudo apt-get install libgtk-3-dev \
+    sudo apt-get install libboost-all-dev \
+    install --upgrade pip && \
     pip install -r requirements.txt
 
 ENTRYPOINT ["streamlit", "run", "streamlit/HEY-I.py", "--server.address=0.0.0.0", "--server.port 8080"]
