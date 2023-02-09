@@ -13,7 +13,7 @@ EXPOSE 8080
 
 RUN apt-get update \
     apt-get install -y \
-    install --upgrade pip && \
+    pip install --upgrade pip && \
     pip install -r requirements.txt
     #apt-get -y install python-pip python-dev libgl1-mesa-glx \
     #apt-get -y install build-essential cmake \
