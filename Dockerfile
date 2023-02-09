@@ -12,7 +12,8 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8080
 
 RUN apt-get update && apt-get install -y \
-    python-pip python-dev libgl1-mesa-glx build-essential cmake libgtk-3-dev libboost-all-dev \
+        python-pip python-dev libgl1-mesa-glx \
+        build-essential cmake libgtk-3-dev libboost-all-dev && \
     pip install --upgrade pip && \
     pip install -r requirements.txt
 
