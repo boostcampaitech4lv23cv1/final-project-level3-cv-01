@@ -1,4 +1,4 @@
-
+<img src="images/main.png" width="100%" height="80%"/>
 <div align="center">
 <img src="https://img.shields.io/badge/Python-grey?style=flat&logo=python&logoColor=p"/>
 <img src="https://img.shields.io/badge/PyTorch-grey?style=flat&logo=PyTorch&logoColor=red"/>
