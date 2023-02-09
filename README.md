@@ -19,8 +19,7 @@
 # 👨‍🏫 HEY-I (HElp Your Interview)
 ## Project Summary
 - 면접 진행 시 행동 분석을 통한 면접 도우미
-- 시선 처리, 얼굴 표정, 자세에 대한 변화 및 이상치 전달
-- Facial Expression Recognition, Pose Estimation, Eye Tracking 사용
+- Facial Expression Recognition, Pose Estimation, Eye Tracking 사용해 얼굴 표정, 자세, 시선 처리에 대한 변화 및 이상치 전달
 ***
 ## Contributors🔥
 | [김범준](https://github.com/quasar529) | [백우열](https://github.com/wooyeolBaek) | [조용재](https://github.com/yyongjae) | [조윤재](https://github.com/KidsareBornStars) | [최명헌](https://github.com/MyeongheonChoi) |
@@ -39,6 +38,15 @@
 
 ***
 ## Demo
+
+**녹화 준비**
+
+<img src="images/prepare.gif" width="50%" height="50%"/>
+
+**녹화 혹은 파일 업로드**
+
+<img src="images/recording1.gif" width="50%" height="50%"/><img src="images/recording2.gif" width="50%" height="50%"/>
+
 **전체 분석 결과**
 
 <img src="images/result1.gif" width="50%" height="50%"/><img src="images/result2.gif" width="50%" height="50%"/><img src="images/result3.gif" width="50%" height="50%"/>
@@ -46,19 +54,23 @@
 **세부 분석 결과**
 
 <img src="images/user_feedback2.gif" width="50%" height="50%"/><img src="images/user_feedback3.gif" width="50%" height="50%"/><img src="images/user_feedback4.gif" width="50%" height="50%"/>
+
+**피드백 전달**
+
+<img src="images/feedback5.gif" width="50%" height="50%"/>
+
 ***
 ## Model
 
 **Facial Emotion Recognition**
 - Model : EfficientNet B0
-- Dataset : 한국인 감정인식을 위한 복합 영상
+- Dataset : <a href='https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&aihubDataSe=realm&dataSetSn=82'>한국인 감정인식을 위한 복합 영상</a>
 - Metric : 
   - Accuracy - 7 classes : 0.6285
   - Accuracy - 2 classes : 0.9112
 
 
 **Pose Estimation**
-- Library : MMPose
 - Model : Resnet50
 - Dataset : <a href='https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&aihubDataSe=realm&dataSetSn=103'>수어 영상</a>
 - Metric : Ap
