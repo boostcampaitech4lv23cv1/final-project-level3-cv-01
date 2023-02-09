@@ -2,15 +2,15 @@
 <div align="center">
 <img src="https://img.shields.io/badge/Python-grey?style=flat&logo=python&logoColor=p"/>
 <img src="https://img.shields.io/badge/PyTorch-grey?style=flat&logo=PyTorch&logoColor=red"/>
-<img src="https://img.shields.io/badge/PyTorch Lightning-grey?style=flat&logo=PyTorch Lightning&logoColor=purple"/>
+<img src="https://img.shields.io/badge/PyTorch Lightning-grey?style=flat&logo=PyTorch Lightning&logoColor=purple"/>  
 <img src="https://img.shields.io/badge/FastAPI-grey?style=flat&logo=FastAPI&logoColor=green"/>
 <img src="https://img.shields.io/badge/Streamlit-grey?style=flat&logo=Streamlit&logoColor=red"/>
 <img src="https://img.shields.io/badge/MongoDB-grey?style=flat&logo=mongodb&logoColor="/>
 <img src="https://img.shields.io/badge/GCP-grey?style=flat&logo=Googlecloud&logoColor="/>
-<img src="https://img.shields.io/badge/Docker-grey?style=flat&logo=docker&logoColor=docker"/>
+<img src="https://img.shields.io/badge/Docker-grey?style=flat&logo=docker&logoColor=docker"/>  
 <img src="https://img.shields.io/badge/GitHub Actions-grey?style=flat&logo=github-actions&logoColor=docker"/>
 <img src="https://img.shields.io/badge/Git-grey?style=flat&logo=Git&logoColor="/>
-<img src="https://img.shields.io/badge/Airflow-grey?style=flat&logo=apache-airflow&logoColor=red"/>
+<img src="https://img.shields.io/badge/Airflow-grey?style=flat&logo=apache-airflow&logoColor=red"/>  
 <img src="https://img.shields.io/badge/slack-grey?style=flat&logo=slack&logoColor=slack"/>
 <img src="https://img.shields.io/badge/Notion-grey?style=flat&logo=notion&logoColor=notion"/>
 <img src="https://img.shields.io/badge/WebRTC-grey?style=flat&logo=WebRTC&logoColor=WebRTC"/>
