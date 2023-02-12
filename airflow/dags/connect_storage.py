@@ -14,14 +14,14 @@ def download_video(storage_path, download_path, bucket_name="heyi-storage"):
         download_path = download_path.replace('\\', '/')
 
     storage_client = storage.Client.from_service_account_json(
-        "./hey-i-375802-d3dcfd2b25d1.json"
+        "./hey-i-375802-994014a91ead.json"
     )
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(storage_path)
     blob.download_to_filename(download_path)
         
 storage_client = storage.Client.from_service_account_json(
-        "/opt/ml/final-project-level3-cv-01/airflow/hey-i-375802-d3dcfd2b25d1.json"
+        "/opt/ml/final-project-level3-cv-01/airflow/hey-i-375802-994014a91ead.json"
     )
 bucket = storage_client.bucket("heyi-storage")
 # blob = bucket.blob("*.webm")

@@ -57,7 +57,7 @@ st.set_page_config(layout="wide")
 st.title("HEY-I")
 
 # key 존재 확인
-assert os.path.exists("./hey-i-375802-d3dcfd2b25d1.json"), "Key가 존재하지 않습니다."
+assert os.path.exists("./hey-i-375802-994014a91ead.json"), "Key가 존재하지 않습니다."
 
 # threshold 지정
 emotion_threshold_sec = 1

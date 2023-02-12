@@ -21,7 +21,7 @@ if not "name" in st.session_state.keys():
     st.warning("HEY-I 페이지에서 이름과 번호를 입력하세요")
     st.stop()
 
-assert os.path.exists("./hey-i-375802-d3dcfd2b25d1.json"), "Key가 존재하지 않습니다."
+assert os.path.exists("./hey-i-375802-994014a91ead.json"), "Key가 존재하지 않습니다."
 
 
 ########################################################### WebRTC
