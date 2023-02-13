@@ -57,19 +57,20 @@ def convert_to_webm(in_file, video_dir):
     print(f"Convert Complete: {video_dir} on {end-start}")
 
 
-# BACKEND_FACE = "http://49.50.175.182:30001/face_emotion"
-# BACKEND_POSE_MMPOSE = "http://49.50.175.182:30001/pose_with_mmpose"
-# BACKEND_EYE = "http://49.50.175.182:30001/eye_tracking"
-# SAVE_REQUEST_DIR = "http://49.50.175.182:30001/save_origin_video"
-# UPLOAD_REQUEST_DIR = "http://49.50.175.182:30001/upload_predict_video"
-BACKEND_FRAME1 = "http://127.0.0.1:8000/frames"
-BACKEND_FRAME2 = "http://127.0.0.1:8000/frames"
-BACKEND_FRAME3 = "http://127.0.0.1:8000/frames"
-BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
-BACKEND_POSE_MMPOSE = "http://127.0.0.1:8000/pose_with_mmpose"
-BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
-SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
-UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
+BACKEND_FRAME1 = "http://49.50.175.182:30001/frames"
+BACKEND_FACE = "http://49.50.175.182:30001/face_emotion"
+BACKEND_POSE_MMPOSE = "http://49.50.175.182:30001/pose_with_mmpose"
+BACKEND_EYE = "http://49.50.175.182:30001/eye_tracking"
+SAVE_REQUEST_DIR = "http://49.50.175.182:30001/save_origin_video"
+UPLOAD_REQUEST_DIR = "http://49.50.175.182:30001/upload_predict_video"
+# BACKEND_FRAME1 = "http://127.0.0.1:8000/frames"
+# BACKEND_FRAME2 = "http://127.0.0.1:8000/frames"
+# BACKEND_FRAME3 = "http://127.0.0.1:8000/frames"
+# BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
+# BACKEND_POSE_MMPOSE = "http://127.0.0.1:8000/pose_with_mmpose"
+# BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
+# SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
+# UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
 # BACKEND_FRAME1 = "http://101.101.219.62:30001/frames"
 # BACKEND_FRAME2 = "http://101.101.208.156:30001/frames"
 # BACKEND_FRAME3 = "http://127.0.0.1:8000/frames"
@@ -163,26 +164,29 @@ if "facedb" not in st.session_state:
     st.session_state["facedb"] = facedb
 
 if not st.session_state.recording and not os.path.exists(webm_file):
-    st.write("❗ 카메라 접근 권한을 승인해주세요")
-    st.markdown("**질문** : 1분 자기 소개를 해주세요")
-    webrtc_streamer(
-        key="record",
-        mode=WebRtcMode.SENDRECV,
-        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-        media_stream_constraints={
-            "video": True,
-            "audio": False,
-        },
-        video_frame_callback=video_frame_callback,
-        in_recorder_factory=in_recorder_factory,
-    )
-    ###########################################################
+    st.markdown('#### 🚨 현재 사이트에서는 영상 업로드릉 통한 면접 영상 분석만이 가능합니다')
+    st.warning('현재 webrtc 와 http 호환성 문제로 인해 카메라를 켤 수 없습니다.', icon="⛔")
+    with st.expander("webrtc 가 가능한 server 에서 구현 시 아래와 같이 화면을 녹화할 수 있습니다."):
+        st.write("❗ 카메라 접근 권한을 승인해주세요")
+        st.markdown("**질문** : 1분 자기 소개를 해주세요")
+        webrtc_streamer(
+            key="record",
+            mode=WebRtcMode.SENDRECV,
+            rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+            media_stream_constraints={
+                "video": True,
+                "audio": False,
+            },
+            video_frame_callback=video_frame_callback,
+            in_recorder_factory=in_recorder_factory,
+        )
+        ###########################################################
 
-    convert = st.button("영상을 다 녹화한 후 이 버튼을 눌러 저장하세요.")
-    if convert:
-        with st.spinner("✔ 확인됐습니다. 변환 중입니다..."):
-            convert_to_webm(flv_file, webm_file)
-            st.session_state.video_dir = webm_file
+        convert = st.button("영상을 다 녹화한 후 이 버튼을 눌러 저장하세요.")
+        if convert:
+            with st.spinner("✔ 확인됐습니다. 변환 중입니다..."):
+                convert_to_webm(flv_file, webm_file)
+                st.session_state.video_dir = webm_file
 
 if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm_file:
     if os.path.exists(st.session_state.video_dir):
