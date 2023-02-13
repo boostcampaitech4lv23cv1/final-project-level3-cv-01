@@ -17,11 +17,11 @@ import streamlit as st
 from FastAPI.utils import upload_video, download_video
 from DBconnect.main import UserDB, PoseDB, EyeDB, FaceDB
 
-if not "name" in st.session_state.keys():
-    st.warning("HEY-I 페이지에서 이름과 번호를 입력하세요")
-    st.stop()
+# if not "name" in st.session_state.keys():
+#     st.warning("HEY-I 페이지에서 이름과 번호를 입력하세요")
+#     st.stop()
 
-assert os.path.exists("./hey-i-375802-994014a91ead.json"), "Key가 존재하지 않습니다."
+# assert os.path.exists("./hey-i-375802-994014a91ead.json"), "Key가 존재하지 않습니다."
 
 
 ########################################################### WebRTC
@@ -56,20 +56,22 @@ def convert_to_webm(in_file, video_dir):
 
     print(f"Convert Complete: {video_dir} on {end-start}")
 
+BACKEND_FRAME1 = "http://49.50.175.182:30001/frames"
+BACKEND_FACE = "http://49.50.175.182:30001/face_emotion"
+BACKEND_POSE_MMPOSE = "http://49.50.175.182:30001/pose_with_mmpose"
+BACKEND_EYE = "http://49.50.175.182:30001/eye_tracking"
+SAVE_REQUEST_DIR = "http://49.50.175.182:30001/save_origin_video"
+UPLOAD_REQUEST_DIR = "http://49.50.175.182:30001/upload_predict_video"
 
-# BACKEND_FACE = "http://49.50.175.182:30001/face_emotion"
-# BACKEND_POSE_MMPOSE = "http://49.50.175.182:30001/pose_with_mmpose"
-# BACKEND_EYE = "http://49.50.175.182:30001/eye_tracking"
-# SAVE_REQUEST_DIR = "http://49.50.175.182:30001/save_origin_video"
-# UPLOAD_REQUEST_DIR = "http://49.50.175.182:30001/upload_predict_video"
-BACKEND_FRAME1 = "http://127.0.0.1:8000/frames"
-BACKEND_FRAME2 = "http://127.0.0.1:8000/frames"
-BACKEND_FRAME3 = "http://127.0.0.1:8000/frames"
-BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
-BACKEND_POSE_MMPOSE = "http://127.0.0.1:8000/pose_with_mmpose"
-BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
-SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
-UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
+# BACKEND_FRAME1 = "http://127.0.0.1:8000/frames"
+# BACKEND_FRAME2 = "http://127.0.0.1:8000/frames"
+# BACKEND_FRAME3 = "http://127.0.0.1:8000/frames"
+# BACKEND_FACE = "http://127.0.0.1:8000/face_emotion"
+# BACKEND_POSE_MMPOSE = "http://127.0.0.1:8000/pose_with_mmpose"
+# BACKEND_EYE = "http://127.0.0.1:8000/eye_tracking"
+# SAVE_REQUEST_DIR = "http://127.0.0.1:8000/save_origin_video"
+# UPLOAD_REQUEST_DIR = "http://127.0.0.1:8000/upload_predict_video"
+
 # BACKEND_FRAME1 = "http://101.101.219.62:30001/frames"
 # BACKEND_FRAME2 = "http://101.101.208.156:30001/frames"
 # BACKEND_FRAME3 = "http://127.0.0.1:8000/frames"
@@ -86,223 +88,229 @@ st.session_state.recording = False
 
 # Basic App Scaffolding
 st.title("HEY-I")
-st.subheader("면접 영상을 녹화하세요")
+
+st.subheader("이 사이트는 inference 결과를 미리 볼 수 있는 사이트입니다.")
+st.warning("이 페이지에서는 영상을 녹화하거나 업로드를 하여 원하는 영상을 분석할 수 있지만 이 사이트에서는 준비된 영상의 결과만을 보여줍니다!")
+st.markdown("**result page** 에서 결과를 확인하세요")
 
 
-start_time = datetime.now(timezone("Asia/Seoul")).strftime("%y%m%d_%H%M%S")
-if "prefix" not in st.session_state.keys() or st.session_state.prefix is None:
-    st.session_state["prefix"] = start_time
-
-if not os.path.exists(
-    f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}"
-):
-    os.makedirs(
-        f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}"
-    )
-
-flv_file = f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording.flv"
-webm_file = f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording.webm"
-
-uploaded_video = st.sidebar.file_uploader("영상 업로드", type=["mp4", "flv"])
-if uploaded_video:
-    st.session_state.recording = True
-    g = io.BytesIO(uploaded_video.read())
-    ext = uploaded_video.type.split("/")[-1]
-    uploaded_file = (
-        f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording."
-        + ext
-    )
-    with open(uploaded_file, "wb") as out:
-        out.write(g.read())
-
-    convert = st.button("영상이 업로드 되었습니다. 이 버튼을 눌러 변환하세요.")
-    if convert:
-        with st.spinner("✔ 변환 중입니다..."):
-            convert_to_webm(uploaded_file, webm_file)
-            st.session_state.video_dir = webm_file
+# st.subheader("면접 영상을 녹화하세요")
 
 
-def in_recorder_factory():
-    return MediaRecorder(
-        flv_file, format="flv"
-    )  # HLS does not work. See https://github.com/aiortc/aiortc/issues/331
+# start_time = datetime.now(timezone("Asia/Seoul")).strftime("%y%m%d_%H%M%S")
+# if "prefix" not in st.session_state.keys() or st.session_state.prefix is None:
+#     st.session_state["prefix"] = start_time
+
+# if not os.path.exists(
+#     f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}"
+# ):
+#     os.makedirs(
+#         f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}"
+#     )
+
+# flv_file = f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording.flv"
+# webm_file = f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording.webm"
+
+# uploaded_video = st.sidebar.file_uploader("영상 업로드", type=["mp4", "flv"])
+# if uploaded_video:
+#     st.session_state.recording = True
+#     g = io.BytesIO(uploaded_video.read())
+#     ext = uploaded_video.type.split("/")[-1]
+#     uploaded_file = (
+#         f"./{st.session_state.name}_{st.session_state.num}/{st.session_state.prefix}/recording."
+#         + ext
+#     )
+#     with open(uploaded_file, "wb") as out:
+#         out.write(g.read())
+
+#     convert = st.button("영상이 업로드 되었습니다. 이 버튼을 눌러 변환하세요.")
+#     if convert:
+#         with st.spinner("✔ 변환 중입니다..."):
+#             convert_to_webm(uploaded_file, webm_file)
+#             st.session_state.video_dir = webm_file
 
 
-userdb = UserDB(
-    st.session_state.name,
-    st.session_state.num,
-    st.session_state.prefix,
-    "/".join(flv_file.split("/")[:-1]),
-)
-posedb = PoseDB(
-    st.session_state.name,
-    st.session_state.num,
-    st.session_state.prefix,
-    "/".join(flv_file.split("/")[:-1]),
-)
-eyedb = EyeDB(
-    st.session_state.name,
-    st.session_state.num,
-    st.session_state.prefix,
-    "/".join(flv_file.split("/")[:-1]),
-)
-facedb = FaceDB(
-    st.session_state.name,
-    st.session_state.num,
-    st.session_state.prefix,
-    "/".join(flv_file.split("/")[:-1]),
-)
+# def in_recorder_factory():
+#     return MediaRecorder(
+#         flv_file, format="flv"
+#     )  # HLS does not work. See https://github.com/aiortc/aiortc/issues/331
 
-if "userdb" not in st.session_state:
-    st.session_state["userdb"] = userdb
-if "posedb" not in st.session_state:
-    st.session_state["posedb"] = posedb
-if "eyedb" not in st.session_state:
-    st.session_state["eyedb"] = eyedb
-if "facedb" not in st.session_state:
-    st.session_state["facedb"] = facedb
 
-if not st.session_state.recording and not os.path.exists(webm_file):
-    st.write("❗ 카메라 접근 권한을 승인해주세요")
-    st.markdown("**질문** : 1분 자기 소개를 해주세요")
-    webrtc_streamer(
-        key="record",
-        mode=WebRtcMode.SENDRECV,
-        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-        media_stream_constraints={
-            "video": True,
-            "audio": False,
-        },
-        video_frame_callback=video_frame_callback,
-        in_recorder_factory=in_recorder_factory,
-    )
-    ###########################################################
+# userdb = UserDB(
+#     st.session_state.name,
+#     st.session_state.num,
+#     st.session_state.prefix,
+#     "/".join(flv_file.split("/")[:-1]),
+# )
+# posedb = PoseDB(
+#     st.session_state.name,
+#     st.session_state.num,
+#     st.session_state.prefix,
+#     "/".join(flv_file.split("/")[:-1]),
+# )
+# eyedb = EyeDB(
+#     st.session_state.name,
+#     st.session_state.num,
+#     st.session_state.prefix,
+#     "/".join(flv_file.split("/")[:-1]),
+# )
+# facedb = FaceDB(
+#     st.session_state.name,
+#     st.session_state.num,
+#     st.session_state.prefix,
+#     "/".join(flv_file.split("/")[:-1]),
+# )
 
-    convert = st.button("영상을 다 녹화한 후 이 버튼을 눌러 저장하세요.")
-    if convert:
-        with st.spinner("✔ 확인됐습니다. 변환 중입니다..."):
-            convert_to_webm(flv_file, webm_file)
-            st.session_state.video_dir = webm_file
+# if "userdb" not in st.session_state:
+#     st.session_state["userdb"] = userdb
+# if "posedb" not in st.session_state:
+#     st.session_state["posedb"] = posedb
+# if "eyedb" not in st.session_state:
+#     st.session_state["eyedb"] = eyedb
+# if "facedb" not in st.session_state:
+#     st.session_state["facedb"] = facedb
 
-if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm_file:
-    if os.path.exists(st.session_state.video_dir):
-        video_file = open(st.session_state.video_dir, "rb")
-        video_bytes = video_file.read()
-        with st.expander("이 영상을 분석 할 지 결정해주세요"):
-            st.video(video_bytes)
-            # 분석할 영상 결정
+# if not st.session_state.recording and not os.path.exists(webm_file):
+#     st.write("❗ 카메라 접근 권한을 승인해주세요")
+#     st.markdown("**질문** : 1분 자기 소개를 해주세요")
+#     webrtc_streamer(
+#         key="record",
+#         mode=WebRtcMode.SENDRECV,
+#         rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+#         media_stream_constraints={
+#             "video": True,
+#             "audio": False,
+#         },
+#         video_frame_callback=video_frame_callback,
+#         in_recorder_factory=in_recorder_factory,
+#     )
+#     ###########################################################
 
-        st.write("이 영상으로 분석을 진행할까요?")
+#     convert = st.button("영상을 다 녹화한 후 이 버튼을 눌러 저장하세요.")
+#     if convert:
+#         with st.spinner("✔ 확인됐습니다. 변환 중입니다..."):
+#             convert_to_webm(flv_file, webm_file)
+#             st.session_state.video_dir = webm_file
 
-        confirm = st.button("Inference")
-        cancel = st.button("Re-Recording")
+# if "video_dir" in st.session_state.keys() and st.session_state.video_dir == webm_file:
+#     if os.path.exists(st.session_state.video_dir):
+#         video_file = open(st.session_state.video_dir, "rb")
+#         video_bytes = video_file.read()
+#         with st.expander("이 영상을 분석 할 지 결정해주세요"):
+#             st.video(video_bytes)
+#             # 분석할 영상 결정
 
-        if confirm:
-            with st.spinner("선택한 영상을 분석하고 있습니다. 잠시 기다려주세요!"):
-                st.session_state.confirm_video = st.session_state.video_dir
+#         st.write("이 영상으로 분석을 진행할까요?")
 
-                # 녹화한 영상 cloud에 업로드할 경로
-                upload_path = "/".join(st.session_state.video_dir.split("/")[-3:])
-                st.session_state.upload_dir = upload_path
-                upload_path = upload_path.replace("\\", "/")
+#         confirm = st.button("Inference")
+#         cancel = st.button("Re-Recording")
 
-                start = time.time()  # 업로드 시간 측정
-                # 1. Front에서 녹화한 영상 클라우드에 업로드
-                upload_video(
-                    file_path=st.session_state.video_dir, upload_path=upload_path
-                )
-                print(f"Front에서 클라우드로 업로드한 영상 경로 {upload_path}")
+#         if confirm:
+#             with st.spinner("선택한 영상을 분석하고 있습니다. 잠시 기다려주세요!"):
+#                 st.session_state.confirm_video = st.session_state.video_dir
 
-                # Front 에서 저장한 영상 경로와 저장할 클라우드 경로
-                save_input_json = {
-                    "VIDEO_PATH": st.session_state.upload_dir,
-                    "SAVED_DIR": st.session_state.video_dir,
-                }
-                # 2. 클라우드에 저장된 영상 Back에 다운
-                from concurrent.futures import ThreadPoolExecutor, as_completed
+#                 # 녹화한 영상 cloud에 업로드할 경로
+#                 upload_path = "/".join(st.session_state.video_dir.split("/")[-3:])
+#                 st.session_state.upload_dir = upload_path
+#                 upload_path = upload_path.replace("\\", "/")
 
-                # with ThreadPoolExecutor() as executor:
-                #     executor.submit(requests.post, SAVE_REQUEST_DIR1, json=save_input_json)
-                #     executor.submit(requests.post, SAVE_REQUEST_DIR2, json=save_input_json)
-                #     executor.submit(requests.post, SAVE_REQUEST_DIR3, json=save_input_json)
-                temp = requests.post(SAVE_REQUEST_DIR, json=save_input_json)
+#                 start = time.time()  # 업로드 시간 측정
+#                 # 1. Front에서 녹화한 영상 클라우드에 업로드
+#                 upload_video(
+#                     file_path=st.session_state.video_dir, upload_path=upload_path
+#                 )
+#                 print(f"Front에서 클라우드로 업로드한 영상 경로 {upload_path}")
 
-                VIDEO_PATH = st.session_state.confirm_video
-                SAVED_DIR = (
-                    f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/frames"
-                )
-                print(VIDEO_PATH, SAVED_DIR)
-                input_json = {"VIDEO_PATH": VIDEO_PATH, "SAVED_DIR": SAVED_DIR}
-                # with ThreadPoolExecutor() as executor:
-                #     executor.submit(requests.post, BACKEND_FRAME1, json=input_json)
-                #     executor.submit(requests.post, BACKEND_FRAME2, json=input_json)
-                #     executor.submit(requests.post, BACKEND_FRAME3, json=input_json)
-                requests.post(BACKEND_FRAME1, json=input_json)
-                r_ = []
-                r_pose_ = []
-                r_eye_ = []
-                with ThreadPoolExecutor() as executor:
-                    r = executor.submit(requests.post, BACKEND_FACE, json=input_json)
-                    r_.append(r)
-                    r_pose = executor.submit(
-                        requests.post, BACKEND_POSE_MMPOSE, json=input_json
-                    )
-                    r_pose_.append(r_pose)
-                    r_eye = executor.submit(requests.post, BACKEND_EYE, json=input_json)
-                    r_eye_.append(r_eye)
+#                 # Front 에서 저장한 영상 경로와 저장할 클라우드 경로
+#                 save_input_json = {
+#                     "VIDEO_PATH": st.session_state.upload_dir,
+#                     "SAVED_DIR": st.session_state.video_dir,
+#                 }
+#                 # 2. 클라우드에 저장된 영상 Back에 다운
+#                 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-                # r_result = requests.post(BACKEND_FACE, json=input_json)
-                # r_pose_result=requests.post(BACKEND_POSE_MMPOSE, json=input_json)
-                # r_eye_result= requests.post(BACKEND_EYE, json=input_json)
+#                 # with ThreadPoolExecutor() as executor:
+#                 #     executor.submit(requests.post, SAVE_REQUEST_DIR1, json=save_input_json)
+#                 #     executor.submit(requests.post, SAVE_REQUEST_DIR2, json=save_input_json)
+#                 #     executor.submit(requests.post, SAVE_REQUEST_DIR3, json=save_input_json)
+#                 temp = requests.post(SAVE_REQUEST_DIR, json=save_input_json)
 
-                result_dir = "/".join(SAVED_DIR.split("/")[:-1])
-                st.session_state.result_dir = result_dir
+#                 VIDEO_PATH = st.session_state.confirm_video
+#                 SAVED_DIR = (
+#                     f"./{VIDEO_PATH.split('/')[1]}/{VIDEO_PATH.split('/')[2]}/frames"
+#                 )
+#                 print(VIDEO_PATH, SAVED_DIR)
+#                 input_json = {"VIDEO_PATH": VIDEO_PATH, "SAVED_DIR": SAVED_DIR}
+#                 # with ThreadPoolExecutor() as executor:
+#                 #     executor.submit(requests.post, BACKEND_FRAME1, json=input_json)
+#                 #     executor.submit(requests.post, BACKEND_FRAME2, json=input_json)
+#                 #     executor.submit(requests.post, BACKEND_FRAME3, json=input_json)
+#                 requests.post(BACKEND_FRAME1, json=input_json)
+#                 r_ = []
+#                 r_pose_ = []
+#                 r_eye_ = []
+#                 with ThreadPoolExecutor() as executor:
+#                     r = executor.submit(requests.post, BACKEND_FACE, json=input_json)
+#                     r_.append(r)
+#                     r_pose = executor.submit(
+#                         requests.post, BACKEND_POSE_MMPOSE, json=input_json
+#                     )
+#                     r_pose_.append(r_pose)
+#                     r_eye = executor.submit(requests.post, BACKEND_EYE, json=input_json)
+#                     r_eye_.append(r_eye)
 
-                for i in as_completed(r_):
-                    r_result = i.result().text
-                for i in as_completed(r_pose_):
-                    r_pose_result = i.result().text
-                for i in as_completed(r_eye_):
-                    r_eye_result = i.result().text
+#                 # r_result = requests.post(BACKEND_FACE, json=input_json)
+#                 # r_pose_result=requests.post(BACKEND_POSE_MMPOSE, json=input_json)
+#                 # r_eye_result= requests.post(BACKEND_EYE, json=input_json)
 
-            with st.spinner("DB에 분석 결과를 저장 중입니다..."):
-                userdb.save_data()
-                facedb.save_data(r_result)
-                posedb.save_data(r_pose_result)
-                eyedb.save_data(r_eye_result)
-                print("save data in mongodb")
+#                 result_dir = "/".join(SAVED_DIR.split("/")[:-1])
+#                 st.session_state.result_dir = result_dir
 
-                # Back에서 저장한 모델 예측 영상 경로 만들기
-                # for task in ("face", "pose", "eye"):
-                for task in ["face", "pose", "eye"]:
-                    upload_name = (
-                        task + "_" + st.session_state.upload_dir.split("/")[-1]
-                    )
-                    upload_folder = "/".join(
-                        st.session_state.upload_dir.split("/")[:-1]
-                    )
-                    upload_dir = "/".join([upload_folder, upload_name])
-                    download_name = upload_name
-                    download_folder = "/".join(
-                        st.session_state.video_dir.split("/")[:-1]
-                    )
-                    download_dir = "/".join([download_folder, download_name])
+#                 for i in as_completed(r_):
+#                     r_result = i.result().text
+#                 for i in as_completed(r_pose_):
+#                     r_pose_result = i.result().text
+#                 for i in as_completed(r_eye_):
+#                     r_eye_result = i.result().text
 
-                    # 4. 클라우드에 저장된 모델 예측 영상 Front에 다운 받기
-                    download_video(
-                        storage_path=upload_dir,
-                        download_path=download_dir,
-                    )
-            st.session_state.complete = True
+#             with st.spinner("DB에 분석 결과를 저장 중입니다..."):
+#                 userdb.save_data()
+#                 facedb.save_data(r_result)
+#                 posedb.save_data(r_pose_result)
+#                 eyedb.save_data(r_eye_result)
+#                 print("save data in mongodb")
 
-        elif cancel:
-            st.session_state.cancel = True
-            st.session_state.prefix = None
+#                 # Back에서 저장한 모델 예측 영상 경로 만들기
+#                 # for task in ("face", "pose", "eye"):
+#                 for task in ["face", "pose", "eye"]:
+#                     upload_name = (
+#                         task + "_" + st.session_state.upload_dir.split("/")[-1]
+#                     )
+#                     upload_folder = "/".join(
+#                         st.session_state.upload_dir.split("/")[:-1]
+#                     )
+#                     upload_dir = "/".join([upload_folder, upload_name])
+#                     download_name = upload_name
+#                     download_folder = "/".join(
+#                         st.session_state.video_dir.split("/")[:-1]
+#                     )
+#                     download_dir = "/".join([download_folder, download_name])
 
-if "complete" in st.session_state.keys() and st.session_state.complete:
-    st.success("분석이 완료 되었습니다!!! Result 페이지에서 결과를 확인하세요!!!", icon="🔥")
-    st.session_state.complete = False
+#                     # 4. 클라우드에 저장된 모델 예측 영상 Front에 다운 받기
+#                     download_video(
+#                         storage_path=upload_dir,
+#                         download_path=download_dir,
+#                     )
+#             st.session_state.complete = True
 
-if "cancel" in st.session_state.keys() and st.session_state.cancel:
-    restart = st.button("다시 녹화하세요")
-    st.session_state.cancel = False
+#         elif cancel:
+#             st.session_state.cancel = True
+#             st.session_state.prefix = None
+
+# if "complete" in st.session_state.keys() and st.session_state.complete:
+#     st.success("분석이 완료 되었습니다!!! Result 페이지에서 결과를 확인하세요!!!", icon="🔥")
+#     st.session_state.complete = False
+
+# if "cancel" in st.session_state.keys() and st.session_state.cancel:
+#     restart = st.button("다시 녹화하세요")
+#     st.session_state.cancel = False
